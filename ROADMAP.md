@@ -141,26 +141,32 @@ This roadmap tracks the consolidation of all Zouroboros enhancements into a unif
 
 ---
 
-## Phase 5: Personas & Agents 🔄 (In Progress)
+## Phase 5: Personas & Agents ✅ (Complete)
 
 **Goal:** Port `zo-persona-creator` and Agency Agents integration.
 
 ### Deliverables
-- [ ] `zouroboros-personas` package
-- [ ] 8-phase persona creation
-- [ ] Safety rules framework
-- [ ] Identity file templates
-- [ ] Agency Agents reference
-- [ ] SkillsMP API client
+- [x] `zouroboros-personas` package
+- [x] 8-phase persona creation workflow
+- [x] SOUL.md constitution generator
+- [x] IDENTITY.md presentation generator
+- [x] Safety rules framework with domain templates
+- [x] Prompt template generator
+- [x] Interactive and non-interactive CLI
+- [x] Agency Agents reference support
+- [ ] SkillsMP API client (deferred to Phase 8)
 
-### Source Files to Port
-- `Skills/zo-persona-creator/scripts/setup-persona.ts`
-- `Skills/zo-persona-creator/scripts/interactive-setup.ts`
-- `Skills/zo-persona-creator/assets/*`
+### Files Created
+- `packages/personas/src/generators/persona.ts` - Main generator
+- `packages/personas/src/templates/soul.ts` - SOUL template
+- `packages/personas/src/templates/identity.ts` - IDENTITY template
+- `packages/personas/src/templates/prompt.ts` - Prompt template
+- `packages/personas/src/templates/safety.ts` - Safety rules
+- `packages/personas/src/cli/index.ts` - CLI interface
 
 ---
 
-## Phase 6: Self-Heal System
+## Phase 6: Self-Heal System 🔄 (In Progress)
 
 **Goal:** Port `zouroboros-introspect`, `prescribe`, and `evolve`.
 
@@ -246,9 +252,9 @@ docs/
 
 ## Current Status
 
-**Phase:** 4 (Swarm Orchestrator) ✅ COMPLETE
-**Overall Progress:** 44% (4/8 phases)
-**Next:** Phase 5 — Personas & Agents
+**Phase:** 6 (Self-Heal System) 🔄 IN PROGRESS
+**Overall Progress:** 62.5% (5/8 phases)
+**Next:** Phase 7 — CLI & TUI
 
 ### Completed Packages
 | Package | Status | Description |
@@ -257,12 +263,12 @@ docs/
 | zouroboros-memory | ✅ | SQLite + vector memory |
 | zouroboros-omniroute | ✅ | Model routing |
 | zouroboros-workflow | ✅ | Interview, eval, unstuck, autoloop |
+| zouroboros-personas | ✅ | Persona creation framework |
 
 ### Pending Packages
 | Package | Phase | Description |
 |---------|-------|-------------|
 | zouroboros-swarm | 4 | Multi-agent orchestration |
-| zouroboros-personas | 5 | Persona creation framework |
 | zouroboros-selfheal | 6 | Introspection & evolution |
 | zouroboros-cli | 7 | Unified CLI |
 | zouroboros-tui | 7 | Terminal UI |
