@@ -1,40 +1,34 @@
 {
   "name": "zouroboros-swarm",
   "version": "2.0.0",
-  "description": "Multi-agent orchestration and routing for Zouroboros",
+  "description": "Multi-agent orchestration with circuit breakers and 6-signal routing",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "zouroboros-swarm": "./dist/cli/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint src --ext .ts",
-    "clean": "rm -rf dist"
+    "test": "echo \"No tests yet\" && exit 0"
   },
   "dependencies": {
     "zouroboros-core": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
   },
-  "files": [
-    "dist/",
-    "bridges/",
-    "README.md"
-  ],
   "keywords": [
-    "zouroboros",
     "swarm",
     "orchestration",
-    "agents",
-    "routing"
+    "multi-agent",
+    "circuit-breaker",
+    "routing",
+    "dag",
+    "zouroboros"
   ],
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/marlandoj/zouroboros.git",
-    "directory": "packages/swarm"
-  }
+  "author": "marlandoj.zo.computer"
 }

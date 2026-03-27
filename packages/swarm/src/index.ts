@@ -1,24 +1,39 @@
 /**
  * Zouroboros Swarm
  * 
- * Multi-agent orchestration with 6-signal composite routing and DAG streaming.
+ * Multi-agent orchestration with circuit breakers, 6-signal routing, and DAG execution.
  * 
  * @module zouroboros-swarm
  */
 
-export const VERSION = '2.0.0';
+// Core types
+export type {
+  Task,
+  TaskResult,
+  SwarmConfig,
+  ExecutorCapability,
+  ExecutorRegistryEntry,
+  RouteDecision,
+  RoutingStrategy,
+  DAGMode,
+  ErrorCategory,
+  CircuitBreakerState,
+} from './types.js';
 
-// Placeholder - full implementation in v2.1.0
-// Port from Skills/zo-swarm-orchestrator/scripts/orchestrate-v5.ts
-export interface SwarmOptions {
-  localConcurrency?: number;
-  omniRouteUrl?: string;
-  executors?: string[];
-}
+// Circuit breaker
+export { CircuitBreaker, CircuitBreakerRegistry } from './circuit/breaker.js';
 
-export class SwarmOrchestrator {
-  constructor(options: SwarmOptions = {}) {
-    // Implementation coming in v2.1.0
-    console.log('SwarmOrchestrator initialized (placeholder)');
-  }
-}
+// Routing
+export { RoutingEngine, type RoutingContext } from './routing/engine.js';
+
+// Registry
+export { loadRegistry, findExecutor, listExecutors, getLocalExecutors } from './registry/loader.js';
+
+// Executor
+export { BridgeExecutor, type BridgeExecutionOptions } from './executor/bridge.js';
+
+// DAG
+export { DAGExecutor, type ExecutionContext, type ExecutionProgress } from './dag/executor.js';
+
+// Main orchestrator
+export { SwarmOrchestrator } from './orchestrator.js';
