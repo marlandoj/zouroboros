@@ -1,39 +1,32 @@
 {
   "name": "zouroboros-personas",
   "version": "2.0.0",
-  "description": "Persona creation and management for Zouroboros",
+  "description": "Persona creation and management with SOUL/IDENTITY architecture",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "zouroboros-personas": "./dist/cli/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint src --ext .ts",
-    "clean": "rm -rf dist"
+    "test": "echo \"No tests yet\" && exit 0"
   },
   "dependencies": {
     "zouroboros-core": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
   },
-  "files": [
-    "dist/",
-    "templates/",
-    "README.md"
-  ],
   "keywords": [
-    "zouroboros",
     "personas",
+    "identity",
+    "ai",
     "agents",
-    "templates"
+    "zouroboros"
   ],
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/marlandoj/zouroboros.git",
-    "directory": "packages/personas"
-  }
+  "author": "marlandoj.zo.computer"
 }
