@@ -413,3 +413,113 @@ MIT License - see [LICENSE](LICENSE) for details.
 - [Ouroboros](https://github.com/Q00/ouroboros) for spec-first patterns
 - [Agency Agents](https://github.com/msitarzewski/agency-agents) for persona templates
 - [karpathy/autoresearch](https://github.com/karpathy/autoresearch) for autoloop inspiration
+
+### Packages
+
+| Package | Description | Status |
+|---------|-------------|--------|
+| `zouroboros-core` | Core types, config, utilities | ✅ Complete |
+| `zouroboros-memory` | SQLite + Vector memory system | ✅ Complete |
+| `zouroboros-omniroute` | Intelligent model combo selection | ✅ Complete |
+| `zouroboros-swarm` | Multi-agent orchestration | 🔄 Planned |
+| `zouroboros-personas` | Persona creation framework | 🔄 Planned |
+| `zouroboros-selfheal` | Introspect, prescribe, evolve | 🔄 Planned |
+| `zouroboros-workflow` | Spec-first development tools | 🔄 Planned |
+| `zouroboros-agents` | Agency Agents integration | 🔄 Planned |
+
+---
+
+## Quick Start
+
+### 1. Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/marlandoj/zouroboros.git
+cd zouroboros
+
+# Install dependencies
+pnpm install
+
+# Build all packages
+pnpm run build
+
+# Initialize configuration
+./scripts/onboard.sh
+```
+
+### 2. Using OmniRoute (Intelligent Routing)
+
+**From Zo chat:**
+```
+Route this task through OmniRoute: "Implement a webhook retry system"
+```
+
+**From terminal:**
+```bash
+# Quick combo recommendation
+zouroboros-omniroute "Fix the login bug"
+# Output: swarm-light
+
+# Full analysis with OmniRoute integration
+zouroboros-omniroute --omniroute --json "Implement webhook retry"
+# Output: { tier: "moderate", score: 0.64, resolvedCombo: "swarm-mid", ... }
+
+# With constraints
+zouroboros-omniroute --budget low --speed high "Quick fix"
+```
+
+**From code:**
+```typescript
+import { resolve, resolveQuick } from 'zouroboros-omniroute';
+
+// Quick resolution
+const combo = resolveQuick("Fix the login bug");
+
+// Full resolution
+const result = await resolve({
+  taskText: "Implement webhook retry",
+  useOmniRoute: true,
+});
+console.log(result.resolvedCombo); // "swarm-mid"
+```
+
+### 3. Using Memory
+
+**From Zo chat:**
+```
+Store this in memory: "User prefers TypeScript over Python for new projects"
+Search memory for: "TypeScript preferences"
+```
+
+**From terminal:**
+```bash
+# Store a fact
+zouroboros-memory store --entity user --key preference --value "TypeScript"
+
+# Search memory
+zouroboros-memory search "TypeScript preferences"
+
+# Capture current conversation
+zouroboros-memory capture
+```
+
+**From code:**
+```typescript
+import { storeFact, searchFacts } from 'zouroboros-memory';
+
+// Store a fact
+await storeFact({
+  entity: 'user',
+  key: 'preference',
+  value: 'TypeScript',
+  category: 'preference',
+});
+
+// Search memory
+const results = await searchFacts('TypeScript');
+```
+
+---
+
+## Configuration
