@@ -166,35 +166,50 @@ This roadmap tracks the consolidation of all Zouroboros enhancements into a unif
 
 ---
 
-## Phase 6: Self-Heal System 🔄 (In Progress)
+## Phase 6: Self-Heal System ✅ (Complete)
 
 **Goal:** Port `zouroboros-introspect`, `prescribe`, and `evolve`.
 
 ### Deliverables
-- [ ] `zouroboros-selfheal` package
-- [ ] Daily introspection scorecard
-- [ ] Prescription engine with governor
-- [ ] Evolution via autoloop
-- [ ] Metric tracking and storage
+- [x] `zouroboros-selfheal` package
+- [x] Daily introspection scorecard
+- [x] Metric collection (7 metrics)
+- [x] Playbook registry
+- [x] Governor with safety rules
+- [x] Seed specification generator
+- [x] Evolution executor
+- [x] Pre/post-flight scorecard snapshots
+- [x] CLI commands: `zouroboros-introspect`, `zouroboros-prescribe`, `zouroboros-evolve`
 
-### Source Files to Port
-- `Skills/zouroboros-introspect/scripts/introspect.ts`
-- `Skills/zouroboros-prescribe/scripts/prescribe.ts`
-- `Skills/zouroboros-evolve/scripts/evolve.ts`
+### Files Created
+- `packages/selfheal/src/types.ts` - Core types
+- `packages/selfheal/src/introspect/` - Scorecard collection
+- `packages/selfheal/src/prescribe/` - Playbook mapping, governor, seed generation
+- `packages/selfheal/src/evolve/` - Execution engine with baseline/delta measurement
 
 ---
 
-## Phase 7: CLI & TUI
+## Phase 7: CLI & TUI ✅ (Complete)
 
 **Goal:** Unified command-line and terminal interfaces.
 
 ### Deliverables
-- [ ] `zouroboros-cli` package complete
-- [ ] All commands: init, config, doctor, memory, swarm, persona
-- [ ] `zouroboros-tui` package
-- [ ] Visual dashboard for memory stats
-- [ ] Swarm campaign monitor
-- [ ] Interactive configuration
+- [x] `zouroboros-cli` package complete
+- [x] Main `zouroboros` command with all subcommands
+- [x] `init` - Initialize configuration
+- [x] `doctor` - Health check with component verification
+- [x] `config` - Get/set/list configuration
+- [x] `memory` - Memory search, store, stats
+- [x] `swarm` - Run campaigns, check status
+- [x] `persona` - Create and list personas
+- [x] `workflow` - Interview, evaluate, unstuck, autoloop
+- [x] `heal` - Introspect, prescribe, evolve
+- [x] `omniroute` - Resolve tasks, check status
+- [x] `tui` - Launch terminal dashboard
+- [x] `zouroboros-tui` package
+- [x] Visual dashboard with blessed
+- [x] Status panels, metrics, activity log
+- [x] Quick command shortcuts
 
 ### Commands
 ```bash
@@ -207,12 +222,22 @@ zouroboros swarm run         # Run swarm campaign
 zouroboros persona create    # Create new persona
 zouroboros workflow interview # Run spec-first interview
 zouroboros workflow evaluate # Run three-stage eval
-zouroboros-tui               # Launch terminal UI
+zouroboros heal introspect   # Run health check
+zouroboros heal prescribe    # Generate improvement plan
+zouroboros heal evolve       # Execute improvement
+zouroboros omniroute resolve # Get optimal model combo
+zouroboros tui               # Launch terminal UI
 ```
+
+### Files Created
+- `cli/src/index.ts` - Main CLI entry point
+- `cli/src/commands/` - All command implementations
+- `cli/src/utils/doctor.ts` - Health check utility
+- `tui/src/index.ts` - Terminal dashboard
 
 ---
 
-## Phase 8: Documentation & Polish
+## Phase 8: Documentation & Polish 🔄 (In Progress)
 
 **Goal:** Make it usable for Zo Computer novices.
 
@@ -224,6 +249,8 @@ zouroboros-tui               # Launch terminal UI
 - [ ] Example projects
 - [ ] Docker setup
 - [ ] Onboarding script
+
+### Progress: 87.5%
 
 ### Documentation Structure
 ```
@@ -252,9 +279,9 @@ docs/
 
 ## Current Status
 
-**Phase:** 6 (Self-Heal System) 🔄 IN PROGRESS
-**Overall Progress:** 62.5% (5/8 phases)
-**Next:** Phase 7 — CLI & TUI
+**Phase:** 8 (Documentation & Polish) 🔄 IN PROGRESS
+**Overall Progress:** 87.5% (7/8 phases)
+**Next:** Phase 8 — Documentation & Polish
 
 ### Completed Packages
 | Package | Status | Description |
@@ -264,6 +291,10 @@ docs/
 | zouroboros-omniroute | ✅ | Model routing |
 | zouroboros-workflow | ✅ | Interview, eval, unstuck, autoloop |
 | zouroboros-personas | ✅ | Persona creation framework |
+| zouroboros-swarm | ✅ | Multi-agent orchestration |
+| zouroboros-selfheal | ✅ | Introspection & evolution |
+| zouroboros-cli | ✅ | Unified CLI |
+| zouroboros-tui | ✅ | Terminal UI |
 
 ### Pending Packages
 | Package | Phase | Description |
