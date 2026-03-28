@@ -1,85 +1,85 @@
-#!/usr/bin/env node
-import { Command } from 'commander';
-import { ZOUROBOROS_VERSION } from 'zouroboros-core';
-import { initCommand } from './commands/init.js';
-import { configCommand } from './commands/config.js';
-import { doctorCommand } from './commands/doctor.js';
+#!/usr/bin/env bun
+/**
+ * Zouroboros CLI
+ * 
+ * Unified command-line interface for all Zouroboros packages.
+ * 
+ * @module zouroboros-cli
+ */
 
-export const program = new Command();
+import { Command } from 'commander';
+import chalk from 'chalk';
+import { loadConfig } from 'zouroboros-core';
+import { version } from '../package.json';
+
+// Import commands
+import { initCommand } from './commands/init.js';
+import { doctorCommand } from './commands/doctor.js';
+import { configCommand } from './commands/config.js';
+import { memoryCommand } from './commands/memory.js';
+import { swarmCommand } from './commands/swarm.js';
+import { personaCommand } from './commands/persona.js';
+import { workflowCommand } from './commands/workflow.js';
+import { healCommand } from './commands/heal.js';
+import { omnirouteCommand } from './commands/omniroute.js';
+import { tuiCommand } from './commands/tui.js';
+
+const program = new Command();
 
 program
   .name('zouroboros')
-  .description('Zouroboros - Self-enhancing AI memory and orchestration')
-  .version(ZOUROBOROS_VERSION);
+  .description('🐍⭕ Zouroboros - Self-enhancing AI memory and orchestration system')
+  .version(version, '-v, --version', 'Display version number')
+  .helpOption('-h, --help', 'Display help for command')
+  .configureOutput({
+    writeOut: (str) => process.stdout.write(str),
+    writeErr: (str) => process.stderr.write(str),
+  });
 
-// Core commands
+// Global options
+program
+  .option('--config <path>', 'Path to config file')
+  .option('--verbose', 'Enable verbose output')
+  .option('--json', 'Output as JSON');
+
+// Register commands
 program.addCommand(initCommand);
-program.addCommand(configCommand);
 program.addCommand(doctorCommand);
+program.addCommand(configCommand);
+program.addCommand(memoryCommand);
+program.addCommand(swarmCommand);
+program.addCommand(personaCommand);
+program.addCommand(workflowCommand);
+program.addCommand(healCommand);
+program.addCommand(omnirouteCommand);
+program.addCommand(tuiCommand);
 
-// Placeholder commands (to be implemented)
-program
-  .command('memory')
-  .description('Memory system commands')
-  .argument('<subcommand>', 'Subcommand: store, search, hybrid, episodes')
-  .action(() => {
-    console.log('Memory commands coming in v2.1.0');
-    console.log('Use individual packages for now:');
-    console.log('  bun Skills/zo-memory-system/scripts/memory.ts');
-  });
+// Default action (no command)
+program.action(() => {
+  console.log(chalk.cyan('\n🐍⭕ Zouroboros'));
+  console.log(chalk.gray('Self-enhancing AI memory and orchestration system\n'));
+  console.log('Run ' + chalk.yellow('zouroboros --help') + ' for available commands\n');
+});
 
-program
-  .command('swarm')
-  .description('Swarm orchestration commands')
-  .argument('<subcommand>', 'Subcommand: run, status, executor')
-  .action(() => {
-    console.log('Swarm commands coming in v2.1.0');
-    console.log('Use individual packages for now:');
-    console.log('  bun Skills/zo-swarm-orchestrator/scripts/orchestrate-v5.ts');
-  });
+// Error handling
+program.exitOverride();
 
-program
-  .command('persona')
-  .description('Persona management commands')
-  .argument('<subcommand>', 'Subcommand: create, list, validate')
-  .action(() => {
-    console.log('Persona commands coming in v2.1.0');
-    console.log('Use individual packages for now:');
-    console.log('  bun Skills/zo-persona-creator/scripts/interactive-setup.ts');
-  });
-
-program
-  .command('introspect')
-  .description('Run self-diagnostics')
-  .action(() => {
-    console.log('Introspection coming in v2.1.0');
-    console.log('Use individual packages for now:');
-    console.log('  bun Skills/zouroboros-introspect/scripts/introspect.ts');
-  });
-
-program
-  .command('prescribe')
-  .description('Generate improvement prescriptions')
-  .action(() => {
-    console.log('Prescription engine coming in v2.1.0');
-    console.log('Use individual packages for now:');
-    console.log('  bun Skills/zouroboros-prescribe/scripts/prescribe.ts');
-  });
-
-program
-  .command('evolve')
-  .description('Execute improvement prescriptions')
-  .option('--auto', 'Run in fully autonomous mode')
-  .action((options) => {
-    console.log('Evolution engine coming in v2.1.0');
-    console.log('Use individual packages for now:');
-    console.log('  bun Skills/zouroboros-evolve/scripts/evolve.ts');
-    if (options.auto) {
-      console.log('Auto mode enabled (when available)');
-    }
-  });
-
-// Only parse if this file is run directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  program.parse();
+try {
+  await program.parseAsync();
+} catch (err: any) {
+  if (err.code === 'commander.help') {
+    process.exit(0);
+  }
+  if (err.code === 'commander.version') {
+    process.exit(0);
+  }
+  if (err.code === 'commander.unknownOption') {
+    console.error(chalk.red(`Error: ${err.message}`));
+    process.exit(1);
+  }
+  if (err.code === 'commander.missingArgument') {
+    console.error(chalk.red(`Error: ${err.message}`));
+    process.exit(1);
+  }
+  throw err;
 }

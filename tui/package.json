@@ -1,36 +1,28 @@
 {
   "name": "zouroboros-tui",
   "version": "2.0.0",
-  "description": "Terminal UI for Zouroboros - visual interface for memory, swarm, and configuration",
+  "description": "Terminal User Interface dashboard for Zouroboros",
   "type": "module",
-  "main": "./dist/index.js",
   "bin": {
     "zouroboros-tui": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "start": "node ./dist/index.js"
+    "start": "bun dist/index.js",
+    "test": "echo \"No tests yet\" && exit 0"
   },
   "dependencies": {
-    "zouroboros-core": "workspace:*",
-    "zouroboros-memory": "workspace:*",
-    "zouroboros-swarm": "workspace:*",
-    "ink": "^4.4.1",
-    "react": "^18.2.0",
-    "ink-select-input": "^5.0.0",
-    "ink-text-input": "^5.0.0",
-    "ink-spinner": "^5.0.0"
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.11.0",
+    "zouroboros-core": "workspace:*"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "typescript": "^5.4.0"
+    "@types/blessed": "^0.1.25",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
   },
-  "keywords": [
-    "zouroboros",
-    "tui",
-    "terminal-ui",
-    "cli"
-  ],
-  "license": "MIT"
+  "keywords": ["tui", "dashboard", "zouroboros", "terminal"],
+  "license": "MIT",
+  "author": "marlandoj.zo.computer"
 }

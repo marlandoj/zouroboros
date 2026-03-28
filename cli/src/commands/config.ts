@@ -1,21 +1,25 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { loadConfig, saveConfig, getConfigValue, setConfigValue } from 'zouroboros-core';
+import { loadConfig, saveConfig } from 'zouroboros-core';
+import { join } from 'path';
+import { homedir } from 'os';
 
 export const configCommand = new Command('config')
   .description('Manage Zouroboros configuration')
   .addCommand(
     new Command('get')
       .description('Get a configuration value')
-      .argument('<key>', 'Configuration key (dot notation, e.g., memory.ollamaUrl)')
+      .argument('<key>', 'Configuration key (dot notation)')
       .action((key) => {
         const config = loadConfig();
-        const value = getConfigValue(config, key);
+        const value = key.split('.').reduce((obj, k) => obj?.[k], config as any);
+        
         if (value === undefined) {
           console.log(chalk.yellow(`Key '${key}' not found`));
           process.exit(1);
         }
-        console.log(value);
+        
+        console.log(typeof value === 'object' ? JSON.stringify(value, null, 2) : value);
       })
   )
   .addCommand(
@@ -24,19 +28,26 @@ export const configCommand = new Command('config')
       .argument('<key>', 'Configuration key (dot notation)')
       .argument('<value>', 'Value to set')
       .action((key, value) => {
-        const config = loadConfig();
+        const configPath = join(homedir(), '.zouroboros', 'config.json');
+        const config = loadConfig(configPath);
         
-        // Try to parse as JSON for non-string values
-        let parsedValue: unknown = value;
-        try {
-          parsedValue = JSON.parse(value);
-        } catch {
-          // Keep as string
+        const keys = key.split('.');
+        let target: any = config;
+        
+        for (let i = 0; i < keys.length - 1; i++) {
+          if (!target[keys[i]]) target[keys[i]] = {};
+          target = target[keys[i]];
         }
         
-        const newConfig = setConfigValue(config, key, parsedValue);
-        saveConfig(newConfig);
-        console.log(chalk.green(`Set ${key} = ${value}`));
+        // Try to parse as JSON, fallback to string
+        try {
+          target[keys[keys.length - 1]] = JSON.parse(value);
+        } catch {
+          target[keys[keys.length - 1]] = value;
+        }
+        
+        saveConfig(config, configPath);
+        console.log(chalk.green(`✅ Set ${key} = ${value}`));
       })
   )
   .addCommand(
@@ -45,22 +56,8 @@ export const configCommand = new Command('config')
       .alias('ls')
       .action(() => {
         const config = loadConfig();
-        console.log(chalk.bold('Zouroboros Configuration:'));
-        console.log();
+        console.log(chalk.cyan('\nZouroboros Configuration:\n'));
         console.log(JSON.stringify(config, null, 2));
-      })
-  )
-  .addCommand(
-    new Command('edit')
-      .description('Open configuration in $EDITOR')
-      .action(() => {
-        const { spawn } = await import('child_process');
-        const editor = process.env.EDITOR || 'vi';
-        const { DEFAULT_CONFIG_PATH } = await import('zouroboros-core');
-        
-        spawn(editor, [DEFAULT_CONFIG_PATH], {
-          stdio: 'inherit',
-          detached: false,
-        });
+        console.log();
       })
   );
