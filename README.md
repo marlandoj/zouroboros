@@ -1,10 +1,12 @@
-# Zouroboros 🐍⭕
+<p align="center">
+  <img src="./assets/zouroboros-hero-banner.png" alt="Zouroboros — Self-Enhancing AI Platform" width="100%" />
+</p>
 
-> A self-enhancing AI memory and orchestration system for Zo Computer
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/marlandoj/zouroboros)
-[![Zo Computer](https://img.shields.io/badge/Zo%20Computer-compatible-green.svg)](https://zo.computer)
+<p align="center">
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
+  <a href="https://github.com/marlandoj/zouroboros"><img src="https://img.shields.io/badge/version-2.0.0-blue.svg" alt="Version" /></a>
+  <a href="https://zo.computer"><img src="https://img.shields.io/badge/Zo%20Computer-native-green.svg" alt="Zo Computer" /></a>
+</p>
 
 ## Overview
 
@@ -138,25 +140,9 @@ const results = await orchestrator.run({
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Zouroboros CLI                        │
-│                   (zouroboros command)                       │
-└─────────────────────────────────────────────────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        ▼                     ▼                     ▼
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│    Memory    │    │    Swarm     │    │   Workflow   │
-│   System     │◄──►│ Orchestrator │◄──►│    Tools     │
-└──────────────┘    └──────────────┘    └──────────────┘
-        │                     │                     │
-        ▼                     ▼                     ▼
-        ┌──────────────┐             ┌──────────────┐
-        │   Personas   │             │  Self-Heal   │
-        │  Framework   │             │   System     │
-        └──────────────┘             └──────────────┘
-```
+<p align="center">
+  <img src="./assets/zouroboros-architecture.png" alt="Zouroboros Architecture" width="100%" />
+</p>
 
 ## Documentation
 
