@@ -1,0 +1,22 @@
+{
+  "name": "zouroboros-persona-creator",
+  "version": "2.0.0",
+  "description": "8-phase persona creation toolkit with templates, examples, and automated setup scripts",
+  "type": "module",
+  "scripts": {
+    "setup": "bun scripts/setup-persona.ts",
+    "interactive": "bun scripts/interactive-setup.ts",
+    "validate": "bun scripts/validate-persona.ts",
+    "skillsmp": "bun scripts/skillsmp.ts"
+  },
+  "keywords": [
+    "personas",
+    "identity",
+    "ai",
+    "agents",
+    "zouroboros",
+    "creator"
+  ],
+  "license": "MIT",
+  "author": "marlandoj.zo.computer"
+}

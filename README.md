@@ -133,6 +133,7 @@ const results = await orchestrator.run({
 | `zouroboros-memory` | Hybrid SQLite + vector memory | `zouroboros-memory` |
 | `zouroboros-workflow` | Interview, eval, unstuck, autoloop | `zouroboros-*` |
 | `zouroboros-personas` | Persona creation framework | `zouroboros-personas` |
+| `zouroboros-persona-creator` | 8-phase persona creation toolkit with templates & examples | `zouroboros persona create` |
 | `zouroboros-swarm` | Multi-agent orchestration | `zouroboros-swarm` |
 | `zouroboros-selfheal` | Introspection & evolution | `zouroboros-introspect` |
 | `zouroboros-cli` | Unified CLI | `zouroboros` |
@@ -158,7 +159,7 @@ See the `examples/` directory for complete projects:
 
 - `basic-memory/` — Memory system fundamentals
 - `swarm-campaign/` — Multi-agent orchestration
-- `persona-creation/` — Building custom personas *(coming soon)*
+- `persona-creation/` — Building custom personas (see `packages/persona-creator/`)
 - `self-healing/` — Autonomous improvement *(coming soon)*
 
 ## Configuration
