@@ -99,13 +99,15 @@ async function main() {
     process.exit(1);
   }
 
-  if (!existsSync(values.program)) {
-    console.error(`Error: Program file not found: ${values.program}`);
+  const programPath = values.program as string;
+
+  if (!existsSync(programPath)) {
+    console.error(`Error: Program file not found: ${programPath}`);
     process.exit(1);
   }
 
   // Parse and validate
-  const config = parseProgram(values.program);
+  const config = parseProgram(programPath);
   const errors = validateProgram(config);
   
   if (errors.length > 0) {

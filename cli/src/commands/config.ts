@@ -12,7 +12,7 @@ export const configCommand = new Command('config')
       .argument('<key>', 'Configuration key (dot notation)')
       .action((key) => {
         const config = loadConfig();
-        const value = key.split('.').reduce((obj, k) => obj?.[k], config as any);
+        const value = key.split('.').reduce((obj: any, k: string) => obj?.[k], config as any);
         
         if (value === undefined) {
           console.log(chalk.yellow(`Key '${key}' not found`));

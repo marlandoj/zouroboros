@@ -7,7 +7,7 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 import { homedir } from 'os';
 import chalk from 'chalk';
-import { loadConfig, PATHS } from 'zouroboros-core';
+import { loadConfig, DEFAULT_MEMORY_DB_PATH } from 'zouroboros-core';
 
 interface CheckResult {
   name: string;
@@ -33,7 +33,7 @@ export async function runDoctor(options: { fix?: boolean } = {}): Promise<boolea
   }
 
   // Check 2: Memory database
-  const memoryDb = PATHS.memoryDb;
+  const memoryDb = DEFAULT_MEMORY_DB_PATH;
   if (existsSync(memoryDb)) {
     try {
       const result = execSync(`sqlite3 "${memoryDb}" "SELECT COUNT(*) FROM facts;"`, { encoding: 'utf-8' });

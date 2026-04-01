@@ -8,7 +8,8 @@
 import { parseArgs } from 'util';
 import { writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
-import { scoreAmbiguity, generateSeedTemplate } from '../interview/ambiguity.js';
+import { scoreAmbiguity } from '../interview/ambiguity.js';
+import { generateSeed } from '../interview/seed.js';
 
 const { values, positionals } = parseArgs({
   args: Bun.argv.slice(2),
@@ -63,7 +64,7 @@ async function main() {
         console.error('Error: --request is required for score subcommand');
         process.exit(1);
       }
-      const score = scoreAmbiguity(values.request);
+      const score = scoreAmbiguity(values.request as string);
       console.log('\nAmbiguity Score:');
       console.log(`  Goal clarity:        ${(score.goal * 100).toFixed(0)}%`);
       console.log(`  Constraint clarity:  ${(score.constraints * 100).toFixed(0)}%`);
@@ -74,14 +75,17 @@ async function main() {
     }
 
     case 'seed': {
-      const seed = generateSeedTemplate(values.topic || 'Untitled', values.from);
-      const outputPath = join(values.output!, `seed-${Date.now()}.yaml`);
-      
-      if (!existsSync(values.output!)) {
-        mkdirSync(values.output!, { recursive: true });
+      const topic = (values.topic as string) || 'Untitled';
+      const fromPath = values.from as string | undefined;
+      const outDir = (values.output as string) || '.';
+      const seed = generateSeed(topic, fromPath);
+      const outputPath = join(outDir, `seed-${Date.now()}.yaml`);
+
+      if (!existsSync(outDir)) {
+        mkdirSync(outDir, { recursive: true });
       }
-      
-      writeFileSync(outputPath, seed);
+
+      writeFileSync(outputPath, JSON.stringify(seed, null, 2));
       console.log(`✓ Seed specification written to: ${outputPath}`);
       break;
     }

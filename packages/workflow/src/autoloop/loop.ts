@@ -91,9 +91,8 @@ export async function runExperiment(
   
   try {
     // Run the command with timeout
-    const result = await $`
-      cd ${workDir} && ${config.runCommand}
-    `.timeout(config.constraints.timeBudgetSeconds * 1000).nothrow();
+    const shell = $`cd ${workDir} && ${config.runCommand}`.nothrow();
+    const result = await (shell as any).timeout(config.constraints.timeBudgetSeconds * 1000);
     
     const durationMs = Date.now() - startTime;
     const output = result.stdout.toString() + result.stderr.toString();

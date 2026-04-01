@@ -53,7 +53,7 @@ export const healCommand = new Command('heal')
           console.log(chalk.gray(`   Delta: ${result.delta}\n`));
         } else {
           console.log(chalk.red('❌ Evolution failed'));
-          console.log(chalk.gray(`   Error: ${result.error}\n`));
+          console.log(chalk.gray(`   Detail: ${result.detail}\n`));
         }
       })
   );

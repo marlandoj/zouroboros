@@ -20,6 +20,7 @@ export interface SemanticResult {
   driftScore: number;
   overallScore: number;
   criteria: SemanticCriterion[];
+  recommendations: string[];
   passed: boolean;
 }
 

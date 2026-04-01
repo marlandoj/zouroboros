@@ -108,7 +108,7 @@ async function main() {
     persona = values.persona as UnstuckPersona;
   } else {
     // Auto-select based on problem
-    const selection = autoSelectPersona(values.problem);
+    const selection = autoSelectPersona(values.problem as string);
     persona = selection.persona;
     
     console.log(`\n🎯 Auto-selected persona: ${persona} (${(selection.confidence * 100).toFixed(0)}% confidence)`);
