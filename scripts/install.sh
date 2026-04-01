@@ -50,10 +50,10 @@ fi
 
 echo "✅ Repository ready"
 
-# Install dependencies
+# Install dependencies (bin warnings are expected before build creates dist/ files)
 echo ""
 echo "📦 Installing dependencies..."
-pnpm install
+pnpm install 2>&1 | grep -v "Failed to create bin" || true
 
 echo "✅ Dependencies installed"
 
@@ -111,27 +111,49 @@ fi
 # Link CLI globally
 echo ""
 echo "🔗 Linking CLI..."
-cd "$INSTALL_DIR/cli"
-pnpm link --global 2>/dev/null || true
 
-# Add to PATH if needed
+# Ensure PNPM_HOME is configured (fixes ERR_PNPM_NO_GLOBAL_BIN_DIR)
+if [ -z "${PNPM_HOME:-}" ]; then
+    export PNPM_HOME="$HOME/.local/share/pnpm"
+    mkdir -p "$PNPM_HOME"
+fi
+
+# Add PNPM_HOME to PATH for this session
+export PATH="$PNPM_HOME:$PATH"
+
+cd "$INSTALL_DIR/cli"
+if pnpm link --global 2>/dev/null; then
+    echo "✅ CLI linked globally"
+else
+    echo "⚠️  pnpm link --global failed — falling back to direct symlink"
+    mkdir -p "$HOME/.local/bin"
+    ln -sf "$INSTALL_DIR/cli/dist/index.js" "$HOME/.local/bin/zouroboros"
+    chmod +x "$HOME/.local/bin/zouroboros"
+fi
+
+# Persist PNPM_HOME and PATH additions to shell profile
+SHELL_RC=""
+if [ -f "$HOME/.bashrc" ]; then
+    SHELL_RC="$HOME/.bashrc"
+elif [ -f "$HOME/.zshrc" ]; then
+    SHELL_RC="$HOME/.zshrc"
+fi
+
+if [ -n "$SHELL_RC" ]; then
+    if ! grep -q "PNPM_HOME" "$SHELL_RC" 2>/dev/null; then
+        echo "" >> "$SHELL_RC"
+        echo "# pnpm global bin directory" >> "$SHELL_RC"
+        echo "export PNPM_HOME=\"\$HOME/.local/share/pnpm\"" >> "$SHELL_RC"
+        echo 'export PATH="$PNPM_HOME:$HOME/.local/bin:$PATH"' >> "$SHELL_RC"
+    fi
+fi
+
+# Verify CLI is reachable
 if ! command -v zouroboros &> /dev/null; then
     echo ""
-    echo "📝 Adding to PATH..."
-    
-    SHELL_RC=""
-    if [ -f "$HOME/.bashrc" ]; then
-        SHELL_RC="$HOME/.bashrc"
-    elif [ -f "$HOME/.zshrc" ]; then
-        SHELL_RC="$HOME/.zshrc"
-    fi
-    
+    echo "📝 CLI not yet on PATH for this session."
     if [ -n "$SHELL_RC" ]; then
-        echo "" >> "$SHELL_RC"
-        echo "# Zouroboros CLI" >> "$SHELL_RC"
-        echo 'export PATH="$PATH:$HOME/zouroboros/cli/bin"' >> "$SHELL_RC"
-        echo "✅ Added to $SHELL_RC"
-        echo "   Run 'source $SHELL_RC' to apply changes"
+        echo "   Run 'source $SHELL_RC' to apply changes, then try: zouroboros doctor"
     fi
 fi
 
