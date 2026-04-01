@@ -1,0 +1,180 @@
+{
+  "$schema": "executor-registry/v1",
+  "description": "Local executor registry for zo-swarm-orchestrator",
+  "executors": [
+    {
+      "id": "claude-code",
+      "name": "Claude Code",
+      "executor": "local",
+      "bridge": "Skills/zo-swarm-executors/bridges/claude-code-bridge.sh",
+      "description": "Claude Code CLI in one-shot mode — full codebase context, file editing, terminal access",
+      "expertise": [
+        "code-generation",
+        "code-review",
+        "debugging",
+        "refactoring",
+        "architecture",
+        "testing",
+        "documentation"
+      ],
+      "best_for": [
+        "Complex multi-file code changes",
+        "Codebase-aware analysis requiring file reads",
+        "Tasks needing terminal command execution",
+        "Git operations and repository management"
+      ],
+      "config": {
+        "defaultTimeout": 600,
+        "model": "swarm-failover",
+        "envVars": {
+          "CLAUDE_CODE_BIN": "Path to claude binary (auto-detected if omitted)",
+          "CLAUDE_CODE_MODEL": "Override model selection",
+          "CLAUDE_CODE_TIMEOUT": "Timeout in seconds (default: 600)"
+        }
+      },
+      "healthCheck": {
+        "command": "command -v claude || test -x /root/.local/bin/claude",
+        "expectedPattern": "claude",
+        "description": "Verify Claude Code CLI is installed"
+      }
+    },
+    {
+      "id": "hermes",
+      "name": "Hermes Agent",
+      "executor": "local",
+      "bridge": "Skills/zo-swarm-executors/bridges/hermes-bridge.sh",
+      "description": "Hermes AI agent with tool-calling, web search, and multi-modal capabilities",
+      "expertise": [
+        "web-research",
+        "web-scraping",
+        "data-analysis",
+        "image-generation",
+        "multi-modal",
+        "tool-orchestration",
+        "audit",
+        "review",
+        "security",
+        "summarize",
+        "investigate"
+      ],
+      "best_for": [
+        "Web research and content extraction",
+        "Tasks requiring external API tools",
+        "Image generation and analysis",
+        "Multi-step tool-calling workflows",
+        "Security audits and vulnerability assessment",
+        "Content review and quality analysis",
+        "Data gathering and summarization"
+      ],
+      "config": {
+        "defaultTimeout": 300,
+        "model": "swarm-failover",
+        "envVars": {
+          "HERMES_PROJECT_DIR": "Path to hermes-agent project (default: /home/workspace/hermes-agent)",
+          "HERMES_VENV": "Path to venv activate script (default: $HERMES_PROJECT_DIR/.venv/bin/activate)",
+          "HERMES_TIMEOUT": "Timeout in seconds (default: 300)",
+          "OPENROUTER_API_KEY": "Required — LLM API access for Hermes"
+        }
+      },
+      "healthCheck": {
+        "command": "test -f /home/workspace/hermes-agent/cli.py && test -f /home/workspace/hermes-agent/.venv/bin/activate",
+        "expectedPattern": "",
+        "description": "Verify Hermes project and venv exist"
+      }
+    },
+    {
+      "id": "gemini",
+      "name": "Gemini CLI",
+      "executor": "local",
+      "bridge": "Skills/zo-swarm-executors/bridges/gemini-bridge.sh",
+      "description": "Google Gemini CLI with persistent daemon — large-context reasoning, multimodal analysis, code generation. Daemon eliminates ~10s Node.js startup overhead per call.",
+      "expertise": [
+        "code-generation",
+        "code-review",
+        "reasoning",
+        "multimodal",
+        "large-context",
+        "research",
+        "prototyping",
+        "analysis",
+        "audit",
+        "evaluate",
+        "summarize",
+        "compare"
+      ],
+      "best_for": [
+        "Large-context code analysis (1M+ token window)",
+        "Multimodal tasks involving images and documents",
+        "Cross-validation and alternative perspective review",
+        "Rapid prototyping and code generation",
+        "Research synthesis across large corpora",
+        "Comprehensive audit and evaluation tasks",
+        "Summarization and comparison of complex findings"
+      ],
+      "config": {
+        "defaultTimeout": 300,
+        "model": "gemini-2.5-flash",
+        "envVars": {
+          "GEMINI_MODEL": "Override model (e.g., gemini-2.5-pro for complex tasks)",
+          "GEMINI_TIMEOUT": "Timeout in seconds (default: 300)",
+          "GEMINI_NO_DAEMON": "Set to '1' to skip daemon and use direct CLI"
+        }
+      },
+      "daemon": {
+        "script": "Skills/zo-swarm-executors/scripts/gemini-daemon.ts",
+        "socket": "/tmp/gemini-daemon.sock",
+        "pidFile": "/tmp/gemini-daemon.pid",
+        "logFile": "/dev/shm/gemini-daemon.log",
+        "maxConcurrent": 4,
+        "idleTimeout": "30min",
+        "description": "Persistent HTTP daemon on Unix socket. Bridge auto-detects and routes through daemon. Falls back to direct CLI if daemon is down."
+      },
+      "warmUp": {
+        "script": "Skills/zo-swarm-executors/scripts/gemini-warmup.ts",
+        "hook": "Skills/zo-swarm-executors/scripts/pre-swarm-hook.sh",
+        "recommended": "Run before swarm execution — starts daemon automatically (~12s → ~2s per call)"
+      },
+      "healthCheck": {
+        "command": "command -v gemini",
+        "expectedPattern": "gemini",
+        "description": "Verify Gemini CLI is installed"
+      }
+    },
+    {
+      "id": "codex",
+      "name": "Codex CLI",
+      "executor": "local",
+      "bridge": "Skills/zo-swarm-executors/bridges/codex-bridge.sh",
+      "description": "OpenAI Codex CLI (Rust) — fastest local executor (~3s per call). Code generation, shell commands, file editing with full sandbox support.",
+      "expertise": [
+        "code-generation",
+        "code-review",
+        "shell-commands",
+        "file-editing",
+        "debugging",
+        "refactoring",
+        "rapid-prototyping"
+      ],
+      "best_for": [
+        "Fast code generation and editing tasks",
+        "Shell command execution and automation",
+        "Quick analysis where speed matters most",
+        "Rapid prototyping and iteration",
+        "Tasks that don't require web access or tools"
+      ],
+      "config": {
+        "defaultTimeout": 600,
+        "model": "swarm-failover",
+        "envVars": {
+          "CODEX_MODEL": "Override model (e.g., o3, gpt-4.1)",
+          "CODEX_TIMEOUT": "Timeout in seconds (default: 300)"
+        }
+      },
+      "healthCheck": {
+        "command": "command -v codex",
+        "expectedPattern": "codex",
+        "description": "Verify Codex CLI is installed"
+      }
+    }
+  ]
+}
