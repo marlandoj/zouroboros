@@ -189,62 +189,91 @@ CREATE INDEX IF NOT EXISTS idx_open_loops_entity ON open_loops(entity, status);
   }
 
   // Check 6: Scheduled Agents (from agents/manifest.json)
-  const monorepoRoot = join(__dirname, '..', '..', '..');
-  const manifestPath = join(monorepoRoot, 'agents', 'manifest.json');
-  if (existsSync(manifestPath)) {
-    try {
-      const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
-      const agentEntries = Object.entries(manifest.agents || {}) as [string, { zo_id: string; title: string }][];
-      let registered = 0;
-      let missing = 0;
-      const missingNames: string[] = [];
+  // Only check if running on Zo platform (token available)
+  const zoToken = process.env.ZO_CLIENT_IDENTITY_TOKEN;
+  if (zoToken) {
+    const monorepoRoot = join(__dirname, '..', '..', '..');
+    const manifestPath = join(monorepoRoot, 'agents', 'manifest.json');
+    if (existsSync(manifestPath)) {
+      try {
+        const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+        const agentEntries = Object.entries(manifest.agents || {}) as [string, { zo_id: string; title: string; schedule: { rrule: string }; instruction: string; persona?: string | null; model?: string }][];
+        let registered = 0;
+        let missing = 0;
+        const missingNames: string[] = [];
+        const missingSpecs: typeof agentEntries = [];
 
-      for (const [slug, spec] of agentEntries) {
-        try {
-          const result = execSync(
-            `curl -sf -H "Authorization: Bearer $ZO_CLIENT_IDENTITY_TOKEN" https://api.zo.computer/zo/agents/${spec.zo_id}`,
-            { encoding: 'utf-8', timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'] }
-          );
-          const agent = JSON.parse(result);
-          if (agent && (agent.id || agent.agent_id)) {
-            registered++;
-          } else {
+        for (const [slug, spec] of agentEntries) {
+          try {
+            const result = execSync(
+              `curl -sf -H "Authorization: Bearer ${zoToken}" https://api.zo.computer/zo/agents/${spec.zo_id}`,
+              { encoding: 'utf-8', timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'] }
+            );
+            const agent = JSON.parse(result);
+            if (agent && (agent.id || agent.agent_id)) {
+              registered++;
+            } else {
+              missing++;
+              missingNames.push(spec.title);
+              missingSpecs.push([slug, spec]);
+            }
+          } catch {
             missing++;
             missingNames.push(spec.title);
+            missingSpecs.push([slug, spec]);
           }
-        } catch {
-          // If API call fails, try listing all agents and matching by ID
-          missing++;
-          missingNames.push(spec.title);
         }
-      }
 
-      if (missing === 0) {
-        checks.push({
-          name: 'Scheduled Agents',
-          status: 'ok',
-          message: `${registered}/${agentEntries.length} registered on Zo platform`
-        });
-      } else {
+        if (missing === 0) {
+          checks.push({
+            name: 'Scheduled Agents',
+            status: 'ok',
+            message: `${registered}/${agentEntries.length} registered on Zo platform`
+          });
+        } else {
+          checks.push({
+            name: 'Scheduled Agents',
+            status: 'warning',
+            message: `${registered}/${agentEntries.length} found. Missing: ${missingNames.join(', ')}`,
+            fixable: true,
+            fix: () => {
+              let allOk = true;
+              for (const [slug, spec] of missingSpecs) {
+                try {
+                  process.stdout.write(chalk.gray(`     Creating agent: ${spec.title}... `));
+                  const payload = JSON.stringify({
+                    input: spec.instruction,
+                    rrule: spec.schedule.rrule,
+                    ...(spec.model ? { model_name: spec.model } : {}),
+                  });
+                  execSync(
+                    `curl -sf -X POST -H "Authorization: Bearer ${zoToken}" -H "Content-Type: application/json" -d '${payload.replace(/'/g, "'\\''")}' https://api.zo.computer/zo/agents`,
+                    { encoding: 'utf-8', timeout: 30000, stdio: ['pipe', 'pipe', 'pipe'] }
+                  );
+                  console.log(chalk.green('✓'));
+                } catch {
+                  console.log(chalk.red('✗'));
+                  allOk = false;
+                }
+              }
+              return allOk;
+            },
+          });
+        }
+      } catch {
         checks.push({
           name: 'Scheduled Agents',
           status: 'warning',
-          message: `${registered}/${agentEntries.length} found. Missing: ${missingNames.join(', ')}`
+          message: 'Could not parse agents/manifest.json'
         });
       }
-    } catch (err) {
+    } else {
       checks.push({
         name: 'Scheduled Agents',
         status: 'warning',
-        message: 'Could not parse agents/manifest.json'
+        message: 'agents/manifest.json not found — agent verification skipped'
       });
     }
-  } else {
-    checks.push({
-      name: 'Scheduled Agents',
-      status: 'warning',
-      message: 'agents/manifest.json not found — agent verification skipped'
-    });
   }
 
   // Print results
