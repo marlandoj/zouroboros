@@ -1,7 +1,5 @@
 # Swarm Orchestrator Enhancement Backlog
 
-> **NOTE**: Active backlog has been consolidated into the monorepo root [BACKLOG.md](../../BACKLOG.md). Completed items are in [CHANGELOG.md](../../CHANGELOG.md). This file is retained for historical reference.
-
 > Strategic backlog for zo-swarm-orchestrator evolution. Items are prioritized by impact, effort, and alignment with the Zouroboros local-first, learning-oriented philosophy.
 
 ---
@@ -19,104 +17,72 @@
 
 ## Active Queue
 
-### P1-High: SWARM-bench Evaluation Harness (Docker-based)
-**Status**: ✅ Done (2026-03-31) — Implementation Complete  
+### P1-High: SWARM-bench Evaluation Harness
+**Status**: Proposed → Ready for Spec  
 **Effort**: Large (2-3 weeks)  
 **Impact**: High — Empirical quality validation, executor benchmarking
 
-**⚠️ DISTINCTION**: This is NOT the same as `scripts/benchmark.ts` (which exists and benchmarks memory strategies). SWARM-bench is a Docker-inspired evaluation harness for task quality validation.
-
 **Description**:  
-Implemented Docker-based evaluation harness adapted from SWE-bench methodology:
-- ✅ `swarm-bench.ts` — Main harness orchestrator with CLI
-- ✅ Benchmark dataset format (JSON) with AC schema
-- ✅ Workspace isolation via temp directory + setup scripts
-- ✅ AC verification engine (file_exists, content_match, test_pass, semantic_similarity, no_error)
-- ✅ Ground truth comparison with Jaccard similarity scoring
-- ✅ Cross-executor leaderboard with persistent rankings
-- ✅ Per-instance result tracking with weighted AC scores
-- ✅ CLI commands: init, run, verify, leaderboard, compare
+Adapt SWE-bench's Docker-based evaluation harness for swarm task validation. Create ground-truth datasets with acceptance criteria, run tasks in isolated environments, verify outputs against AC, and generate quality reports.
 
-**Files Created**:
-- `scripts/swarm-bench.ts` — 800+ line implementation
-- `~/.swarm/bench/datasets/` — Benchmark suite storage
-- `~/.swarm/bench/results/` — Run results storage
-- `~/.swarm/bench/leaderboard.json` — Executor rankings
+**Core Components**:
+- `swarm-bench.ts` — Main harness orchestrator
+- Benchmark dataset format (JSON) with AC schema
+- Workspace isolation (git worktree or overlayfs)
+- AC verification engine (file exists, content match, schema validation)
+- Ground truth comparison (semantic similarity)
+- Cross-executor leaderboard
 
-**Usage**:
-```bash
-# Create new benchmark suite
-bun swarm-bench.ts init my-validation
+**Acceptance Criteria**:
+- [ ] Can define benchmark instances with multiple AC types
+- [ ] Runs tasks via local executor bridges in isolated workspaces
+- [ ] Verifies AC and produces pass/partial/fail scores
+- [ ] Compares outputs to ground truth baselines
+- [ ] Generates executor-specific performance reports
+- [ ] Integrates with existing zo-memory-system for episode tracking
 
-# Run benchmark with specific executor
-bun swarm-bench.ts run my-validation.json --executor claude-code
+**Success Metrics**:
+- Benchmark runs complete without manual intervention
+- AC verification accuracy >95%
+- Can detect quality regressions between swarm versions
+- Executor benchmarking enables data-driven routing improvements
 
-# View detailed verification report
-bun swarm-bench.ts verify ~/.swarm/bench/results/bench_xxx.json
-
-# Show executor leaderboard
-bun swarm-bench.ts leaderboard
-
-# Compare two runs
-bun swarm-bench.ts compare run1.json run2.json
-```
-
-**Sample Benchmark Instance**:
-```json
-{
-  "id": "basic-file-creation",
-  "name": "Create Configuration File",
-  "difficulty": "trivial",
-  "category": "coding",
-  "task": "Create a file at /tmp/test-project/config.json...",
-  "acceptance_criteria": [
-    { "type": "file_exists", "path": "/tmp/test-project/config.json", "weight": 0.3 },
-    { "type": "content_match", "file": "/tmp/test-project/config.json", 
-      "contains": ["\"name\"", "\"version\""], "weight": 0.7 }
-  ]
-}
-```
-
-**Note**: Framework fully functional. Executor bridge configuration may need environment-specific tuning for production use.
-
-**Next Steps**:
-- Create comprehensive benchmark dataset (20-50 instances across all categories)
-- Add Docker container isolation option (currently uses temp directories)
-- Implement semantic similarity via Ollama embeddings
+**Dependencies**: None (new capability)  
+**Rationale**: Currently, swarm task quality is heuristic-based. SWARM-bench provides empirical validation, enabling A/B testing of routing strategies and task decomposition approaches.
 
 ---
 
-### P2-Medium: Dependency Cascade Mitigation
-**Status**: ✅ Done (2026-03-31)  
-**Effort**: Medium (1 week)  
-**Impact**: High — 77.5% of swarm failures are cascade failures
+### P2-Medium: Agentic RAG SDK Integration (Documentation Retrieval)
+**Status**: Proposed → Needs Evaluation  
+**Effort**: Medium (1-2 weeks)  
+**Impact**: Medium-High — Grounded SDK documentation for agents
 
 **Description**:  
-Implemented partial DAG recovery for cascade mitigation:
-- ✅ Task-level `onDependencyFailure` policy field (`abort` | `degrade` | `retry` | `inherit`)
-- ✅ Task type auto-classification (`analysis` | `mutation` | `hybrid` | `auto`)
-- ✅ Degraded execution mode for analysis tasks (proceed with partial inputs + warning annotation)
-- ✅ Partial input assembly from completed dependencies with confidence scoring
-- ✅ Cascade event logging to zo-memory-system episodes
-- ✅ Backward compatibility with existing `--no-cascade` flag
-- ✅ Updated both `runDAGStreaming` and `runDAGWaves` execution modes
+Integrate MattMagg/agentic-rag-sdk as an optional MCP tool for swarm agents. The SDK provides pre-indexed RAG over 13 AI SDK corpora (ADK, OpenAI Agents, LangChain, Claude SDK, CrewAI) with hybrid retrieval + reranking.
 
-**Files Modified**:
-- `scripts/orchestrate-v5.ts` — Core cascade mitigation implementation
+**Integration Options**:
+| Option | Effort | Pros | Cons |
+|--------|--------|------|------|
+| A: Full SDK deployment | High | Complete feature set | Requires Voyage AI + Qdrant Cloud |
+| B: MCP client only | Low | Use user's existing instance | Depends on external MCP server |
+| C: Local fork (CortexDB) | Medium | Local-first, no external deps | Requires porting ingestion pipeline |
 
-**Usage**:
-```json
-{
-  "id": "analyze-results",
-  "persona": "analyst",
-  "task": "Analyze the failed test output and recommend fixes",
-  "dependsOn": ["run-tests"],
-  "onDependencyFailure": "degrade",
-  "taskType": "analysis"
-}
-```
+**Recommended Path**: Start with Option B (MCP client), validate value, then evaluate Option C for local-first deployment.
 
-**Results**: Analysis tasks can now proceed with partial inputs when root tasks fail, reducing cascade failure impact by allowing recovery workflows to continue.
+**Core Components**:
+- MCP client integration in executor bridges
+- Optional `rag_search` tool exposure to agents
+- Fallback to zo-memory-system for personal knowledge
+- Configuration for SDK endpoint + API keys
+
+**Acceptance Criteria**:
+- [ ] Agents can query SDK documentation via RAG
+- [ ] Searches return relevant, reranked results
+- [ ] No degradation in task completion times
+- [ ] Graceful fallback when RAG unavailable
+
+**Dependencies**: MCP server from agentic-rag-sdk or user's deployment  
+**Rationale**: Agents frequently need accurate SDK documentation. Current approach relies on training data (stale) or web search (unreliable). Grounded RAG improves accuracy for coding tasks.
 
 ---
 
@@ -160,6 +126,37 @@ Evaluate AgentKV (Python/C++) and CortexDB (Go) as potential backends for zo-mem
 
 **Dependencies**: None (evaluation only)  
 **Rationale**: Current SQLite+Ollama stack works but has latency overhead (Ollama round-trip). Embedded vector+graph could reduce search latency from ~4s to <100ms, enabling real-time memory integration.
+
+---
+
+### P2-Medium: Dependency Cascade Mitigation
+**Status**: Backlog  
+**Effort**: Medium (1 week)  
+**Impact**: High — 77.5% of swarm failures are cascade failures
+
+**Description**:  
+Current behavior: When a root task fails, all dependent tasks are marked failed (cascade). Data from March 2026 incident: 62 of 80 failures (77.5%) were cascades, not root failures.
+
+**Proposed Solution**: Partial DAG recovery  
+- Identify which dependent tasks can proceed with degraded context
+- For analysis tasks: continue with partial inputs + warning annotation
+- For mutation tasks: require explicit retry or abort
+- Add `on_dependency_failure: 'abort' | 'degrade' | 'retry'` field to tasks
+
+**Core Components**:
+- Cascade detection in executor
+- Degraded execution mode for analysis tasks
+- Task-level failure handling policy
+- Episodic logging for cascade events
+
+**Acceptance Criteria**:
+- [ ] Can configure per-task cascade behavior
+- [ ] Analysis tasks can proceed with partial inputs
+- [ ] Cascade events logged to memory system
+- [ ] Success rate improves by >20% (measured via SWARM-bench)
+
+**Dependencies**: SWARM-bench (for measuring improvement)  
+**Rationale**: Single root failures shouldn't kill entire campaigns. This is the highest-impact reliability improvement based on production data.
 
 ---
 
@@ -213,46 +210,26 @@ Web dashboard showing active swarm runs, task progress, circuit breaker states, 
 
 ---
 
-## Completed Work ✅
-
-### Agentic RAG SDK Integration (Documentation Retrieval)
-**Status**: ✅ Done (2026-03-31)  
-**File**: `scripts/rag-enrichment.ts`
-
-**What Was Built**:
-- Local-first RAG using Ollama (nomic-embed-text) + Qdrant
-- 19 SDKs indexed: Claude SDK, LangChain, CrewAI, OpenAI Agents, ADK, LlamaIndex, Pydantic-AI, AutoGen, DSPy, Instructor, LangGraph, Semantic Kernel, Hono, MCP SDK, Qdrant, Bun, Drizzle ORM, Stripe, Airtable
-- Auto-enrichment: Task prompts automatically enriched with top-3 relevant SDK patterns
-- Keyword triggering: RAG only fires for tasks containing relevant keywords (agent, API, database, workflow, etc.)
-- Graceful fallback: Non-blocking — if RAG fails, task proceeds normally
-- Zero API costs: All local embeddings, no external API calls
-
-**Integration**: Called from `buildOptimizedPrompt()` in `orchestrate-v5.ts`
-
-**Why Not MattMagg/agentic-rag-sdk?** Built custom local-first solution instead of external MCP dependency. Better fits Zouroboros philosophy.
-
----
-
-## Implementation Strategy (Updated)
+## Implementation Strategy
 
 ### Phase 1: Validation Infrastructure (Weeks 1-3)
-**Focus**: Build true SWARM-bench harness (Docker-based evaluation, not memory benchmark)
+**Focus**: Build SWARM-bench harness to enable data-driven decisions
 
-1. **Week 1**: Design benchmark format with AC schema, workspace isolation
+1. **Week 1**: Design benchmark format, build workspace isolation
 2. **Week 2**: Implement AC verification engine, ground truth comparison
 3. **Week 3**: Create initial benchmark dataset (10-20 instances), validate harness
 
-**Deliverable**: Working SWARM-bench with baseline metrics for swarm task quality
+**Deliverable**: Working SWARM-bench with baseline metrics for current swarm performance
 
 ---
 
-### Phase 2: Cascade Mitigation Completion (Weeks 4-5)
-**Focus**: Extend basic cascade-off to full partial DAG recovery
+### Phase 2: Reliability Improvements (Weeks 4-5)
+**Focus**: Address highest-impact failure mode (cascade failures)
 
-1. **Week 4**: Implement per-task `on_dependency_failure` policy, degraded execution mode
-2. **Week 5**: Cascade event logging to memory, validate improvement via SWARM-bench
+1. **Week 4**: Implement partial DAG recovery with degrade/abort/retry policies
+2. **Week 5**: Validate improvement via SWARM-bench, tune policies
 
-**Deliverable**: Cascade mitigation reducing failure rate by >20% (measured)
+**Deliverable**: Cascade mitigation reducing failure rate by >20%
 
 ---
 
@@ -263,19 +240,37 @@ Web dashboard showing active swarm runs, task progress, circuit breaker states, 
 2. **Week 7**: Build benchmark comparing current vs. CortexDB vs. AgentKV
 3. **Week 8**: Decision + migration plan (if positive)
 
-**Deliverable**: Decision document with benchmarks
+**Deliverable**: Decision document with benchmarks, migration path if accepted
 
 ---
 
-## Decision Log (Updated)
+### Phase 4: Agent Capabilities (Weeks 9-10)
+**Focus**: Grounded documentation retrieval for coding tasks
+
+1. **Week 9**: Integrate Agentic RAG SDK as MCP client (Option B)
+2. **Week 10**: Validate with coding tasks, measure accuracy improvement
+
+**Deliverable**: Optional RAG tool for agents, usage guidelines
+
+---
+
+### Phase 5: Continuous Improvement (Ongoing)
+**Focus**: Use SWARM-bench to drive iterative improvements
+
+- Monthly benchmark runs against ground truth dataset
+- A/B test routing strategies
+- Task difficulty calibration
+- Executor performance tracking
+
+---
+
+## Decision Log
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| 2026-03-31 | ✅ Agentic RAG: Complete | Custom local-first implementation in `rag-enrichment.ts` — 19 SDKs, Ollama+Qdrant, zero API costs |
-| 2026-03-31 | 🔄 Cascade: Partial | Basic `--no-cascade` flag implemented; partial DAG recovery still in backlog |
-| 2026-03-31 | SWARM-bench: Not started | `benchmark.ts` is memory strategy benchmarking; true evaluation harness still needed |
 | 2026-03-27 | Prioritize SWARM-bench over heartbeats | No runaway token incidents; cascade failures are bigger problem |
-| 2026-03-27 | Defer AgentKV/CortexDB to Phase 3 | Need benchmarks to measure improvement |
+| 2026-03-27 | Defer AgentKV/CortexDB to Phase 3 | Need benchmarks (SWARM-bench) to measure improvement |
+| 2026-03-27 | Start Agentic RAG with MCP client only | Lower risk; validate value before committing to local deployment |
 
 ---
 
@@ -288,4 +283,4 @@ Web dashboard showing active swarm runs, task progress, circuit breaker states, 
 
 ---
 
-*Last updated: 2026-03-31*
+*Last updated: 2026-03-27*
