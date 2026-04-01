@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "pnpm -r build",
-    "postbuild": "pnpm install --frozen-lockfile 2>/dev/null; zouroboros init 2>/dev/null; zouroboros doctor",
+    "postbuild": "pnpm install --frozen-lockfile 2>/dev/null; bun cli/dist/index.js init 2>/dev/null; bun cli/dist/index.js doctor",
     "dev": "pnpm -r dev",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
