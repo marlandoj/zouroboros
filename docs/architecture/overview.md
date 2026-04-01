@@ -11,36 +11,11 @@ Zouroboros is designed as a modular, self-enhancing AI infrastructure platform.
 
 ## System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Zouroboros CLI                           │
-│                   (Command & Control Interface)                 │
-└───────────────────────────────┬─────────────────────────────────┘
-                                │
-        ┌───────────────────────┼───────────────────────┐
-        │                       │                       │
-   ┌────▼─────┐         ┌───────▼───────┐      ┌───────▼──────┐
-   │  Memory  │         │     Swarm     │      │   Personas   │
-   │  System  │         │ Orchestration │      │  Framework   │
-   └────┬─────┘         └───────┬───────┘      └──────┬───────┘
-        │                       │                     │
-        │              ┌────────▼────────┐            │
-        │              │    Executors    │            │
-        │              │ • Claude Code   │            │
-        │              │ • Codex CLI     │            │
-        │              │ • Gemini CLI    │            │
-        │              │ • Hermes Agent  │            │
-        │              └─────────────────┘            │
-        │                                             │
-        └──────────────────┬──────────────────────────┘
-                           │
-                  ┌────────▼────────┐
-                  │   Self-Heal     │
-                  │ • Introspect    │
-                  │ • Prescribe     │
-                  │ • Evolve        │
-                  └─────────────────┘
-```
+<p align="center">
+  <img src="../../assets/zouroboros-architecture.png" alt="Zouroboros System Architecture" width="100%" />
+</p>
+
+The CLI and TUI Dashboard sit at the top as the command layer. Below, three core pillars — **Memory System**, **Swarm Orchestration**, and **Workflow Tools** — connect to the **Personas Framework** and **Self-Heal Engine** (Introspect, Prescribe, Evolve). Swarm orchestration dispatches to executor bridges (Claude Code, Codex CLI, Gemini CLI, Hermes Agent).
 
 ## Package Structure
 
@@ -73,26 +48,15 @@ Zouroboros is designed as a modular, self-enhancing AI infrastructure platform.
 
 ## Data Flow
 
-### Memory Capture
-```
-Conversation → Auto-Capture → HyDE Expansion → Vector DB
-                                              ↓
-                                         Graph Relations
-```
+<p align="center">
+  <img src="../../assets/zouroboros-data-flows.png" alt="Zouroboros Data Flow Pipelines" width="100%" />
+</p>
 
-### Swarm Execution
-```
-Tasks YAML → Parse DAG → 6-Signal Router → Executor Pool
-                                              ↓
-                                      Streaming Results
-```
+Three core pipelines drive the system:
 
-### Self-Healing
-```
-Introspect → Scorecard → Prescribe → Seed YAML → Autoloop
-                                                  ↓
-                                        Measure & Evolve
-```
+- **Memory Capture** — Conversation → Auto-Capture → HyDE Expansion → Vector DB → Graph Relations
+- **Swarm Execution** — Tasks YAML → Parse DAG → 6-Signal Router → Executor Pool → Streaming Results
+- **Self-Healing Loop** — Introspect → Scorecard → Prescribe → Seed YAML → Autoloop → Measure & Evolve (cycles back)
 
 ## Configuration
 
