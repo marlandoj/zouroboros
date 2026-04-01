@@ -6,7 +6,7 @@
  * - Circuit Breaker V2 (CLOSED/OPEN/HALF_OPEN with probes)
  * - Backpressure monitoring
  * - 6-signal composite routing (+procedure, +temporal)
- * - Dynamic model routing with caching
+ * - OmniRoute dynamic model routing with caching
  * - Error classification (8 categories)
  * - Agency persona resolution
  * - Pre-flight validation
@@ -40,9 +40,12 @@ import { randomUUID } from "crypto";
 import {
   inferTaskType,
   estimateComplexitySync,
+  fetchCombos,
+  bestComboForTask,
   TIER_TO_COMBO as STATIC_TIER_TO_COMBO,
   type TaskType,
   type ComplexityEstimate as TierResolveEstimate,
+  type OmniRouteRecommendation,
 } from "./tier-resolve";
 
 // Swarm memory and token optimizer
@@ -67,7 +70,7 @@ const CIRCUIT_STATE_FILE = join(SWARM_DIR, "circuit-breaker-state.json");
 const MEMORY_DB = join("/home/workspace/.zo/memory/shared-facts.db");
 const REGISTRY = join(WORKSPACE, "Skills", "zo-swarm-executors", "registry", "executor-registry.json");
 const PERSONA_REGISTRY = join(WORKSPACE, "Skills", "zo-swarm-orchestrator", "assets", "persona-registry.json");
-const AGENCY_PERSONAS = join(WORKSPACE, "agency-agents-personas.json");
+const AGENCY_PERSONAS = join(WORKSPACE, "IDENTITY", "agency-agents-personas.json");
 const LOCK_DIR = "/dev/shm";
 
 // Ensure directories exist
@@ -131,7 +134,7 @@ const STRATEGY_WEIGHTS = {
   fast:     { capability: 0.15, health: 0.25, complexityFit: 0.45, history: 0.15 },
   reliable: { capability: 0.20, health: 0.45, complexityFit: 0.15, history: 0.20 },
   balanced: { capability: 0.30, health: 0.35, complexityFit: 0.20, history: 0.15 },
-  explore:  { capability: 0.40, health: 0.16, complexityFit: 0.18, history: 0.16, procedure: 0.10, temporal: 0.05 },
+  explore:  { capability: 0.40, health: 0.20, complexityFit: 0.20, history: 0.20 },
 };
 
 // 6-signal weights (v4.5+)
@@ -142,30 +145,9 @@ const STRATEGY_WEIGHTS_6SIGNAL = {
   explore:  { capability: 0.35, health: 0.16, complexityFit: 0.18, history: 0.16, procedure: 0.10, temporal: 0.05 },
 };
 
-// Shared swarm tier mapping
+// OmniRoute tier mapping
 const TIER_TO_COMBO: Record<string, string> = { ...STATIC_TIER_TO_COMBO };
 const COMBO_CACHE_TTL_MS = 60_000;
-
-// ============================================================================
-// TIER RESOLVE WEIGHTS (required by tier-resolve module)
-// ============================================================================
-
-type WeightConfig = Record<string, any>;
-type RouterWeights = Record<string, number>;
-
-const DEFAULT_WEIGHTS: RouterWeights = {
-  wordCount: 0.04,
-  fileRefs: 0.02,
-  multiStep: 0.10,
-  toolUsage: 0.04,
-  analysisDepth: 0.08,
-  domainComplexity: 0.10,
-  techStackDepth: 0.10,
-  conceptCount: 0.20,
-  taskVerbComplexity: 0.10,
-  scopeBreadth: 0.12,
-  featureListCount: 0.20,
-};
 
 // Combo cache
 let _comboCache: { data: any[]; fetchedAt: number } | null = null;
@@ -192,11 +174,6 @@ interface Task {
 
   // DAG dependencies
   dependsOn?: string[];
-
-  // v5.2: Cascade mitigation - dependency failure handling
-  onDependencyFailure?: "abort" | "degrade" | "retry" | "inherit";
-  taskType?: "analysis" | "mutation" | "hybrid" | "auto";
-  maxRetriesOnDegraded?: number;
 
   // Memory configuration
   memoryStrategy?: "hierarchical" | "sliding" | "none";
@@ -248,7 +225,7 @@ interface OrchestratorConfig {
   notifyOnComplete: NotificationChannel;
   routingStrategy: RoutingStrategy;
   useSixSignalRouting: boolean;
-  // API fallback (disabled)
+  // OmniRoute
   omniRouteEnabled: boolean;
   omniRouteUrl?: string;
   omniRouteModel?: string;
@@ -346,8 +323,8 @@ interface CognitiveProfile {
   entityAffinities: Map<string, number>;
 }
 
-// API fallback health
-interface ApiFallbackHealthState {
+// OmniRoute health
+interface OmniRouteHealthState {
   circuitOpen: boolean;
   consecutiveFailures: number;
   lastFailure: number;
@@ -384,176 +361,6 @@ interface ProgressData {
 }
 
 // ============================================================================
-// CASCADE MITIGATION v5.2
-// ============================================================================
-
-type TaskTypeClassification = "analysis" | "mutation" | "hybrid";
-type DependencyFailurePolicy = "abort" | "degrade" | "retry" | "inherit";
-
-interface CascadeEvent {
-  swarmId: string;
-  taskId: string;
-  eventType: "dependency_failed" | "degraded_execution" | "partial_input_assembly" | "cascade_complete";
-  failedDependencyId: string;
-  policy: DependencyFailurePolicy;
-  taskType: TaskTypeClassification;
-  completedDeps: string[];
-  failedDeps: string[];
-  degraded: boolean;
-  timestamp: number;
-}
-
-interface PartialInputContext {
-  availableOutputs: Array<{ taskId: string; persona: string; summary: string; output?: string }>;
-  missingDependencies: string[];
-  warningAnnotation: string;
-  confidenceScore: number; // 0-1 based on % of deps available
-}
-
-/**
- * Classifies tasks based on keywords and expected mutations
- */
-function classifyTaskType(task: Task): TaskTypeClassification {
-  if (task.taskType && task.taskType !== "auto") {
-    return task.taskType as TaskTypeClassification;
-  }
-
-  // Auto-classify based on task description and expected mutations
-  const lowerTask = task.task.toLowerCase();
-  
-  // Mutation indicators
-  const mutationKeywords = [
-    "create", "write", "edit", "update", "delete", "modify", "refactor",
-    "implement", "add", "remove", "change", "fix", "migrate", "deploy"
-  ];
-  
-  // Analysis indicators  
-  const analysisKeywords = [
-    "analyze", "review", "audit", "evaluate", "assess", "compare",
-    "research", "investigate", "check", "validate", "verify",
-    "summarize", "report", "explain", "document"
-  ];
-
-  const hasMutationKeywords = mutationKeywords.some(kw => lowerTask.includes(kw));
-  const hasAnalysisKeywords = analysisKeywords.some(kw => lowerTask.includes(kw));
-  const hasExpectedMutations = task.expectedMutations && task.expectedMutations.length > 0;
-
-  if (hasExpectedMutations || (hasMutationKeywords && !hasAnalysisKeywords)) {
-    return "mutation";
-  }
-  if (hasAnalysisKeywords && !hasMutationKeywords) {
-    return "analysis";
-  }
-  return "hybrid";
-}
-
-/**
- * Determines the effective policy for a task, handling "inherit"
- */
-function resolvePolicy(task: Task, defaultPolicy: DependencyFailurePolicy): DependencyFailurePolicy {
-  const policy = task.onDependencyFailure || "inherit";
-  if (policy === "inherit") {
-    return defaultPolicy;
-  }
-  return policy;
-}
-
-/**
- * Assembles partial inputs from completed dependencies
- */
-function assemblePartialInputs(
-  task: Task,
-  completed: Set<string>,
-  failed: Set<string>,
-  taskResults: Map<string, TaskResult>
-): PartialInputContext {
-  const deps = task.dependsOn || [];
-  const availableOutputs: Array<{ taskId: string; persona: string; summary: string; output?: string }> = [];
-  const missingDependencies: string[] = [];
-
-  for (const depId of deps) {
-    if (completed.has(depId)) {
-      const result = taskResults.get(depId);
-      if (result && result.success) {
-        // Extract summary (first 200 chars)
-        const summary = result.output 
-          ? result.output.slice(0, 200).replace(/\s+/g, " ") + "..."
-          : "Completed successfully";
-        availableOutputs.push({
-          taskId: depId,
-          persona: result.task.persona,
-          summary,
-          output: result.output,
-        });
-      }
-    } else if (failed.has(depId)) {
-      missingDependencies.push(depId);
-    }
-  }
-
-  const totalDeps = deps.length;
-  const availableCount = availableOutputs.length;
-  const confidenceScore = totalDeps > 0 ? availableCount / totalDeps : 1.0;
-
-  const warningAnnotation = missingDependencies.length > 0
-    ? `\n⚠️  DEGRADED EXECUTION NOTICE ⚠️\n` +
-      `This task is running with partial inputs due to failed dependencies: ${missingDependencies.join(", ")}\n` +
-      `Proceed with caution - some context may be missing.\n` +
-      `Available context confidence: ${(confidenceScore * 100).toFixed(0)}%\n`
-    : "";
-
-  return {
-    availableOutputs,
-    missingDependencies,
-    warningAnnotation,
-    confidenceScore,
-  };
-}
-
-/**
- * Logs cascade events to zo-memory-system
- */
-function logCascadeEvent(event: CascadeEvent): void {
-  try {
-    // Log to NDJSON for local tracking
-    const logPath = join(LOGS_DIR, `${event.swarmId}-cascade.ndjson`);
-    const entry = JSON.stringify({
-      ts: new Date(event.timestamp).toISOString(),
-      ...event,
-    }) + "\n";
-    writeFileSync(logPath, entry, { flag: "a" });
-
-    // Also log as episode tag for memory system
-    if (existsSync(MEMORY_DB)) {
-      const db = new Database(MEMORY_DB);
-      // Find the most recent episode for this swarm
-      const episode = db.query(
-        "SELECT id FROM episodes WHERE metadata LIKE ? ORDER BY happened_at DESC LIMIT 1"
-      ).get(`%${event.swarmId}%`) as { id: number } | null;
-
-      if (episode) {
-        // Store cascade event as fact with episode reference
-        db.run(
-          `INSERT INTO facts (entity, key, value, decay_class, created_at, confidence)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          [
-            `cascade.${event.swarmId}`,
-            `event.${event.taskId}`,
-            JSON.stringify(event),
-            "session",
-            Math.floor(event.timestamp / 1000),
-            event.degraded ? 0.7 : 0.9,
-          ]
-        );
-      }
-      db.close();
-    }
-  } catch {
-    // Non-blocking: cascade logging failures shouldn't stop execution
-  }
-}
-
-// ============================================================================
 // DEFAULT CONFIG
 // ============================================================================
 
@@ -570,9 +377,9 @@ const DEFAULT_CONFIG: OrchestratorConfig = {
   routingStrategy: "balanced",
   useSixSignalRouting: true,
   omniRouteEnabled: false,
-  omniRouteUrl: undefined,
-  omniRouteModel: undefined,
-  omniRouteApiKey: undefined,
+  omniRouteUrl: process.env.OMNIROUTE_URL || "https://omniroute.example.com/v1/chat/completions",
+  omniRouteModel: "swarm-failover",
+  omniRouteApiKey: process.env.OMNIROUTE_API_KEY,
   omniRouteBudgetTokens: 50000,
   stagnationEnabled: true,
   autoUnstuckMode: "log",
@@ -656,20 +463,22 @@ function jaccardSimilarity(a: string, b: string): number {
 // CIRCUIT BREAKER V2
 // ============================================================================
 
-/**
- * Check if a task can be started based on dependency status
- * In streaming DAG mode, this is always true as we check deps separately
- */
-function canRun(task: Task): boolean {
-  return true;
+function createDefaultCircuitBreaker(): CircuitBreakerV2 {
+  return {
+    state: "CLOSED",
+    failures: 0,
+    totalFailures: 0,
+    lastFailure: 0,
+    lastSuccess: 0,
+    cooldownMs: 30_000,
+    baseCooldownMs: 30_000,
+    maxCooldownMs: CB_MAX_COOLDOWN_MS,
+    backoffMultiplier: CB_BACKOFF_MULTIPLIER,
+    probeInFlight: false,
+    failureCategories: new Map(),
+  };
 }
 
-/**
- * Circuit breaker state machine: check if an attempt can proceed
- * OPEN = no attempts allowed
- * HALF_OPEN = one probe attempt allowed
- * CLOSED = unlimited attempts
- */
 function canAttempt(cb: CircuitBreakerV2): boolean {
   if (cb.state === "CLOSED") return true;
   if (cb.state === "OPEN") {
@@ -686,9 +495,6 @@ function canAttempt(cb: CircuitBreakerV2): boolean {
   return false;
 }
 
-/**
- * Record a successful execution on the circuit breaker
- */
 function recordSuccess(cb: CircuitBreakerV2): void {
   cb.failures = 0;
   cb.lastSuccess = Date.now();
@@ -699,20 +505,20 @@ function recordSuccess(cb: CircuitBreakerV2): void {
   cb.probeInFlight = false;
 }
 
-/**
- * Record a failed execution on the circuit breaker
- */
 function recordFailure(cb: CircuitBreakerV2, category?: ErrorCategory): void {
   cb.failures++;
   cb.totalFailures++;
   cb.lastFailure = Date.now();
+
   if (category) {
     cb.failureCategories.set(category, (cb.failureCategories.get(category) || 0) + 1);
   }
+
   const threshold = category ? CB_FAILURE_THRESHOLDS[category] : 3;
+
   if (cb.state === "HALF_OPEN") {
     cb.state = "OPEN";
-    cb.cooldownMs = Math.min(cb.cooldownMs * cb.backoffMultiplier, CB_MAX_COOLDOWN_MS);
+    cb.cooldownMs = Math.min(cb.cooldownMs * cb.backoffMultiplier, cb.maxCooldownMs);
     cb.probeInFlight = false;
   } else if (cb.failures >= threshold) {
     cb.state = "OPEN";
@@ -723,39 +529,77 @@ function recordFailure(cb: CircuitBreakerV2, category?: ErrorCategory): void {
   }
 }
 
-/**
- * Record executor history for performance and outcome tracking
- */
-function recordHistory(exid: string, cat: string, ok: boolean, ms: number): void {
-  try {
-    const db = new Database(HISTORY_DB);
-    const now = Math.floor(Date.now() / 1000);
-    db.run(`INSERT INTO executor_history (executor,category,attempts,successes,avg_ms,last_updated)
-      VALUES (?,?,1,?,?,?) ON CONFLICT(executor,category)
-      DO UPDATE SET attempts=attempts+1, successes=successes+?,
-      avg_ms=(avg_ms*(attempts-1)+?)/attempts, last_updated=?`,
-      [exid, cat || "general", ok ? 1 : 0, ms, now, ok ? 1 : 0, ms, now]);
-    db.close();
-  } catch {}
+function serializeCircuitBreakers(
+  breakers: Map<string, CircuitBreakerV2>,
+  backpressure: Map<string, BackpressureState>
+): Record<string, PersistedCircuitState> {
+  const result: Record<string, PersistedCircuitState> = {};
+  for (const [id, cb] of breakers) {
+    const bp = backpressure.get(id);
+    const cats: Record<string, number> = {};
+    for (const [k, v] of cb.failureCategories) cats[k] = v;
+    result[id] = {
+      state: cb.state,
+      failures: cb.failures,
+      totalFailures: cb.totalFailures,
+      cooldownMs: cb.cooldownMs,
+      lastFailure: cb.lastFailure,
+      lastSuccess: cb.lastSuccess,
+      failureCategories: cats,
+      savedAt: Date.now(),
+      backpressure: bp ? {
+        baselineDurationMs: bp.baselineDurationMs,
+        pressureScore: bp.pressureScore,
+      } : undefined,
+    };
+  }
+  return result;
 }
 
-/**
- * Create a default fresh circuit breaker for a new executor
- */
-function createDefaultCircuitBreaker(): CircuitBreakerV2 {
-  return {
-    state: "CLOSED",
-    failures: 0,
-    totalFailures: 0,
-    lastFailure: 0,
-    lastSuccess: 0,
-    cooldownMs: 30_000,
-    baseCooldownMs: 30_000,
-    maxCooldownMs: CB_MAX_COOLDOWN_MS,
-    backoffMultiplier: CB_BACKOFF_MULTIPLIER,
-    probeInFlight: false,
-    failureCategories: new Map(),
-  };
+function deserializeCircuitBreakers(
+  data: Record<string, PersistedCircuitState>
+): { breakers: Map<string, CircuitBreakerV2>; backpressure: Map<string, BackpressureState> } {
+  const breakers = new Map<string, CircuitBreakerV2>();
+  const bp = new Map<string, BackpressureState>();
+  const now = Date.now();
+
+  for (const [id, persisted] of Object.entries(data)) {
+    if (now - persisted.savedAt > CB_PERSIST_MAX_AGE_MS) {
+      breakers.set(id, createDefaultCircuitBreaker());
+      continue;
+    }
+
+    const cats = new Map<ErrorCategory, number>();
+    for (const [k, v] of Object.entries(persisted.failureCategories)) {
+      cats.set(k as ErrorCategory, v);
+    }
+
+    breakers.set(id, {
+      state: persisted.state,
+      failures: persisted.failures,
+      totalFailures: persisted.totalFailures,
+      lastFailure: persisted.lastFailure,
+      lastSuccess: persisted.lastSuccess,
+      cooldownMs: persisted.cooldownMs,
+      baseCooldownMs: 30_000,
+      maxCooldownMs: CB_MAX_COOLDOWN_MS,
+      backoffMultiplier: CB_BACKOFF_MULTIPLIER,
+      probeInFlight: false,
+      failureCategories: cats,
+    });
+
+    if (persisted.backpressure) {
+      bp.set(id, {
+        executorId: id,
+        recentDurationsMs: [],
+        baselineDurationMs: persisted.backpressure.baselineDurationMs,
+        pressureScore: persisted.backpressure.pressureScore,
+        trend: "stable",
+      });
+    }
+  }
+
+  return { breakers, backpressure: bp };
 }
 
 // ============================================================================
@@ -783,6 +627,10 @@ function updateBackpressure(state: BackpressureState, durationMs: number): void 
   else if (ratio < 2.0) state.pressureScore = 0.3;
   else if (ratio < 3.0) state.pressureScore = 0.6;
   else state.pressureScore = 0.9;
+
+  if (ratio < 1.5) {
+    state.baselineDurationMs = state.baselineDurationMs * 0.9 + durationMs * 0.1;
+  }
 
   if (state.recentDurationsMs.length >= 5) {
     const firstHalf = state.recentDurationsMs.slice(0, 5).reduce((a, b) => a + b, 0) / 5;
@@ -1048,9 +896,6 @@ function healthScore(cb: CircuitBreakerV2 | undefined): number {
   return Math.max(0.0, 1.0 - cb.failures * 0.3);
 }
 
-/**
- * Get historical success rate for executor-category pair
- */
 function historyScore(exid: string, cat: string): number {
   try {
     const db = new Database(HISTORY_DB, { readonly: true });
@@ -1064,42 +909,20 @@ function historyScore(exid: string, cat: string): number {
   }
 }
 
-/**
- * Get recent episodic success rate
- */
-function getRecentEpisodicRate(executorId: string, sinceDays: number = 7): number {
+function recordHistory(exid: string, cat: string, ok: boolean, ms: number): void {
   try {
-    const db = new Database(MEMORY_DB, { readonly: true });
-    const since = Math.floor(Date.now() / 1000) - sinceDays * 24 * 60 * 60;
-    const stmt = db.prepare(
-      "SELECT outcome FROM episodes WHERE entities LIKE ? AND happened_at > ?"
-    );
-    const rows = stmt.all(`%executor.${executorId}%`, since) as { outcome: string }[];
+    const db = new Database(HISTORY_DB);
+    const now = Math.floor(Date.now() / 1000);
+    db.run(`INSERT INTO executor_history (executor,category,attempts,successes,avg_ms,last_updated)
+      VALUES (?,?,1,?,?,?) ON CONFLICT(executor,category)
+      DO UPDATE SET attempts=attempts+1, successes=successes+?,
+      avg_ms=(avg_ms*(attempts-1)+?)/attempts, last_updated=?`,
+      [exid, cat || "general", ok ? 1 : 0, ms, now, ok ? 1 : 0, ms, now]);
     db.close();
-
-    if (rows.length === 0) return 0.5;
-    const successes = rows.filter(r => r.outcome === "success").length;
-    return successes / rows.length;
-  } catch {
-    return 0.5;
-  }
+  } catch {}
 }
 
-/**
- * Route a task to the best executor based on composite scoring
- */
-function route(
-  task: Task,
-  executors: Record<string, ExecutorCapability>,
-  cbs: Map<string, CircuitBreakerV2>,
-  strategy: string,
-  useSixSignal: boolean
-): RouteDecision {
-  const complexity = estimateComplexity(task);
-  const cat = task.memoryMetadata?.category || "general";
-
-
-// Get procedure success rate from memory database
+// Get procedure success rate
 function getProcedureSuccessRate(executorId: string, category?: string): number {
   try {
     const db = new Database(MEMORY_DB, { readonly: true });
@@ -1119,6 +942,36 @@ function getProcedureSuccessRate(executorId: string, category?: string): number 
     return 0.5;
   }
 }
+
+// Get recent episodic success rate
+function getRecentEpisodicRate(executorId: string, sinceDays: number = 7): number {
+  try {
+    const db = new Database(MEMORY_DB, { readonly: true });
+    const since = Math.floor(Date.now() / 1000) - sinceDays * 24 * 60 * 60;
+    const stmt = db.prepare(
+      "SELECT outcome FROM episodes WHERE entities LIKE ? AND happened_at > ?"
+    );
+    const rows = stmt.all(`%executor.${executorId}%`, since) as { outcome: string }[];
+    db.close();
+
+    if (rows.length === 0) return 0.5;
+    const successes = rows.filter(r => r.outcome === "success").length;
+    return successes / rows.length;
+  } catch {
+    return 0.5;
+  }
+}
+
+function route(
+  task: Task,
+  executors: Record<string, ExecutorCapability>,
+  cbs: Map<string, CircuitBreakerV2>,
+  strategy: string,
+  useSixSignal: boolean
+): RouteDecision {
+  const complexity = estimateComplexity(task);
+  const cat = task.memoryMetadata?.category || "general";
+
   const weights = useSixSignal
     ? STRATEGY_WEIGHTS_6SIGNAL[strategy as keyof typeof STRATEGY_WEIGHTS_6SIGNAL] || STRATEGY_WEIGHTS_6SIGNAL.balanced
     : STRATEGY_WEIGHTS[strategy as keyof typeof STRATEGY_WEIGHTS] || STRATEGY_WEIGHTS.balanced;
@@ -1168,29 +1021,51 @@ function getProcedureSuccessRate(executorId: string, category?: string): number 
 }
 
 // ============================================================================
-// OMNIRoute INTEGRATION (Stubs for extended routing)
+// OMNIRoute INTEGRATION
 // ============================================================================
 
-/**
- * Fetch available combos (stub for external combo service)
- */
-async function fetchCombos(): Promise<any[]> {
-  // In production, this would call the combo listing endpoint
-  // For now, return empty to use static fallback
-  return [];
+async function getCachedCombos(): Promise<any[] | null> {
+  if (_comboCache && Date.now() - _comboCache.fetchedAt < COMBO_CACHE_TTL_MS) {
+    return _comboCache.data;
+  }
+  try {
+    const combos = await fetchCombos();
+    _comboCache = { data: combos, fetchedAt: Date.now() };
+    return combos;
+  } catch {
+    return null;
+  }
 }
 
-/**
- * Select best combo for a task based on characteristics (stub)
- */
-async function bestComboForTask(
-  task: string,
-  combos: any[],
-  options: { taskType: any; constraints: { latency: string; quality: string } }
-): Promise<{ comboId: string | null; confidence: number }> {
-  // In production, use the external recommendation API
-  // For now, return empty to use static fallback
-  return { comboId: null, confidence: 0 };
+async function resolveModelDynamic(task: Task, config: OrchestratorConfig): Promise<{ model: string; source: string }> {
+  if (task.model) {
+    return { model: task.model, source: "task_override" };
+  }
+
+  const complexity = estimateComplexity(task);
+
+  if (!config.omniRouteEnabled || !config.omniRouteUrl) {
+    return { model: TIER_TO_COMBO[complexity.tier] || "swarm-mid", source: "tier_static" };
+  }
+
+  try {
+    const combos = await getCachedCombos();
+    if (!combos) {
+      return { model: TIER_TO_COMBO[complexity.tier] || "swarm-mid", source: "tier_fallback" };
+    }
+
+    const taskType = inferTaskType(task.task);
+    const recommendation = await bestComboForTask(task.task, combos, {
+      taskType,
+      constraints: { latency: "medium", quality: "high" },
+    });
+
+    if (recommendation.comboId) {
+      return { model: recommendation.comboId, source: "omniroute" };
+    }
+  } catch {}
+
+  return { model: TIER_TO_COMBO[complexity.tier] || "swarm-mid", source: "tier_fallback" };
 }
 
 // ============================================================================
@@ -1333,7 +1208,7 @@ class SwarmOrchestrator {
   private progressFile: string;
   private runStartTime: number = 0;
   private totalTaskCount: number = 0;
-  private apiFallbackHealth: ApiFallbackHealthState = {
+  private omniRouteHealth: OmniRouteHealthState = {
     circuitOpen: false,
     consecutiveFailures: 0,
     lastFailure: 0,
@@ -1388,7 +1263,7 @@ class SwarmOrchestrator {
       }
     } catch {}
 
-    console.log(`\nLocal executors: ${[...this.localExecutors.keys()].join(", ") || "none"}`);
+    console.log(`  Local executors: ${[...this.localExecutors.keys()].join(", ") || "none"}`);
   }
 
   private loadCircuitBreakerState(): void {
@@ -1453,8 +1328,6 @@ class SwarmOrchestrator {
     // Verify executor bridges
     for (const task of tasks) {
       const effectiveExec = getEffectiveExecutor(task);
-      if (effectiveExec === "auto") continue;
-      
       const bridge = getBridge(effectiveExec, this.executors);
       if (!bridge) {
         errors.push(`No bridge found for executor: ${effectiveExec}`);
@@ -1508,6 +1381,20 @@ class SwarmOrchestrator {
       }
     }
 
+    // Check OmniRoute
+    if (this.config.omniRouteEnabled) {
+      try {
+        const baseUrl = this.config.omniRouteUrl!.replace("/chat/completions", "/models");
+        const resp = await fetch(baseUrl, { signal: AbortSignal.timeout(5000) });
+        if (!resp.ok) {
+          console.log(`  ⚠️  OmniRoute health check failed (HTTP ${resp.status}) — failover disabled`);
+          this.config.omniRouteEnabled = false;
+        }
+      } catch {
+        console.log("  ⚠️  OmniRoute not reachable — failover disabled");
+        this.config.omniRouteEnabled = false;
+      }
+    }
 
     return { ok: errors.length === 0, errors };
   }
@@ -1570,7 +1457,7 @@ class SwarmOrchestrator {
   }
 
   // --------------------------------------------------------------------------
-  // DAG STREAMING EXECUTION (v5.2 - Cascade Mitigation)
+  // DAG STREAMING EXECUTION
   // --------------------------------------------------------------------------
 
   private async runDAGStreaming(tasks: Task[]): Promise<void> {
@@ -1579,13 +1466,20 @@ class SwarmOrchestrator {
     const completed = new Set<string>();
     const failed = new Set<string>();
     const failedRoots = new Set<string>();
-    const taskResults = new Map<string, TaskResult>();
-    
-    // Track which tasks are running in degraded mode
-    const degradedTasks = new Set<string>();
-    
-    // Default policy from config (abort = skip downstream, degrade = proceed with partial)
-    const defaultPolicy: DependencyFailurePolicy = this.config.cascadeMode ? "abort" : "degrade";
+
+    const canRun = (task: Task): boolean => {
+      const deps = task.dependsOn || [];
+      if (deps.length === 0) return true;
+
+      if (!this.config.cascadeMode) {
+        // Cascade-off: skip if any dep is a failed root
+        for (const d of deps) {
+          if (failed.has(d) && failedRoots.has(d)) return false;
+        }
+      }
+
+      return deps.every(d => completed.has(d) || failed.has(d));
+    };
 
     while (pending.size > 0 || running.size > 0) {
       // Start new tasks
@@ -1594,99 +1488,35 @@ class SwarmOrchestrator {
         for (const [id, task] of pending) {
           if (canRun(task)) {
             pending.delete(id);
-            const deps = task.dependsOn || [];
-            
-            // Check for failed dependencies
-            const failedDeps = deps.filter(d => failed.has(d));
-            
-            if (failedDeps.length > 0) {
-              // Determine policy
-              const policy = resolvePolicy(task, defaultPolicy);
-              const taskType = classifyTaskType(task);
-              
-              // Log cascade event
-              logCascadeEvent({
-                swarmId: this.swarmId,
-                taskId: id,
-                eventType: "dependency_failed",
-                failedDependencyId: failedDeps[0],
-                policy,
-                taskType,
-                completedDeps: deps.filter(d => completed.has(d)),
-                failedDeps,
-                degraded: false,
-                timestamp: Date.now(),
-              });
-              
-              if (policy === "abort" || (policy === "degrade" && taskType === "mutation")) {
-                // Skip this task
-                console.log(`  SKIP [${id}] (failed deps: ${failedDeps.join(", ")}, policy: ${policy})`);
-                failed.add(id);
-                completed.add(id);
-                started = true;
-                continue;
-              }
-              
-              if (policy === "degrade") {
-                // Mark for degraded execution
-                console.log(`  DEGRADE [${id}] (proceeding with partial inputs)`);
-                degradedTasks.add(id);
-              }
-              
-              if (policy === "retry") {
-                // Check if failed deps have retry attempts left
-                const canRetryDeps = failedDeps.some(d => {
-                  const result = taskResults.get(d);
-                  return result && result.retries < (result.task.maxRetriesOnDegraded ?? this.config.maxRetries);
-                });
-                
-                if (!canRetryDeps) {
-                  console.log(`  SKIP [${id}] (retry exhausted for deps: ${failedDeps.join(", ")})`);
+
+            // Cascade-off: mark as skipped if downstream of failed root
+            if (!this.config.cascadeMode) {
+              const deps = task.dependsOn || [];
+              for (const d of deps) {
+                if (failed.has(d) && failedRoots.has(d)) {
+                  console.log(`  SKIP [${id}] (downstream of failed root: ${d})`);
                   failed.add(id);
                   completed.add(id);
                   started = true;
-                  continue;
+                  break;
                 }
-                
-                // Put back in pending to wait for retry
-                pending.set(id, task);
-                started = true;
-                continue;
               }
+              if (completed.has(id)) continue;
             }
 
-            const promise = this.executeTaskWithResilience(task, degradedTasks.has(id) ? taskResults : undefined)
-              .then(result => {
-                this.results.push(result);
-                taskResults.set(id, result);
-                
-                if (result.success) {
-                  completed.add(id);
-                  
-                  // Log degraded execution success
-                  if (degradedTasks.has(id)) {
-                    logCascadeEvent({
-                      swarmId: this.swarmId,
-                      taskId: id,
-                      eventType: "degraded_execution",
-                      failedDependencyId: "",
-                      policy: "degrade",
-                      taskType: classifyTaskType(task),
-                      completedDeps: [],
-                      failedDeps: [],
-                      degraded: true,
-                      timestamp: Date.now(),
-                    });
-                  }
-                } else {
-                  failed.add(id);
-                  if ((task.dependsOn || []).length === 0) {
-                    failedRoots.add(id);
-                  }
+            const promise = this.executeTaskWithResilience(task).then(result => {
+              this.results.push(result);
+              if (result.success) {
+                completed.add(id);
+              } else {
+                failed.add(id);
+                if ((task.dependsOn || []).length === 0) {
+                  failedRoots.add(id);
                 }
-                running.delete(id);
-                this.writeProgress();
-              });
+              }
+              running.delete(id);
+              this.writeProgress();
+            });
             running.set(id, promise);
             started = true;
             break;
@@ -1702,26 +1532,10 @@ class SwarmOrchestrator {
 
       await new Promise(r => setTimeout(r, 100));
     }
-    
-    // Log cascade completion summary
-    if (degradedTasks.size > 0) {
-      logCascadeEvent({
-        swarmId: this.swarmId,
-        taskId: "summary",
-        eventType: "cascade_complete",
-        failedDependencyId: "",
-        policy: "degrade",
-        taskType: "analysis",
-        completedDeps: [...completed],
-        failedDeps: [...failed],
-        degraded: true,
-        timestamp: Date.now(),
-      });
-    }
   }
 
   // --------------------------------------------------------------------------
-  // DAG WAVES EXECUTION (v5.2 - Cascade Mitigation)
+  // DAG WAVES EXECUTION
   // --------------------------------------------------------------------------
 
   private async runDAGWaves(tasks: Task[]): Promise<void> {
@@ -1730,10 +1544,6 @@ class SwarmOrchestrator {
     const completed = new Set<string>();
     const failed = new Set<string>();
     const failedRoots = new Set<string>();
-    const taskResults = new Map<string, TaskResult>();
-    const degradedTasks = new Set<string>();
-    
-    const defaultPolicy: DependencyFailurePolicy = this.config.cascadeMode ? "abort" : "degrade";
 
     let wave = 0;
     while (remaining.size > 0) {
@@ -1746,56 +1556,20 @@ class SwarmOrchestrator {
         const depsMet = deps.every(d => completed.has(d) || failed.has(d));
 
         if (depsMet) {
-          const failedDeps = deps.filter(d => failed.has(d));
-          
-          if (failedDeps.length > 0) {
-            const policy = resolvePolicy(task, defaultPolicy);
-            const taskType = classifyTaskType(task);
-            
-            // Log cascade event
-            logCascadeEvent({
-              swarmId: this.swarmId,
-              taskId: id,
-              eventType: "dependency_failed",
-              failedDependencyId: failedDeps[0],
-              policy,
-              taskType,
-              completedDeps: deps.filter(d => completed.has(d)),
-              failedDeps,
-              degraded: false,
-              timestamp: Date.now(),
-            });
-            
-            if (policy === "abort" || (policy === "degrade" && taskType === "mutation")) {
-              console.log(`  SKIP [${id}] (failed deps: ${failedDeps.join(", ")}, policy: ${policy})`);
-              failed.add(id);
-              remaining.delete(id);
-              continue;
-            }
-            
-            if (policy === "degrade") {
-              console.log(`  DEGRADE [${id}] (proceeding with partial inputs)`);
-              degradedTasks.add(id);
-            }
-            
-            if (policy === "retry") {
-              const canRetryDeps = failedDeps.some(d => {
-                const result = taskResults.get(d);
-                return result && result.retries < (result.task.maxRetriesOnDegraded ?? this.config.maxRetries);
-              });
-              
-              if (!canRetryDeps) {
-                console.log(`  SKIP [${id}] (retry exhausted)`);
+          // Cascade-off: check if downstream of failed root
+          if (!this.config.cascadeMode) {
+            let skip = false;
+            for (const d of deps) {
+              if (failed.has(d) && failedRoots.has(d)) {
+                console.log(`  SKIP [${id}] (downstream of failed root: ${d})`);
                 failed.add(id);
                 remaining.delete(id);
-                continue;
+                skip = true;
+                break;
               }
-              
-              // Skip for now, will be retried
-              continue;
             }
+            if (skip) continue;
           }
-          
           waveTasks.push(task);
         }
       }
@@ -1810,18 +1584,16 @@ class SwarmOrchestrator {
         break;
       }
 
-      console.log(`\n📊 Wave ${wave}: ${waveTasks.length} tasks${degradedTasks.size > 0 ? ` (${degradedTasks.size} degraded)` : ""}`);
+      console.log(`\n📊 Wave ${wave}: ${waveTasks.length} tasks`);
 
       // Execute wave in parallel
       const waveResults = await Promise.all(
-        waveTasks.map(t => this.executeTaskWithResilience(t, degradedTasks.has(t.id) ? taskResults : undefined))
+        waveTasks.map(t => this.executeTaskWithResilience(t))
       );
 
       for (const result of waveResults) {
         this.results.push(result);
-        taskResults.set(result.task.id, result);
         remaining.delete(result.task.id);
-        
         if (result.success) {
           completed.add(result.task.id);
         } else {
@@ -1834,39 +1606,17 @@ class SwarmOrchestrator {
 
       this.writeProgress();
     }
-    
-    // Log cascade completion
-    if (degradedTasks.size > 0) {
-      logCascadeEvent({
-        swarmId: this.swarmId,
-        taskId: "summary",
-        eventType: "cascade_complete",
-        failedDependencyId: "",
-        policy: "degrade",
-        taskType: "analysis",
-        completedDeps: [...completed],
-        failedDeps: [...failed],
-        degraded: true,
-        timestamp: Date.now(),
-      });
-    }
   }
 
   // --------------------------------------------------------------------------
-  // TASK EXECUTION WITH RESILIENCE (v5.2 - Cascade Mitigation)
+  // TASK EXECUTION WITH RESILIENCE
   // --------------------------------------------------------------------------
 
-  private async executeTaskWithResilience(task: Task, taskResults?: Map<string, TaskResult>): Promise<TaskResult> {
+  private async executeTaskWithResilience(task: Task): Promise<TaskResult> {
     const startTime = Date.now();
     const originalPersona = task.persona;
     const originalExecutor = task.executor;
     const cat = task.memoryMetadata?.category || "general";
-    
-    // Check if this is degraded execution
-    const isDegraded = taskResults !== undefined && (task.dependsOn || []).some(d => {
-      const r = taskResults.get(d);
-      return r && !r.success;
-    });
 
     let retries = 0;
     const tried = new Set<string>();
@@ -1915,49 +1665,19 @@ class SwarmOrchestrator {
 
       const bridge = getBridge(exid, this.executors);
       if (!bridge) {
-        // Bridge missing — treat as retriable so routing selects a different executor
-        const err = `Bridge missing for executor: ${exid}`;
-        console.log(`  ⚠️  [${task.id}] ${err} — rerouting to next executor`);
-        this.logger.log("task_error", { taskId: task.id, executor: exid, attempt: retries, errorType: "bridge_missing", retryable: true });
-        recordFailure(cb, "runtime_error");
-        recordHistory(exid, cat, false, 0);
-        recentOutputs.push(err);
-        retries++;
-        if (retries <= this.config.maxRetries) {
-          const wait = Math.pow(2, retries - 1) * 1000;
-          console.log(`  ⏳ [${task.id}] Retrying with different executor in ${wait}ms...`);
-          await new Promise(r => setTimeout(r, wait));
-          continue; // retry with a different executor via the reroute logic
-        } else {
-          return { task, success: false, error: err, durationMs: Date.now() - startTime, retries };
-        }
+        return { task, success: false, error: `No bridge for executor: ${exid}`, durationMs: Date.now() - startTime, retries };
       }
 
       const timeout = task.timeoutSeconds || this.config.timeoutSeconds;
 
-      // Build optimized prompt (with partial inputs if degraded)
-      const prompt = await this.buildOptimizedPrompt(task, exid, retries > 0 ? recentOutputs : [], isDegraded ? taskResults : undefined);
+      // Build optimized prompt
+      const prompt = await this.buildOptimizedPrompt(task, exid, retries > 0 ? recentOutputs : []);
 
-      // Add degraded execution notice to prompt if applicable
-      let finalPrompt = prompt;
-      if (isDegraded && taskResults) {
-        const partialContext = assemblePartialInputs(task, new Set(), new Set(
-          (task.dependsOn || []).filter(d => {
-            const r = taskResults.get(d);
-            return r && !r.success;
-          })
-        ), taskResults);
-        
-        if (partialContext.warningAnnotation) {
-          finalPrompt = partialContext.warningAnnotation + "\n\n" + prompt;
-        }
-      }
-
-      console.log(`  ▶️  [${task.id}] ${exid}${isDegraded ? " (degraded)" : ""} (attempt ${retries + 1}/${this.config.maxRetries + 1})`);
+      console.log(`  ▶️  [${task.id}] ${exid} (attempt ${retries + 1}/${this.config.maxRetries + 1})`);
 
       const t0 = Date.now();
       try {
-        const output = await this.callLocalAgent(exid, bridge, finalPrompt, timeout);
+        const output = await this.callLocalAgent(exid, bridge, prompt, timeout);
         const duration = Date.now() - t0;
 
         // Update circuit breaker and backpressure
@@ -2027,6 +1747,31 @@ class SwarmOrchestrator {
       }
     }
 
+    // Max retries exceeded - try OmniRoute fallback
+    if (this.config.omniRouteEnabled && !this.omniRouteHealth.circuitOpen) {
+      try {
+        console.log(`  🌐 [${task.id}] Trying OmniRoute fallback...`);
+        const { model } = await resolveModelDynamic(task, this.config);
+        const prompt = await this.buildOptimizedPrompt(task, "omniroute", recentOutputs);
+        const output = await this.callOmniRoute(prompt, task.timeoutSeconds, model);
+
+        this.logger.log("task_success_omniroute", { taskId: task.id });
+
+        task.persona = originalPersona;
+        if (task.executor !== undefined) task.executor = originalExecutor;
+
+        return { task, success: true, output, durationMs: Date.now() - startTime, retries };
+      } catch (omniError) {
+        this.omniRouteHealth.consecutiveFailures++;
+        this.omniRouteHealth.lastFailure = Date.now();
+        if (this.omniRouteHealth.consecutiveFailures >= 2) {
+          this.omniRouteHealth.circuitOpen = true;
+        }
+        console.log(`  ❌ [${task.id}] OmniRoute fallback failed: ${omniError}`);
+        this.logger.log("omniroute_fallback_failed", { taskId: task.id, error: String(omniError) });
+      }
+    }
+
     task.persona = originalPersona;
     if (task.executor !== undefined) task.executor = originalExecutor;
 
@@ -2043,8 +1788,8 @@ class SwarmOrchestrator {
   // PROMPT BUILDING
   // --------------------------------------------------------------------------
 
-  private async buildOptimizedPrompt(task: Task, executorId: string, recentOutputs: string[], taskResults?: Map<string, TaskResult>): Promise<string> {
-    const basePrompt = task.task || "";
+  private async buildOptimizedPrompt(task: Task, executorId: string, recentOutputs: string[]): Promise<string> {
+    const basePrompt = task.task;
 
     // v5.1: RAG enrichment — auto-inject relevant SDK patterns
     let ragContext = "";
@@ -2214,6 +1959,37 @@ Consider approaching this as a "${stagnation.suggestedPersona}" would.
     });
   }
 
+  private async callOmniRoute(prompt: string, timeoutSeconds?: number, resolvedModel?: string): Promise<string> {
+    const effectiveTimeout = timeoutSeconds || this.config.timeoutSeconds;
+    const model = resolvedModel || this.config.omniRouteModel || "swarm-failover";
+
+    const response = await fetch(this.config.omniRouteUrl!, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.config.omniRouteApiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 4000,
+      }),
+      signal: AbortSignal.timeout(effectiveTimeout * 1000),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OmniRoute error: ${response.status} ${await response.text()}`);
+    }
+
+    const data = await response.json();
+    const output = data.choices?.[0]?.message?.content || "";
+
+    // Update budget
+    const used = data.usage?.total_tokens || estimateTokens(prompt) + estimateTokens(output);
+    this.omniRouteHealth.budgetUsedTokens += used;
+
+    return output;
+  }
 
   // --------------------------------------------------------------------------
   // RESULTS & NOTIFICATIONS
@@ -2272,7 +2048,6 @@ Consider approaching this as a "${stagnation.suggestedPersona}" would.
   private async printSummary(totalDurationMs: number): Promise<void> {
     const successful = this.results.filter(r => r.success).length;
     const failed = this.results.filter(r => !r.success).length;
-    const message = `Swarm ${this.swarmId} complete: ${successful}/${this.results.length} tasks in ${Math.round(totalDurationMs / 1000)}s`;
 
     console.log("\n" + "=".repeat(60));
     console.log(`📊 Swarm ${this.swarmId} Summary`);
@@ -2370,6 +2145,7 @@ async function main(): Promise<void> {
     console.log("  --dag-mode MODE      streaming|waves (default: streaming)");
     console.log("  --no-cascade         Skip downstream tasks when root fails");
     console.log("  --notify CHANNEL     none|sms|email (default: none)");
+    console.log("  --omniroute          Enable OmniRoute failover");
     console.log("  --4-signal           Use 4-signal routing (default: 6-signal)");
     process.exit(1);
   }
@@ -2434,6 +2210,9 @@ async function main(): Promise<void> {
       case "--notify":
         if (i + 1 < args.length) config.notifyOnComplete = args[++i] as NotificationChannel;
         break;
+      case "--omniroute":
+        config.omniRouteEnabled = true;
+        break;
       case "--4-signal":
         config.useSixSignalRouting = false;
         break;
@@ -2444,6 +2223,11 @@ async function main(): Promise<void> {
   const orchestrator = new SwarmOrchestrator(swarmId, config);
   await orchestrator.run(tasks);
 }
+
+main().catch(e => {
+  console.error(`Fatal error: ${e}`);
+  process.exit(1);
+});
 
 main().catch(e => {
   console.error(`Fatal error: ${e}`);
