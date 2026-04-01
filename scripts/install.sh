@@ -75,63 +75,56 @@ echo "✅ Build complete"
 echo ""
 echo "🔗 Linking CLI..."
 
-# Ensure PNPM_HOME is configured (fixes ERR_PNPM_NO_GLOBAL_BIN_DIR)
-if [ -z "${PNPM_HOME:-}" ]; then
-    export PNPM_HOME="$HOME/.local/share/pnpm"
-    mkdir -p "$PNPM_HOME"
+CLI_ENTRY="$INSTALL_DIR/cli/dist/index.js"
+
+# Strategy: create a wrapper script in /usr/local/bin (always on PATH)
+# Falls back to ~/.local/bin if /usr/local/bin is not writable
+WRAPPER_SCRIPT='#!/bin/sh
+exec bun "'"$CLI_ENTRY"'" "$@"'
+
+LINKED=false
+
+# Try /usr/local/bin first (works for root and sudo installs)
+if [ -w /usr/local/bin ] || [ "$(id -u)" = "0" ]; then
+    echo "$WRAPPER_SCRIPT" > /usr/local/bin/zouroboros
+    chmod +x /usr/local/bin/zouroboros
+    LINKED=true
+    echo "✅ CLI linked to /usr/local/bin/zouroboros"
 fi
 
-# Add PNPM_HOME and local bin to PATH for this session
-export PATH="$PNPM_HOME:$HOME/.local/bin:$PATH"
+# Also link to ~/.local/bin as a backup
+mkdir -p "$HOME/.local/bin"
+echo "$WRAPPER_SCRIPT" > "$HOME/.local/bin/zouroboros"
+chmod +x "$HOME/.local/bin/zouroboros"
 
-cd "$INSTALL_DIR/cli"
-if pnpm link --global 2>/dev/null; then
-    echo "✅ CLI linked globally"
+if [ "$LINKED" = false ]; then
+    LINKED=true
+    echo "✅ CLI linked to $HOME/.local/bin/zouroboros"
+fi
+
+# Ensure ~/.local/bin is on PATH in all shell configs
+for RC_FILE in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile"; do
+    if [ -f "$RC_FILE" ]; then
+        if ! grep -q 'HOME/.local/bin' "$RC_FILE" 2>/dev/null; then
+            echo '' >> "$RC_FILE"
+            echo '# Zouroboros CLI' >> "$RC_FILE"
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$RC_FILE"
+        fi
+    fi
+done
+
+# Verify CLI is reachable in current session
+export PATH="/usr/local/bin:$HOME/.local/bin:$PATH"
+if command -v zouroboros &> /dev/null; then
+    echo "✅ CLI verified on PATH"
 else
-    echo "⚠️  pnpm link --global failed — falling back to direct symlink"
-    mkdir -p "$HOME/.local/bin"
-    ln -sf "$INSTALL_DIR/cli/dist/index.js" "$HOME/.local/bin/zouroboros"
-    chmod +x "$HOME/.local/bin/zouroboros"
-fi
-
-# Persist PNPM_HOME and PATH additions to shell profile
-SHELL_RC=""
-if [ -f "$HOME/.bashrc" ]; then
-    SHELL_RC="$HOME/.bashrc"
-elif [ -f "$HOME/.zshrc" ]; then
-    SHELL_RC="$HOME/.zshrc"
-fi
-
-if [ -n "$SHELL_RC" ]; then
-    if ! grep -q "PNPM_HOME" "$SHELL_RC" 2>/dev/null; then
-        echo "" >> "$SHELL_RC"
-        echo "# pnpm global bin directory" >> "$SHELL_RC"
-        echo "export PNPM_HOME=\"\$HOME/.local/share/pnpm\"" >> "$SHELL_RC"
-        echo 'export PATH="$PNPM_HOME:$HOME/.local/bin:$PATH"' >> "$SHELL_RC"
-    fi
-fi
-
-# Verify CLI is reachable
-if ! command -v zouroboros &> /dev/null; then
-    echo ""
-    echo "📝 CLI not yet on PATH for this session."
-    if [ -n "$SHELL_RC" ]; then
-        echo "   Run 'source $SHELL_RC' to apply changes, then try: zouroboros doctor"
-    fi
+    echo "⚠️  CLI linked but not on PATH in this session."
+    echo "   Open a new terminal or run: export PATH=\"\$HOME/.local/bin:\$PATH\""
 fi
 
 # Run full initialization (config + memory DB + Ollama + health check)
 echo ""
-if command -v zouroboros &> /dev/null; then
-    zouroboros init --force || true
-elif [ -x "$HOME/.local/bin/zouroboros" ]; then
-    "$HOME/.local/bin/zouroboros" init --force || true
-elif [ -f "$INSTALL_DIR/cli/dist/index.js" ]; then
-    bun "$INSTALL_DIR/cli/dist/index.js" init --force || true
-else
-    echo "⚠️  CLI not found — skipping auto-init."
-    echo "   After adding CLI to PATH, run: zouroboros init"
-fi
+zouroboros init --force || bun "$CLI_ENTRY" init --force || true
 
 # Setup complete
 echo ""
