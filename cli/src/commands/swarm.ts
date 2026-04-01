@@ -23,8 +23,11 @@ export const swarmCommand = new Command('swarm')
           localConcurrency: parseInt(options.maxConcurrent),
         });
         
-        const results = await orchestrator.runCampaign(tasksFile);
-        console.log(chalk.green(`\n✅ Campaign complete: ${results.success}/${results.total} tasks succeeded`));
+        const { readFileSync } = await import('fs');
+        const tasks = JSON.parse(readFileSync(tasksFile, 'utf-8'));
+        const results = await orchestrator.run(tasks);
+        const successCount = results.filter((r: any) => r.success).length;
+        console.log(chalk.green(`\n✅ Campaign complete: ${successCount}/${results.length} tasks succeeded`));
       })
   )
   .addCommand(

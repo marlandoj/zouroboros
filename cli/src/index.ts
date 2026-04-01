@@ -9,8 +9,7 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { loadConfig } from 'zouroboros-core';
-import { version } from '../package.json';
+import { loadConfig, VERSION } from 'zouroboros-core';
 
 // Import commands
 import { initCommand } from './commands/init.js';
@@ -30,7 +29,7 @@ const program = new Command();
 program
   .name('zouroboros')
   .description('🐍⭕ Zouroboros - Self-enhancing AI memory and orchestration system')
-  .version(version, '-v, --version', 'Display version number')
+  .version(VERSION, '-v, --version', 'Display version number')
   .helpOption('-h, --help', 'Display help for command')
   .configureOutput({
     writeOut: (str) => process.stdout.write(str),

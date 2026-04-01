@@ -40,16 +40,9 @@ echo "✅ All prerequisites met"
 echo ""
 echo "📥 Cloning Zouroboros repository..."
 if [ -d "$INSTALL_DIR" ]; then
-    echo "⚠️  Directory $INSTALL_DIR already exists"
-    read -p "Update existing installation? (y/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        cd "$INSTALL_DIR"
-        git pull origin main
-    else
-        echo "Installation cancelled"
-        exit 0
-    fi
+    echo "⚠️  Directory $INSTALL_DIR already exists — updating..."
+    cd "$INSTALL_DIR"
+    git pull origin main
 else
     git clone "$REPO_URL" "$INSTALL_DIR"
     cd "$INSTALL_DIR"
@@ -67,7 +60,14 @@ echo "✅ Dependencies installed"
 # Build packages
 echo ""
 echo "🔨 Building packages..."
-pnpm run build
+if ! pnpm run build; then
+    echo ""
+    echo "❌ Build failed. Common fixes:"
+    echo "   1. Run: pnpm -r add -D @types/bun"
+    echo "   2. Ensure Bun and pnpm are up to date"
+    echo "   3. Check https://github.com/marlandoj/zouroboros/issues"
+    exit 1
+fi
 
 echo "✅ Build complete"
 

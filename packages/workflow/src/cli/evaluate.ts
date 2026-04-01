@@ -85,36 +85,41 @@ async function main() {
     process.exit(1);
   }
 
-  if (!existsSync(values.seed)) {
-    console.error(`Error: Seed file not found: ${values.seed}`);
+  const seedPath = values.seed as string;
+  const artifactPath = values.artifact as string;
+  const stage = values.stage as string | undefined;
+  const outputDir = values.output as string | undefined;
+
+  if (!existsSync(seedPath)) {
+    console.error(`Error: Seed file not found: ${seedPath}`);
     process.exit(1);
   }
 
-  if (!existsSync(values.artifact)) {
-    console.error(`Error: Artifact not found: ${values.artifact}`);
+  if (!existsSync(artifactPath)) {
+    console.error(`Error: Artifact not found: ${artifactPath}`);
     process.exit(1);
   }
 
   // Parse seed
-  const seed = parseSeed(values.seed);
+  const seed = parseSeed(seedPath);
   console.log(`Evaluating against seed: ${seed.goal || 'Unknown goal'}`);
   console.log('');
 
   // Stage 1: Mechanical
-  if (!values.stage || values.stage === '1') {
+  if (!stage || stage === '1') {
     console.log('Stage 1: Mechanical Verification');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    
-    const checks = runMechanicalChecks(values.artifact);
+
+    const checks = runMechanicalChecks(artifactPath);
     for (const check of checks) {
       const status = check.passed ? '✓' : '✗';
       console.log(`${status} ${check.name}: ${check.detail}`);
     }
-    
+
     const allPassed = checks.every(c => c.passed);
     console.log(`\n${allPassed ? '✓ PASSED' : '✗ FAILED'} — ${checks.filter(c => c.passed).length}/${checks.length} checks passed`);
-    
-    if (!allPassed && !values.stage) {
+
+    if (!allPassed && !stage) {
       console.log('\n⚠ Stage 1 failed — stopping evaluation');
       process.exit(1);
     }
@@ -122,24 +127,24 @@ async function main() {
   }
 
   // Stage 2: Semantic
-  if (!values.stage || values.stage === '2') {
+  if (!stage || stage === '2') {
     console.log('Stage 2: Semantic Evaluation');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    
-    const result = runSemanticEvaluation(seed, values.artifact);
-    
+
+    const result = runSemanticEvaluation(seed, artifactPath);
+
     console.log(`\nAcceptance Criteria (${result.criteria.filter(c => c.met).length}/${result.criteria.length} met):`);
     for (const criterion of result.criteria) {
       const status = criterion.met ? '✓' : '✗';
       console.log(`${status} ${criterion.name}: ${criterion.evidence || 'No evidence found'}`);
     }
-    
+
     console.log(`\nScores:`);
     console.log(`  AC Compliance: ${(result.acCompliance * 100).toFixed(0)}%`);
     console.log(`  Goal Alignment: ${(result.goalAlignment * 100).toFixed(0)}%`);
     console.log(`  Drift Score: ${result.driftScore.toFixed(2)}`);
     console.log(`  Overall: ${(result.overallScore * 100).toFixed(0)}%`);
-    
+
     if (result.overallScore >= 0.8) {
       console.log('\n✓ PASSED — Stage 2 complete');
     } else {
@@ -155,14 +160,14 @@ async function main() {
   }
 
   // Save report if output specified
-  if (values.output) {
-    const report: EvaluationReport = {
+  if (outputDir) {
+    const report = {
       seed: seed.goal || 'Unknown',
-      artifact: values.artifact,
+      artifact: artifactPath,
       timestamp: new Date().toISOString(),
       stages: {
-        mechanical: !values.stage || values.stage === '1' ? { passed: true, checks: [] } : undefined,
-        semantic: !values.stage || values.stage === '2' ? {
+        mechanical: !stage || stage === '1' ? { passed: true, checks: [] } : undefined,
+        semantic: !stage || stage === '2' ? {
           passed: true,
           score: 0.85,
           acCompliance: 0.9,
@@ -170,12 +175,12 @@ async function main() {
           criteria: []
         } : undefined
       },
-      decision: 'APPROVED'
+      decision: 'approved' as const
     };
 
-    const outputPath = join(values.output, `eval-${Date.now()}.json`);
-    if (!existsSync(values.output)) {
-      mkdirSync(values.output, { recursive: true });
+    const outputPath = join(outputDir, `eval-${Date.now()}.json`);
+    if (!existsSync(outputDir)) {
+      mkdirSync(outputDir, { recursive: true });
     }
     writeFileSync(outputPath, JSON.stringify(report, null, 2));
     console.log(`✓ Report saved to: ${outputPath}`);

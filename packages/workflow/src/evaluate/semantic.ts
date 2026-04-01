@@ -81,12 +81,25 @@ export function runSemanticEvaluation(
   // Overall score
   const overallScore = 0.5 * goalAlignment + 0.3 * acCompliance + 0.2 * (1 - driftScore);
 
+  const recommendations: string[] = [];
+  if (acCompliance < 0.8) {
+    const unmet = criteria.filter(c => !c.met).map(c => c.name);
+    recommendations.push(`Unmet acceptance criteria: ${unmet.join(', ')}`);
+  }
+  if (goalAlignment < 0.7) {
+    recommendations.push('Goal alignment is low — verify implementation matches the stated objective');
+  }
+  if (driftScore > 0.3) {
+    recommendations.push('Significant drift detected — review scope changes against original spec');
+  }
+
   return {
     acCompliance,
     goalAlignment,
     driftScore,
     overallScore,
     criteria,
+    recommendations,
     passed: overallScore >= 0.8,
   };
 }

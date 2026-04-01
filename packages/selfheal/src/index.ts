@@ -115,3 +115,17 @@ export class SelfHeal {
     });
   }
 }
+
+const _defaultInstance = new SelfHeal();
+
+export async function introspect(options: IntrospectOptions = {}): Promise<Scorecard> {
+  return _defaultInstance.introspect(options);
+}
+
+export async function prescribe(options: PrescribeOptions = {}): Promise<Prescription> {
+  return _defaultInstance.prescribe(options);
+}
+
+export async function evolve(options: EvolveOptions = {}): Promise<EvolutionResult> {
+  return _defaultInstance.evolve(options);
+}
