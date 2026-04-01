@@ -58,7 +58,7 @@ export function createBackup(options: {
   const config = options.config ?? loadConfig(options.configPath);
   const configPath = options.configPath ?? DEFAULT_CONFIG_PATH;
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 23);
   const label = options.label ? `-${options.label}` : '';
   const backupName = `backup-${timestamp}${label}`;
   const backupRoot = getBackupDir(config);
@@ -228,7 +228,7 @@ export function listBackups(config?: ZouroborosConfig): {
       }
     })
     .filter((b): b is NonNullable<typeof b> => b !== null)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.name.localeCompare(a.name));
 }
 
 /**
