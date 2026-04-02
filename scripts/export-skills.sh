@@ -30,6 +30,8 @@ while [[ $# -gt 0 ]]; do
       echo "  zouroboros-introspect   7-metric health scorecard"
       echo "  zouroboros-prescribe    Auto-generate improvement seeds"
       echo "  zouroboros-evolve       Prescription execution"
+      echo "  zo-swarm-orchestrator   Multi-agent swarm orchestration"
+      echo "  zo-memory-system        Hybrid memory engine"
       exit 0
       ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -41,11 +43,13 @@ mkdir -p "$DEST"
 INSTALLED=0
 SKIPPED=0
 
+# Install a skill with docs under packages/<pkg>/docs/<doc_dir>
+# Args: name pkg doc_dir standalone_scripts(comma-sep or "ALL")
 install_skill() {
   local name="$1"
-  local pkg="$2"     # workflow or selfheal
-  local doc_dir="$3" # subdirectory under docs/
-  local standalone_scripts="$4" # comma-separated list of standalone script filenames (or empty)
+  local pkg="$2"
+  local doc_dir="$3"
+  local standalone_scripts="$4"
 
   if [[ -n "$SKILL_FILTER" && "$SKILL_FILTER" != "$name" ]]; then
     return
@@ -64,9 +68,11 @@ install_skill() {
   rm -rf "$dest_skill"
   mkdir -p "$dest_skill"
 
-  # Copy SKILL.md
+  # Copy SKILL.md (check docs dir first, then package root)
   if [[ -f "$src_docs/SKILL.md" ]]; then
     cp "$src_docs/SKILL.md" "$dest_skill/SKILL.md"
+  elif [[ -f "$REPO_ROOT/packages/$pkg/SKILL.md" ]]; then
+    cp "$REPO_ROOT/packages/$pkg/SKILL.md" "$dest_skill/SKILL.md"
   fi
 
   # Copy references
@@ -80,7 +86,13 @@ install_skill() {
   fi
 
   # Copy standalone scripts
-  if [[ -n "$standalone_scripts" ]]; then
+  if [[ "$standalone_scripts" == "ALL" ]]; then
+    local standalone_dir="$REPO_ROOT/packages/$pkg/src/standalone"
+    if [[ -d "$standalone_dir" ]]; then
+      mkdir -p "$dest_skill/scripts"
+      cp "$standalone_dir"/*.ts "$dest_skill/scripts/" 2>/dev/null || true
+    fi
+  elif [[ -n "$standalone_scripts" ]]; then
     mkdir -p "$dest_skill/scripts"
     IFS=',' read -ra FILES <<< "$standalone_scripts"
     for f in "${FILES[@]}"; do
@@ -88,8 +100,7 @@ install_skill() {
       if [[ -f "$src_file" ]]; then
         cp "$src_file" "$dest_skill/scripts/$f"
       fi
-
-      # Also check the autoloop standalone location
+      # Also check nested standalone locations (e.g., autoloop)
       local alt_file="$REPO_ROOT/packages/$pkg/src/autoloop/standalone/$f"
       if [[ -f "$alt_file" ]]; then
         cp "$alt_file" "$dest_skill/scripts/$f"
@@ -115,6 +126,10 @@ install_skill "zouroboros-introspect" "selfheal" "introspect" "introspect.ts,ski
 install_skill "zouroboros-prescribe"  "selfheal" "prescribe"  "prescribe.ts"
 install_skill "zouroboros-evolve"     "selfheal" "evolve"     "evolve.ts"
 
+# Core system skills
+install_skill "zo-swarm-orchestrator" "swarm"  "."  "ALL"
+install_skill "zo-memory-system"      "memory" "."  "ALL"
+
 echo ""
 if [[ $INSTALLED -gt 0 ]]; then
   echo "✅ Exported $INSTALLED skill(s) to $DEST"
@@ -128,3 +143,4 @@ echo ""
 echo "Usage:"
 echo "  bun $DEST/zouroboros-introspect/scripts/introspect.ts --help"
 echo "  bun $DEST/autoloop/scripts/autoloop.ts --help"
+echo "  bun $DEST/zo-memory-system/scripts/memory-next.ts --help"

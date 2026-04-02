@@ -39,6 +39,10 @@ Self-Enhancement Skills (packages/selfheal):
   zouroboros-prescribe    Auto-generate improvement prescriptions from scorecard
   zouroboros-evolve       Execute prescriptions with regression detection
 
+Core System Skills:
+  zo-swarm-orchestrator   Multi-agent swarm orchestration with DAG execution
+  zo-memory-system        Hybrid SQLite + vector memory engine
+
 Install:
   zouroboros skills install              # Export all to ~/Skills/
   zouroboros skills install --skill autoloop  # Export one skill

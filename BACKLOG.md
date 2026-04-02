@@ -212,8 +212,10 @@ All individual repos have been migrated to the monorepo and archived (2026-04-01
 | `zouroboros-introspect` | `packages/selfheal/docs/introspect/` + CLI + standalone | ✅ Full migration |
 | `zouroboros-prescribe` | `packages/selfheal/docs/prescribe/` + CLI + standalone | ✅ Full migration |
 | `zouroboros-evolve` | `packages/selfheal/docs/evolve/` + CLI + standalone | ✅ Full migration |
+| `zo-swarm-orchestrator` | `packages/swarm/docs/` + `src/standalone/` (20 scripts) | ✅ Full migration |
+| `zo-memory-system` | `packages/memory/docs/` + `src/standalone/` (41 scripts) | ✅ Full migration |
 
-Standalone copies in `Skills/` deprecated with notices pointing to monorepo.
+All 9 skills exportable via `zouroboros skills install`. Standalone copies in `Skills/` deprecated with notices pointing to monorepo.
 
 **Remaining standalone repos (not part of monorepo):**
 - `zouroboros-seedkit` — Standalone installer/bootstrap kit, stays independent
