@@ -2,9 +2,10 @@
  * Doctor utility - Health check for Zouroboros components
  */
 
-import { existsSync, mkdirSync, readFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { execSync, spawnSync } from 'child_process';
 import { join, dirname } from 'path';
+import { tmpdir } from 'os';
 import { homedir } from 'os';
 import chalk from 'chalk';
 import { loadConfig, saveConfig, DEFAULT_CONFIG, DEFAULT_MEMORY_DB_PATH } from 'zouroboros-core';
@@ -246,10 +247,16 @@ CREATE INDEX IF NOT EXISTS idx_open_loops_entity ON open_loops(entity, status);
                     rrule: spec.schedule.rrule,
                     ...(spec.model ? { model_name: spec.model } : {}),
                   });
-                  execSync(
-                    `curl -sf -X POST -H "Authorization: Bearer ${zoToken}" -H "Content-Type: application/json" -d '${payload.replace(/'/g, "'\\''")}' https://api.zo.computer/zo/agents`,
-                    { encoding: 'utf-8', timeout: 30000, stdio: ['pipe', 'pipe', 'pipe'] }
-                  );
+                  const tmpFile = join(tmpdir(), `zo-agent-${slug}.json`);
+                  writeFileSync(tmpFile, payload);
+                  try {
+                    execSync(
+                      `curl -sf -X POST -H "Authorization: Bearer ${zoToken}" -H "Content-Type: application/json" -d @${tmpFile} https://api.zo.computer/zo/agents`,
+                      { encoding: 'utf-8', timeout: 30000, stdio: ['pipe', 'pipe', 'pipe'] }
+                    );
+                  } finally {
+                    try { unlinkSync(tmpFile); } catch {}
+                  }
                   console.log(chalk.green('✓'));
                 } catch {
                   console.log(chalk.red('✗'));
