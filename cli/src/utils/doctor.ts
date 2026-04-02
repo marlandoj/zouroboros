@@ -235,36 +235,7 @@ CREATE INDEX IF NOT EXISTS idx_open_loops_entity ON open_loops(entity, status);
           checks.push({
             name: 'Scheduled Agents',
             status: 'warning',
-            message: `${registered}/${agentEntries.length} found. Missing: ${missingNames.join(', ')}`,
-            fixable: true,
-            fix: () => {
-              let allOk = true;
-              for (const [slug, spec] of missingSpecs) {
-                try {
-                  process.stdout.write(chalk.gray(`     Creating agent: ${spec.title}... `));
-                  const payload = JSON.stringify({
-                    input: spec.instruction,
-                    rrule: spec.schedule.rrule,
-                    ...(spec.model ? { model_name: spec.model } : {}),
-                  });
-                  const tmpFile = join(tmpdir(), `zo-agent-${slug}.json`);
-                  writeFileSync(tmpFile, payload);
-                  try {
-                    execSync(
-                      `curl -sf -X POST -H "Authorization: Bearer ${zoToken}" -H "Content-Type: application/json" -d @${tmpFile} https://api.zo.computer/zo/agents`,
-                      { encoding: 'utf-8', timeout: 30000, stdio: ['pipe', 'pipe', 'pipe'] }
-                    );
-                  } finally {
-                    try { unlinkSync(tmpFile); } catch {}
-                  }
-                  console.log(chalk.green('✓'));
-                } catch {
-                  console.log(chalk.red('✗'));
-                  allOk = false;
-                }
-              }
-              return allOk;
-            },
+            message: `${registered}/${agentEntries.length} found. Run in Zo chat: "Create all Zouroboros agents from agents/manifest.json"`,
           });
         }
       } catch {
