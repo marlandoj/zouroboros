@@ -30,12 +30,6 @@ Zouroboros consolidates all Zouroboros enhancements into a unified, easy-to-inst
 curl -fsSL https://raw.githubusercontent.com/marlandoj/zouroboros/main/scripts/install.sh | bash
 ```
 
-### From Zo Chat
-
-```
-Initialize Zouroboros for me
-```
-
 ### Manual Install
 
 ```bash
