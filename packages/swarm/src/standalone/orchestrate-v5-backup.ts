@@ -2,7 +2,7 @@
 /**
  * Swarm Orchestrator v5.0.0 — Full-Featured TypeScript Implementation
  *
- * Replaces corrupted orchestrate-v4.ts with a clean rewrite.
+ * Backup snapshot of the current TypeScript runtime.
  * Spec: orchestrate.py v5.0.0 (Python reference implementation).
  * Features: 6-signal composite routing, DAG cascade mitigation, SQLite history,
  *           memory context injection, auto-episode creation, Python fallback.
@@ -805,4 +805,3 @@ function main(): void {
 }
 
 main();
-

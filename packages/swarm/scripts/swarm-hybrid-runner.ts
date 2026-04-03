@@ -67,7 +67,7 @@ async function runPreflightChecks(campaignFile: string): Promise<PreflightResult
     errors.push(`Campaign file is not valid JSON: ${e}`);
   }
 
-  // 2a. PRIMARY: Bun TS orchestrator (v5.0 - full feature parity with v4)
+  // 2a. PRIMARY: Bun TS orchestrator (current full-feature runtime)
   const tsScript = join(import.meta.dir, "orchestrate-v5.ts");
   if (existsSync(tsScript)) {
     const tscResult = Bun.spawnSync({
