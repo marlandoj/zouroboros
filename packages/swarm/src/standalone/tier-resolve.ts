@@ -978,7 +978,7 @@ async function autoTuneWeights(): Promise<void> {
 // COMBO SERVICE INTEGRATION
 // ============================================================================
 
-async function fetchCombos(): Promise<any[]> {
+export async function fetchCombos(): Promise<any[]> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (COMBO_SERVICE_API_KEY) headers["Authorization"] = `Bearer ${COMBO_SERVICE_API_KEY}`;
   if (!COMBO_SERVICE_BASE_URL) throw new Error("Combo service disabled");
@@ -988,7 +988,7 @@ async function fetchCombos(): Promise<any[]> {
   return data.combos || data;
 }
 
-function bestComboForTask(combos: any[], taskType: TaskType, complexityTier: ComplexityTier): ComboRecommendation {
+export function bestComboForTask(combos: any[], taskType: TaskType, complexityTier: ComplexityTier): ComboRecommendation {
   const fitness = TASK_FITNESS[taskType] || TASK_FITNESS.general;
   const enabled = combos.filter((c) => c.enabled !== false);
   const allowedNames = TIER_CANDIDATES[complexityTier];
@@ -1069,4 +1069,3 @@ async function main() {
 }
 
 if (import.meta.main) { main(); }
-

@@ -10,6 +10,40 @@ export type RoutingStrategy = 'fast' | 'reliable' | 'balanced' | 'explore';
 export type DAGMode = 'streaming' | 'waves';
 export type NotificationChannel = 'none' | 'sms' | 'email';
 export type ErrorCategory = 'timeout' | 'rate_limited' | 'permission_denied' | 'context_overflow' | 'mutation_failed' | 'syntax_error' | 'runtime_error' | 'unknown';
+export type DelegationMode = 'auto' | 'disabled';
+
+export interface ChildWriteScope {
+  childId: string;
+  paths: string[];
+}
+
+export interface TaskDelegationConfig {
+  mode?: DelegationMode;
+  maxChildren?: number;
+  writeScopes?: ChildWriteScope[];
+}
+
+export interface ChildTaskRecord {
+  childId: string;
+  parentTaskId: string;
+  executorId: string;
+  delegatedModel?: string;
+  writeScope?: string[];
+  toolset?: string[];
+  status: 'success' | 'failure' | 'blocked' | 'skipped';
+  durationMs?: number;
+  artifacts?: string[];
+  source?: 'executor_bridge' | 'parent_summary' | 'logger_synthesis';
+  summary?: string;
+}
+
+export interface HierarchicalDelegationConfig {
+  enabled: boolean;
+  maxDepth: number;
+  defaultMode: DelegationMode;
+  claudeCodeMaxChildren: number;
+  hermesMaxChildren: number;
+}
 
 export interface Task {
   id: string;
@@ -23,6 +57,7 @@ export interface Task {
   timeoutSeconds?: number;
   expectedMutations?: Array<{ file: string; contains: string }>;
   model?: string;
+  delegation?: TaskDelegationConfig;
   outputToMemory?: boolean;
   memoryMetadata?: {
     category?: string;
@@ -39,6 +74,11 @@ export interface TaskResult {
   durationMs: number;
   retries: number;
   tokensUsed?: number;
+  artifacts?: string[];
+  childRecords?: ChildTaskRecord[];
+  delegated?: boolean;
+  modelUsed?: string;
+  effectiveExecutor?: string;
 }
 
 export interface SwarmConfig {
@@ -51,6 +91,7 @@ export interface SwarmConfig {
   routingStrategy: RoutingStrategy;
   useSixSignalRouting: boolean;
   stagnationEnabled: boolean;
+  hierarchicalDelegation?: HierarchicalDelegationConfig;
 }
 
 export interface CircuitBreakerState {

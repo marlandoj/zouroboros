@@ -115,7 +115,7 @@ export class DAGExecutor {
         if (result.success) {
           // Record output for downstream tasks
           this.context.contextManager?.recordTaskOutput(
-            taskId, result.output || '', true
+            taskId, result.output || '', true, result.artifacts || []
           );
         } else {
           // Handle failure through cascade manager

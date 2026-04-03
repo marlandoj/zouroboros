@@ -6,6 +6,7 @@
 
 - **Circuit Breaker V2** — CLOSED/OPEN/HALF_OPEN states with category-aware failure tracking
 - **6-Signal Composite Routing** — Capability, health, complexity fit, history, procedure, temporal
+- **Hierarchical Orchestration** — Hermes/Claude parent tasks can self-decompose under centralized delegation policy
 - **Executor Bridges** — Claude Code, Hermes, Gemini, Codex CLI integration
 - **DAG Execution** — Streaming and wave-based task execution modes
 - **Registry-Based** — JSON registry for executor configuration
@@ -73,6 +74,28 @@ zouroboros-swarm doctor
   }
 ]
 ```
+
+Hierarchical delegation is available through an optional `delegation` block on each task:
+
+```json
+{
+  "id": "implementation-safe",
+  "executor": "claude-code",
+  "task": "Implement the parser cleanup and synthesize the result.",
+  "delegation": {
+    "mode": "auto",
+    "maxChildren": 2,
+    "writeScopes": [
+      { "childId": "parser-a", "paths": ["src/parser/a.ts"] },
+      { "childId": "parser-b", "paths": ["src/parser/b.ts"] }
+    ]
+  }
+}
+```
+
+- `mode: "auto"` enables executor-side self-decomposition when policy allows it.
+- Mutation tasks require disjoint `writeScopes`; otherwise they are forced to remain leaf tasks.
+- Results now persist parent/child telemetry, including `delegated`, `effectiveExecutor`, `childRecords`, and artifact lists.
 
 ## Routing Strategies
 
