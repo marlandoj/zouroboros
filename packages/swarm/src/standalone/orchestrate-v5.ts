@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /**
- * Swarm Orchestrator v5.0.0 — Complete Port from v4
+ * Swarm Orchestrator v5.0.0 — Current TypeScript Runtime
  *
- * This is a comprehensive rewrite that ports ALL features from v4:
+ * This is the current full-featured TypeScript runtime with:
  * - Circuit Breaker V2 (CLOSED/OPEN/HALF_OPEN with probes)
  * - Backpressure monitoring
  * - 6-signal composite routing (+procedure, +temporal)
@@ -134,7 +134,7 @@ const STRATEGY_WEIGHTS = {
   explore:  { capability: 0.40, health: 0.16, complexityFit: 0.18, history: 0.16, procedure: 0.10, temporal: 0.05 },
 };
 
-// 6-signal weights (v4.5+)
+// 6-signal weights
 const STRATEGY_WEIGHTS_6SIGNAL = {
   fast:     { capability: 0.12, health: 0.20, complexityFit: 0.40, history: 0.12, procedure: 0.08, temporal: 0.08 },
   reliable: { capability: 0.15, health: 0.35, complexityFit: 0.12, history: 0.18, procedure: 0.12, temporal: 0.08 },
@@ -186,7 +186,7 @@ interface Task {
   task: string;
   priority: PriorityQueue;
 
-  // v4.9: Separate executor from persona
+  // Separate executor from persona
   executor?: string;
   agencyPersona?: string;
 
@@ -2091,7 +2091,7 @@ class SwarmOrchestrator {
       this.logger.log("rag_enrichment", { taskId: task.id, patterns, latencyMs });
     }
 
-    // v4.9: Resolve agency persona
+    // Resolve agency persona
     let personaContext = "";
     if (task.agencyPersona) {
       const personaMd = resolveAgencyPersona(task.agencyPersona);

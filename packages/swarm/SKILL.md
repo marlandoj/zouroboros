@@ -10,7 +10,7 @@ metadata:
 
 A reusable skill that enables **any persona** to spawn parallel agent teams, delegate tasks across specialized personas, and synthesize results into coherent output.
 
-**v4.5 "Memory-Enriched Routing":** All tasks execute locally through bridge scripts (no API calls). 6-signal composite routing distributes work based on capability matching, health signals, complexity fit, execution history, procedural learning, and episodic performance. Auto-creates memory episodes after every swarm run.
+**Current routing model:** All tasks execute locally through bridge scripts (no API calls). 6-signal composite routing distributes work based on capability matching, health signals, complexity fit, execution history, procedural learning, and episodic performance. Auto-creates memory episodes after every swarm run.
 
 ---
 
@@ -175,7 +175,7 @@ tail -f /tmp/swarm.log
 
 ---
 
-## RAG Integration (v4.11)
+## RAG Integration
 
 The orchestrator automatically enriches task prompts with relevant SDK documentation from the Agentic RAG system. This gives agents instant access to best practices and code patterns across the entire Zouroboros ecosystem.
 
@@ -249,20 +249,17 @@ RAG is automatic and non-blocking. To disable, set `RAG_ENABLED=false` (future r
 
 | Version | Status | Key Innovation |
 |---------|--------|----------------|
-| **v5.0** | ✅ **Current** | **Dual-engine**: Python (551L, primary) + TypeScript (807L, 0 errors). 6-signal routing, DAG cascade mitigation, memory context injection, wikilinks. P3 cascade-off skips downstream on root failure. |
-| v4.10 | ⚠️ Corrupted | Phase 4 intelligence — stagnation, auto-unstuck, OmniRoute health, wikilinks |
-| v4.5 | ⚠️ Corrupted | Memory-Enriched Routing — local-only execution, 6-signal composite routing |
-| v1–v4 | Archived | Superseded |
+| **v5 current** | ✅ **Current** | Dual-engine runtime, 6-signal routing, local bridges, cascade mitigation, memory context injection, hierarchical telemetry |
 
 ---
 
 ## Architecture: Local-Only Execution
 
-As of v4.4, **all tasks execute through local executor bridges**. There are no remote API calls — no Zo API, no Anthropic Direct, no API credentials needed.
+All tasks execute through local executor bridges. There are no remote API calls — no Zo API, no Anthropic Direct, no API credentials needed.
 
 ```
-BEFORE (v4.3)                  AFTER (v4.4+)
-─────────────                  ──────────────
+EARLIER ARCHITECTURE           CURRENT ARCHITECTURE
+───────────────────           ────────────────────
 3 execution paths              1 execution path (local bridges)
   - Local executor               - Local executor only
   - Anthropic Direct API
@@ -277,18 +274,18 @@ All tasks must have a matching local executor in the registry. The preflight che
 
 ---
 
-## Version 4 - Token-Optimized Hierarchical Memory
+## Token-Optimized Hierarchical Memory
 
-Building on v3's persistent memory, **v4 introduces intelligent memory strategies** that automatically manage token budgets to prevent the context window exhaustion that caused v1 failures.
+Building on persistent memory, the orchestrator uses intelligent memory strategies that automatically manage token budgets to prevent context window exhaustion.
 
-### The Problem v4 Solves
+### The Problem It Solves
 
 From February 2026 production failures:
 - **Context window exhaustion**: 5 agents × 256k tokens = system failure
 - **Unbounded memory growth**: Sequential memory grows forever
 - **No token budgeting**: No visibility into prompt token usage
 
-### What v4 Adds
+### What It Adds
 
 | Feature | Implementation | Benefit |
 |---------|----------------|---------|
@@ -300,7 +297,7 @@ From February 2026 production failures:
 
 ---
 
-## 6-Signal Composite Routing (v4.5)
+## 6-Signal Composite Routing
 
 The orchestrator scores each executor on six signals to pick the best agent for each task:
 
@@ -339,7 +336,7 @@ bun orchestrate-v5.ts tasks.json --routing-strategy reliable
 
 ---
 
-## Auto-Episodes & Cognitive Profiles (v4.5)
+## Auto-Episodes & Cognitive Profiles
 
 ### Auto-Episodes
 
@@ -406,7 +403,7 @@ sequential     386           5         0%
 
 ---
 
-## Task File Format (v4)
+## Task File Format
 
 ```json
 [
@@ -432,7 +429,7 @@ sequential     386           5         0%
 
 | File | Purpose |
 |------|---------|
-| `orchestrate-v5.ts` | Main orchestrator (v4.5 with 6-signal routing) |
+| `orchestrate-v5.ts` | Main orchestrator with 6-signal routing |
 | `token-optimizer.ts` | Token cleaning + hierarchical memory |
 | `swarm-memory.ts` | SQLite persistence + inter-agent messaging |
 | `swarm-config.ts` | Configuration management CLI |

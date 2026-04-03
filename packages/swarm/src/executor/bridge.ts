@@ -6,6 +6,8 @@
 
 import { spawn } from 'child_process';
 import { join } from 'path';
+import { existsSync, readFileSync, unlinkSync } from 'fs';
+import { randomUUID } from 'crypto';
 import type { Task, TaskResult, ExecutorRegistryEntry, ErrorCategory } from '../types.js';
 import { CircuitBreaker } from '../circuit/breaker.js';
 
@@ -13,6 +15,7 @@ export interface BridgeExecutionOptions {
   timeoutMs: number;
   workdir?: string;
   env?: Record<string, string>;
+  context?: Record<string, unknown>;
 }
 
 export class BridgeExecutor {
@@ -52,11 +55,12 @@ export class BridgeExecutor {
 
     const fullBridgePath = join('/home/workspace', bridgePath);
     const workdir = options.workdir || '/home/workspace';
+    const resultPath = join('/tmp', `swarm-bridge-${task.id}-${randomUUID()}.json`);
 
     return new Promise((resolve) => {
       const child = spawn('bash', [fullBridgePath, task.task, workdir], {
         cwd: workdir,
-        env: { ...process.env, ...options.env, SWARM_TASK_ID: task.id },
+        env: { ...process.env, ...options.env, SWARM_TASK_ID: task.id, RESULT_PATH: resultPath },
         timeout: options.timeoutMs,
       });
 
@@ -73,15 +77,36 @@ export class BridgeExecutor {
 
       child.on('close', (code) => {
         const durationMs = Date.now() - startTime;
+        let structuredOutput: string | undefined;
+        let structuredArtifacts: string[] | undefined;
+        let structuredModel: string | undefined;
+
+        try {
+          if (existsSync(resultPath)) {
+            const structured = JSON.parse(readFileSync(resultPath, 'utf8'));
+            if (typeof structured.output === 'string') {
+              structuredOutput = structured.output;
+            }
+            structuredModel = structured.metrics?.model;
+            structuredArtifacts = [
+              ...(Array.isArray(structured.artifacts?.filesCreated) ? structured.artifacts.filesCreated : []),
+              ...(Array.isArray(structured.artifacts?.filesModified) ? structured.artifacts.filesModified : []),
+              ...(Array.isArray(structured.artifacts?.filesDeleted) ? structured.artifacts.filesDeleted : []),
+            ];
+          }
+        } catch {}
+        try { unlinkSync(resultPath); } catch {}
         
         if (code === 0) {
           this.circuitBreaker.recordSuccess();
           resolve({
             task,
             success: true,
-            output: stdout,
+            output: structuredOutput ?? stdout,
             durationMs,
             retries: 0,
+            artifacts: structuredArtifacts,
+            modelUsed: structuredModel,
           });
         } else {
           const errorCategory = this.classifyError(stderr, code);

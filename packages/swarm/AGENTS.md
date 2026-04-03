@@ -1,6 +1,6 @@
 # Swarm Orchestrator - Agent Memory
 
-## March 2026 Failure Remediation (v4.0.0 → v4.1.0)
+## March 2026 Failure Remediation
 
 **Incident:** Sprint 2 Deferred Remediation campaign (March 4, 2026) — 5 failure categories, ~50% efficiency.
 
@@ -62,9 +62,9 @@
 - No backoff strategy caused thundering herd
 - Missing circuit breaker allowed cascading failures
 
-## Memory Integration (v4.5.0)
+## Memory Integration
 
-As of v4.5.0, the orchestrator integrates with zo-memory-system for learning and adaptive routing:
+The orchestrator integrates with zo-memory-system for learning and adaptive routing:
 
 | Feature | Implementation | Benefit |
 |---------|---------------|---------|
@@ -74,7 +74,7 @@ As of v4.5.0, the orchestrator integrates with zo-memory-system for learning and
 | Error Classification | Auto-classify: timeout, mutation_failed, file_not_found | Failure patterns inform routing avoidance |
 | Entity Affinities | Exponential moving average per entity per executor | Tracks which executors excel at which domains |
 
-### Composite Router Signals (v4.5)
+### Composite Router Signals
 
 ```
 composite = (w.capability * capScore)     # Task-capability matching
@@ -98,15 +98,15 @@ bun ~/Skills/zo-memory-system/scripts/memory.ts profile --executor gemini
 bun ~/Skills/zo-memory-system/scripts/memory.ts procedures --evolve "site-review"
 ```
 
-## Architecture (v4.6.0 — Local Executors + OmniRoute Failover)
+## Architecture (Local Executors + OmniRoute Failover)
 
 Primary path: all tasks execute via local executor bridges (claude-code, hermes, gemini, codex).
 When all local executors exhaust retries, OmniRoute provides API-level failover through a
 priority combo that chains multiple providers (paid → free tiers).
 
 ```
-v4.4 (local only)              v4.6 (local + OmniRoute failover)
-─────────────────              ─────────────────────────────────
+Local-only runtime             Current failover-aware runtime
+──────────────────             ───────────────────────────────
 1 execution path               2 execution paths
   - Local executor only          - Local executor (primary)
                                  - OmniRoute API failover (last resort)
@@ -115,7 +115,7 @@ On failure: retry same          On failure: retry local → reroute local → Om
   local executor
 ```
 
-### OmniRoute Integration (v4.6)
+### OmniRoute Integration
 
 OmniRoute runs at `http://localhost:20128` and exposes an OpenAI-compatible `/v1` endpoint.
 The `swarm-failover` combo provides priority-based provider failover.

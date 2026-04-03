@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /**
- * Swarm Orchestrator v5.0.0 — Complete Port from v4
+ * Swarm Orchestrator v5.0.0 — Current TypeScript Runtime
  *
- * This is a comprehensive rewrite that ports ALL features from v4:
+ * This is the current full-featured TypeScript runtime with:
  * - Circuit Breaker V2 (CLOSED/OPEN/HALF_OPEN with probes)
  * - Backpressure monitoring
  * - 6-signal composite routing (+procedure, +temporal)
@@ -31,6 +31,12 @@ import { join, dirname } from "path";
 import { spawn } from "child_process";
 import { Database } from "bun:sqlite";
 import { randomUUID } from "crypto";
+import {
+  evaluateDelegation,
+  hasDisjointWriteScopes,
+  renderHierarchicalPolicyBlock,
+  stripDelegationReport,
+} from "../src/hierarchical";
 
 // ============================================================================
 // IMPORTS FROM EXISTING MODULES
@@ -67,7 +73,7 @@ const RESULTS_DIR = join(SWARM_DIR, "results");
 const HISTORY_DB = join(SWARM_DIR, "executor-history.db");
 const HISTORY_JSON = join(SWARM_DIR, "executor-history.json");
 const CIRCUIT_STATE_FILE = join(SWARM_DIR, "circuit-breaker-state.json");
-const MEMORY_DB = join("/home/workspace/.zo/memory/shared-facts.db");
+const MEMORY_DB = process.env.ZO_MEMORY_DB || join(WORKSPACE, ".zo", "memory", "shared-facts.db");
 const REGISTRY = join(WORKSPACE, "Skills", "zo-swarm-executors", "registry", "executor-registry.json");
 const PERSONA_REGISTRY = join(WORKSPACE, "Skills", "zo-swarm-orchestrator", "assets", "persona-registry.json");
 const AGENCY_PERSONAS = join(WORKSPACE, "IDENTITY", "agency-agents-personas.json");
@@ -137,7 +143,7 @@ const STRATEGY_WEIGHTS = {
   explore:  { capability: 0.40, health: 0.20, complexityFit: 0.20, history: 0.20 },
 };
 
-// 6-signal weights (v4.5+)
+// 6-signal weights
 const STRATEGY_WEIGHTS_6SIGNAL = {
   fast:     { capability: 0.12, health: 0.20, complexityFit: 0.40, history: 0.12, procedure: 0.08, temporal: 0.08 },
   reliable: { capability: 0.15, health: 0.35, complexityFit: 0.12, history: 0.18, procedure: 0.12, temporal: 0.08 },
@@ -161,6 +167,40 @@ type ComplexityTier = "trivial" | "simple" | "moderate" | "complex";
 type RoutingStrategy = "fast" | "reliable" | "balanced" | "explore";
 type DAGMode = "streaming" | "waves";
 type NotificationChannel = "none" | "sms" | "email";
+type DelegationMode = "auto" | "disabled";
+
+interface ChildWriteScope {
+  childId: string;
+  paths: string[];
+}
+
+interface TaskDelegationConfig {
+  mode?: DelegationMode;
+  maxChildren?: number;
+  writeScopes?: ChildWriteScope[];
+}
+
+interface ChildTaskRecord {
+  childId: string;
+  parentTaskId: string;
+  executorId: string;
+  delegatedModel?: string;
+  writeScope?: string[];
+  toolset?: string[];
+  status: "success" | "failure" | "blocked" | "skipped";
+  durationMs?: number;
+  artifacts?: string[];
+  source?: "executor_bridge" | "parent_summary" | "logger_synthesis";
+  summary?: string;
+}
+
+interface HierarchicalDelegationConfig {
+  enabled: boolean;
+  maxDepth: number;
+  defaultMode: DelegationMode;
+  claudeCodeMaxChildren: number;
+  hermesMaxChildren: number;
+}
 
 interface Task {
   id: string;
@@ -168,7 +208,7 @@ interface Task {
   task: string;
   priority: PriorityQueue;
 
-  // v4.9: Separate executor from persona
+  // Separate executor from persona
   executor?: string;
   agencyPersona?: string;
 
@@ -199,6 +239,7 @@ interface Task {
   timeoutSeconds?: number;
   expectedMutations?: Array<{ file: string; contains: string }>;
   model?: string;
+  delegation?: TaskDelegationConfig;
 }
 
 interface TaskResult {
@@ -209,6 +250,11 @@ interface TaskResult {
   durationMs: number;
   retries: number;
   tokensUsed?: number;
+  artifacts?: string[];
+  childRecords?: ChildTaskRecord[];
+  delegated?: boolean;
+  modelUsed?: string;
+  effectiveExecutor?: string;
 }
 
 interface OrchestratorConfig {
@@ -237,6 +283,117 @@ interface OrchestratorConfig {
   enableStreamingCapture: boolean;
   // Cascade
   cascadeMode: boolean;
+  hierarchicalDelegation: HierarchicalDelegationConfig;
+}
+
+interface LocalAgentInvocation {
+  output: string;
+  modelUsed?: string;
+  artifacts: string[];
+  childRecords: ChildTaskRecord[];
+  delegated: boolean;
+}
+
+interface ExecutorHistoryRow {
+  attempts: number;
+  successes: number;
+  avg_ms: number;
+  delegated_attempts: number;
+  delegated_successes: number;
+  child_attempts: number;
+  child_successes: number;
+  avg_child_count: number;
+  avg_child_duration_ms: number;
+}
+
+interface HistorySignal {
+  score: number;
+  baseScore: number;
+  delegationTelemetry: number;
+}
+
+interface PersistedResultsFile {
+  swarmId: string;
+  status?: string;
+  completed?: number;
+  failed?: number;
+  total?: number;
+  delegatedTasks?: number;
+  childTaskCount?: number;
+  elapsedMs?: number;
+  results?: TaskResult[];
+}
+
+interface PersistedTelemetrySummary {
+  delegatedTasks: number;
+  childTaskCount: number;
+  artifactCount: number;
+  reroutedTasks: number;
+  effectiveExecutors: string[];
+}
+
+interface ExecutorHistoryReportRow extends ExecutorHistoryRow {
+  executor: string;
+  category: string;
+  last_updated: number;
+}
+
+function summarizePersistedTelemetry(resultsFile: PersistedResultsFile): PersistedTelemetrySummary {
+  const results = resultsFile.results || [];
+  const delegatedTasks = typeof resultsFile.delegatedTasks === "number"
+    ? resultsFile.delegatedTasks
+    : results.filter(result => result.delegated).length;
+  const childTaskCount = typeof resultsFile.childTaskCount === "number"
+    ? resultsFile.childTaskCount
+    : results.reduce((sum, result) => sum + (result.childRecords?.length || 0), 0);
+  const artifactCount = results.reduce((sum, result) => sum + (result.artifacts?.length || 0), 0);
+  const reroutedTasks = results.filter(result => {
+    const requested = result.task.executor;
+    const effective = result.effectiveExecutor;
+    return Boolean(requested && effective && requested !== effective);
+  }).length;
+  const effectiveExecutors = [...new Set(
+    results
+      .map(result => result.effectiveExecutor || result.task.executor)
+      .filter((executor): executor is string => Boolean(executor)),
+  )];
+
+  return {
+    delegatedTasks,
+    childTaskCount,
+    artifactCount,
+    reroutedTasks,
+    effectiveExecutors,
+  };
+}
+
+function readExecutorHistory(limit = 10): ExecutorHistoryReportRow[] {
+  try {
+    ensureExecutorHistorySchema();
+    const db = new Database(HISTORY_DB, { readonly: true });
+    const rows = db.query(
+      `SELECT
+        executor,
+        category,
+        attempts,
+        successes,
+        avg_ms,
+        delegated_attempts,
+        delegated_successes,
+        child_attempts,
+        child_successes,
+        avg_child_count,
+        avg_child_duration_ms,
+        last_updated
+      FROM executor_history
+      ORDER BY delegated_attempts DESC, child_attempts DESC, attempts DESC, last_updated DESC
+      LIMIT ?`,
+    ).all(limit) as ExecutorHistoryReportRow[];
+    db.close();
+    return rows;
+  } catch {
+    return [];
+  }
 }
 
 // Circuit Breaker V2
@@ -385,7 +542,57 @@ const DEFAULT_CONFIG: OrchestratorConfig = {
   autoUnstuckMode: "log",
   enableStreamingCapture: false,
   cascadeMode: true,
+  hierarchicalDelegation: {
+    enabled: true,
+    maxDepth: 1,
+    defaultMode: "auto",
+    claudeCodeMaxChildren: 2,
+    hermesMaxChildren: 3,
+  },
 };
+
+function ensureExecutorHistorySchema(): void {
+  try {
+    const db = new Database(HISTORY_DB);
+    db.run(`CREATE TABLE IF NOT EXISTS executor_history (
+      executor TEXT NOT NULL,
+      category TEXT NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      successes INTEGER NOT NULL DEFAULT 0,
+      avg_ms REAL NOT NULL DEFAULT 0,
+      delegated_attempts INTEGER NOT NULL DEFAULT 0,
+      delegated_successes INTEGER NOT NULL DEFAULT 0,
+      child_attempts INTEGER NOT NULL DEFAULT 0,
+      child_successes INTEGER NOT NULL DEFAULT 0,
+      avg_child_count REAL NOT NULL DEFAULT 0,
+      avg_child_duration_ms REAL NOT NULL DEFAULT 0,
+      last_updated INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+      PRIMARY KEY (executor, category)
+    )`);
+
+    const columns = new Set(
+      (db.query(`PRAGMA table_info(executor_history)`).all() as Array<{ name: string }>).map(col => col.name),
+    );
+    const requiredColumns: Array<[string, string]> = [
+      ["delegated_attempts", "INTEGER NOT NULL DEFAULT 0"],
+      ["delegated_successes", "INTEGER NOT NULL DEFAULT 0"],
+      ["child_attempts", "INTEGER NOT NULL DEFAULT 0"],
+      ["child_successes", "INTEGER NOT NULL DEFAULT 0"],
+      ["avg_child_count", "REAL NOT NULL DEFAULT 0"],
+      ["avg_child_duration_ms", "REAL NOT NULL DEFAULT 0"],
+    ];
+
+    for (const [name, definition] of requiredColumns) {
+      if (!columns.has(name)) {
+        db.run(`ALTER TABLE executor_history ADD COLUMN ${name} ${definition}`);
+      }
+    }
+
+    db.close();
+  } catch {}
+}
+
+ensureExecutorHistorySchema();
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -759,7 +966,9 @@ function loadExecutors(): Record<string, ExecutorCapability> {
         if (!ex.id) continue;
         // Only include local executors with valid bridges
         if (ex.executor !== "local") continue;
-        const bridgePath = ex.bridge ? join(WORKSPACE, ex.bridge) : null;
+        const bridgePath = ex.bridge
+          ? (ex.bridge.startsWith("/") ? ex.bridge : join(WORKSPACE, ex.bridge))
+          : null;
         if (!bridgePath || !existsSync(bridgePath)) continue;
 
         const existing = executors[ex.id];
@@ -794,7 +1003,7 @@ function getBridge(exid: string, executors: Record<string, ExecutorCapability>):
     const execRegistry = JSON.parse(readFileSync(REGISTRY, "utf-8"));
     for (const e of execRegistry.executors || []) {
       if (e.id === exid && e.bridge) {
-        const p = join(WORKSPACE, e.bridge);
+        const p = e.bridge.startsWith("/") ? e.bridge : join(WORKSPACE, e.bridge);
         if (existsSync(p)) return p;
       }
     }
@@ -856,7 +1065,9 @@ function resolveAgencyPersona(personaName: string): string {
 }
 
 function getEffectiveExecutor(task: Task): string {
-  return task.executor || task.persona;
+  if (task.executor) return task.executor;
+  if (task.persona && task.persona !== "auto") return task.persona;
+  return "";
 }
 
 // ============================================================================
@@ -896,28 +1107,151 @@ function healthScore(cb: CircuitBreakerV2 | undefined): number {
   return Math.max(0.0, 1.0 - cb.failures * 0.3);
 }
 
-function historyScore(exid: string, cat: string): number {
+function getExecutorHistoryRow(exid: string, cat: string): ExecutorHistoryRow | null {
   try {
+    ensureExecutorHistorySchema();
     const db = new Database(HISTORY_DB, { readonly: true });
     const row = db.query(
-      "SELECT attempts, successes FROM executor_history WHERE executor=? AND category=?",
-    ).get(exid, cat || "general") as { attempts: number; successes: number } | null;
+      `SELECT
+        attempts,
+        successes,
+        avg_ms,
+        delegated_attempts,
+        delegated_successes,
+        child_attempts,
+        child_successes,
+        avg_child_count,
+        avg_child_duration_ms
+      FROM executor_history
+      WHERE executor=? AND category=?`,
+    ).get(exid, cat || "general") as ExecutorHistoryRow | null;
     db.close();
-    return row && row.attempts >= 3 ? row.successes / row.attempts : 0.5;
+    return row;
   } catch {
-    return 0.5;
+    return null;
   }
 }
 
-function recordHistory(exid: string, cat: string, ok: boolean, ms: number): void {
+function computeDelegationTelemetryScore(
+  task: Task,
+  executorId: string,
+  row: ExecutorHistoryRow | null,
+  config: OrchestratorConfig,
+): number {
+  const decision = evaluateDelegation(task, executorId, config);
+  if (!decision.allowed || !row || row.delegated_attempts < 2) {
+    return 0.5;
+  }
+
+  const delegatedSuccessRate = row.delegated_successes / Math.max(row.delegated_attempts, 1);
+  const childSuccessRate = row.child_attempts >= 2
+    ? row.child_successes / Math.max(row.child_attempts, 1)
+    : delegatedSuccessRate;
+  const childUtilization = Math.min(1, row.avg_child_count / Math.max(decision.maxChildren, 1));
+  const childLatency = row.avg_child_duration_ms > 0
+    ? Math.max(0, 1 - row.avg_child_duration_ms / 60_000)
+    : 0.5;
+
+  return (
+    delegatedSuccessRate * 0.55 +
+    childSuccessRate * 0.25 +
+    childUtilization * 0.10 +
+    childLatency * 0.10
+  );
+}
+
+function getHistorySignal(
+  exid: string,
+  cat: string,
+  task: Task,
+  config: OrchestratorConfig,
+): HistorySignal {
+  const row = getExecutorHistoryRow(exid, cat);
+  const baseScore = row && row.attempts >= 3 ? row.successes / row.attempts : 0.5;
+  const delegationTelemetry = computeDelegationTelemetryScore(task, exid, row, config);
+
+  if (delegationTelemetry === 0.5) {
+    return { score: baseScore, baseScore, delegationTelemetry };
+  }
+
+  return {
+    score: Math.max(0, Math.min(1, baseScore * 0.7 + delegationTelemetry * 0.3)),
+    baseScore,
+    delegationTelemetry,
+  };
+}
+
+function recordHistory(
+  exid: string,
+  cat: string,
+  ok: boolean,
+  ms: number,
+  telemetry?: { delegated?: boolean; childRecords?: ChildTaskRecord[] },
+): void {
   try {
+    ensureExecutorHistorySchema();
     const db = new Database(HISTORY_DB);
     const now = Math.floor(Date.now() / 1000);
-    db.run(`INSERT INTO executor_history (executor,category,attempts,successes,avg_ms,last_updated)
-      VALUES (?,?,1,?,?,?) ON CONFLICT(executor,category)
-      DO UPDATE SET attempts=attempts+1, successes=successes+?,
-      avg_ms=(avg_ms*(attempts-1)+?)/attempts, last_updated=?`,
-      [exid, cat || "general", ok ? 1 : 0, ms, now, ok ? 1 : 0, ms, now]);
+    const childRecords = telemetry?.childRecords || [];
+    const delegatedAttempt = telemetry?.delegated ? 1 : 0;
+    const delegatedSuccess = telemetry?.delegated && ok ? 1 : 0;
+    const childAttempts = childRecords.length;
+    const childSuccesses = childRecords.filter(record => record.status === "success").length;
+    const avgChildDurationMs = childRecords.length > 0
+      ? childRecords.reduce((sum, record) => sum + (record.durationMs || 0), 0) / childRecords.length
+      : 0;
+
+    db.run(`INSERT INTO executor_history (
+        executor,
+        category,
+        attempts,
+        successes,
+        avg_ms,
+        delegated_attempts,
+        delegated_successes,
+        child_attempts,
+        child_successes,
+        avg_child_count,
+        avg_child_duration_ms,
+        last_updated
+      )
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+      ON CONFLICT(executor,category)
+      DO UPDATE SET
+        attempts = attempts + 1,
+        successes = successes + excluded.successes,
+        avg_ms = ((avg_ms * attempts) + excluded.avg_ms) / (attempts + 1),
+        delegated_attempts = delegated_attempts + excluded.delegated_attempts,
+        delegated_successes = delegated_successes + excluded.delegated_successes,
+        child_attempts = child_attempts + excluded.child_attempts,
+        child_successes = child_successes + excluded.child_successes,
+        avg_child_count = CASE
+          WHEN (delegated_attempts + excluded.delegated_attempts) > 0
+          THEN ((avg_child_count * delegated_attempts) + (excluded.avg_child_count * excluded.delegated_attempts))
+            / (delegated_attempts + excluded.delegated_attempts)
+          ELSE avg_child_count
+        END,
+        avg_child_duration_ms = CASE
+          WHEN (child_attempts + excluded.child_attempts) > 0
+          THEN ((avg_child_duration_ms * child_attempts) + (excluded.avg_child_duration_ms * excluded.child_attempts))
+            / (child_attempts + excluded.child_attempts)
+          ELSE avg_child_duration_ms
+        END,
+        last_updated = excluded.last_updated`,
+      [
+        exid,
+        cat || "general",
+        1,
+        ok ? 1 : 0,
+        ms,
+        delegatedAttempt,
+        delegatedSuccess,
+        childAttempts,
+        childSuccesses,
+        delegatedAttempt ? childAttempts : 0,
+        avgChildDurationMs,
+        now,
+      ]);
     db.close();
   } catch {}
 }
@@ -967,7 +1301,8 @@ function route(
   executors: Record<string, ExecutorCapability>,
   cbs: Map<string, CircuitBreakerV2>,
   strategy: string,
-  useSixSignal: boolean
+  useSixSignal: boolean,
+  config: OrchestratorConfig,
 ): RouteDecision {
   const complexity = estimateComplexity(task);
   const cat = task.memoryMetadata?.category || "general";
@@ -982,7 +1317,8 @@ function route(
     const cap = capScore(task, ex);
     const hl = healthScore(cbs.get(eid));
     const cf = complexityFitScore(eid, complexity.tier);
-    const hi = historyScore(eid, cat);
+    const history = getHistorySignal(eid, cat, task, config);
+    const hi = history.score;
 
     let score: number;
     let breakdown: any;
@@ -992,10 +1328,26 @@ function route(
       const temp = getRecentEpisodicRate(eid, 7);
       score = weights.capability * cap + weights.health * hl + weights.complexityFit * cf +
               weights.history * hi + (weights as any).procedure * proc + (weights as any).temporal * temp;
-      breakdown = { capability: cap, health: hl, complexityFit: cf, history: hi, procedure: proc, temporal: temp };
+      breakdown = {
+        capability: cap,
+        health: hl,
+        complexityFit: cf,
+        history: hi,
+        historyBase: history.baseScore,
+        delegationTelemetry: history.delegationTelemetry,
+        procedure: proc,
+        temporal: temp,
+      };
     } else {
       score = weights.capability * cap + weights.health * hl + weights.complexityFit * cf + weights.history * hi;
-      breakdown = { capability: cap, health: hl, complexityFit: cf, history: hi };
+      breakdown = {
+        capability: cap,
+        health: hl,
+        complexityFit: cf,
+        history: hi,
+        historyBase: history.baseScore,
+        delegationTelemetry: history.delegationTelemetry,
+      };
     }
 
     candidates.push({ id: eid, name: ex.name, score, breakdown });
@@ -1254,7 +1606,7 @@ class SwarmOrchestrator {
         const execRegistry = JSON.parse(readFileSync(REGISTRY, "utf-8"));
         for (const ex of execRegistry.executors || []) {
           if (ex.executor === "local" && ex.bridge) {
-            const bridgePath = join(WORKSPACE, ex.bridge);
+            const bridgePath = ex.bridge.startsWith("/") ? ex.bridge : join(WORKSPACE, ex.bridge);
             if (existsSync(bridgePath)) {
               this.localExecutors.set(ex.id, { id: ex.id, bridge: bridgePath, name: ex.name || ex.id });
             }
@@ -1313,8 +1665,11 @@ class SwarmOrchestrator {
     // Validate task structure
     for (const task of tasks) {
       const effectiveExec = getEffectiveExecutor(task);
-      if (!task.id || !effectiveExec || !task.task) {
+      if (!task.id || !task.task) {
         errors.push(`Invalid task: missing required fields (id=${task.id}, executor=${effectiveExec})`);
+      }
+      if (task.delegation?.writeScopes && task.delegation.writeScopes.length > 0 && !hasDisjointWriteScopes(task)) {
+        errors.push(`Task ${task.id} has overlapping or invalid delegation write scopes`);
       }
     }
 
@@ -1328,6 +1683,7 @@ class SwarmOrchestrator {
     // Verify executor bridges
     for (const task of tasks) {
       const effectiveExec = getEffectiveExecutor(task);
+      if (!effectiveExec) continue;
       const bridge = getBridge(effectiveExec, this.executors);
       if (!bridge) {
         errors.push(`No bridge found for executor: ${effectiveExec}`);
@@ -1417,7 +1773,7 @@ class SwarmOrchestrator {
     if (existsSync(lockPath)) {
       try {
         const lock = JSON.parse(readFileSync(lockPath, "utf8"));
-        if (Date.now() - lock.ts < STALE_LOCK_MS) {
+        if (lock.pid !== process.pid && Date.now() - lock.ts < STALE_LOCK_MS) {
           console.log(`   ❌ Swarm ${this.swarmId} is already running (PID: ${lock.pid})`);
           return [];
         }
@@ -1622,33 +1978,22 @@ class SwarmOrchestrator {
     const tried = new Set<string>();
     let recentOutputs: string[] = [];
 
-    // Get or create circuit breaker
-    const effectiveExec = getEffectiveExecutor(task);
-    if (!this.circuitBreakers.has(effectiveExec)) {
-      this.circuitBreakers.set(effectiveExec, createDefaultCircuitBreaker());
-    }
-    const cb = this.circuitBreakers.get(effectiveExec)!;
-
-    // Get or create backpressure state
-    if (!this.backpressureStates.has(effectiveExec)) {
-      this.backpressureStates.set(effectiveExec, createDefaultBackpressure(effectiveExec));
-    }
-    const bp = this.backpressureStates.get(effectiveExec)!;
-
     while (retries <= this.config.maxRetries) {
-      // Check circuit breaker
-      if (!canAttempt(cb)) {
-        console.log(`  ⏏️  [${task.id}] Circuit OPEN for ${effectiveExec}, waiting...`);
-        await new Promise(r => setTimeout(r, cb.cooldownMs));
-        continue;
-      }
-
       // Route to executor
       let exid: string;
-      if (task.persona && task.persona !== "auto" && retries === 0) {
+      if (task.executor && retries === 0) {
+        exid = task.executor;
+      } else if (task.persona && task.persona !== "auto" && retries === 0) {
         exid = task.persona;
       } else {
-        const decision = route(task, this.executors, this.circuitBreakers, this.config.routingStrategy, this.config.useSixSignalRouting);
+        const decision = route(
+          task,
+          this.executors,
+          this.circuitBreakers,
+          this.config.routingStrategy,
+          this.config.useSixSignalRouting,
+          this.config,
+        );
         exid = decision.executorId;
 
         // Retry-with-reroute: try different executor on retry
@@ -1662,6 +2007,22 @@ class SwarmOrchestrator {
       }
 
       tried.add(exid);
+
+      if (!this.circuitBreakers.has(exid)) {
+        this.circuitBreakers.set(exid, createDefaultCircuitBreaker());
+      }
+      const cb = this.circuitBreakers.get(exid)!;
+
+      if (!this.backpressureStates.has(exid)) {
+        this.backpressureStates.set(exid, createDefaultBackpressure(exid));
+      }
+      const bp = this.backpressureStates.get(exid)!;
+
+      if (!canAttempt(cb)) {
+        console.log(`  ⏏️  [${task.id}] Circuit OPEN for ${exid}, waiting...`);
+        await new Promise(r => setTimeout(r, cb.cooldownMs));
+        continue;
+      }
 
       const bridge = getBridge(exid, this.executors);
       if (!bridge) {
@@ -1677,31 +2038,60 @@ class SwarmOrchestrator {
 
       const t0 = Date.now();
       try {
-        const output = await this.callLocalAgent(exid, bridge, prompt, timeout);
+        const invocation = await this.callLocalAgent(exid, bridge, prompt, timeout);
         const duration = Date.now() - t0;
+        const childRecords = invocation.childRecords.map(record => ({
+          ...record,
+          parentTaskId: task.id,
+          executorId: record.executorId || exid,
+        }));
+        const artifacts = invocation.artifacts || [];
 
         // Update circuit breaker and backpressure
         recordSuccess(cb);
         updateBackpressure(bp, duration);
 
         // Record history
-        recordHistory(exid, cat, true, duration);
+        recordHistory(exid, cat, true, duration, {
+          delegated: invocation.delegated,
+          childRecords,
+        });
 
         // Add to memory
         if (this.memoryManager) {
-          this.memoryManager.addAgentOutput(exid, output, { ...task.memoryMetadata, outputToMemory: task.outputToMemory });
+          this.memoryManager.addAgentOutput(exid, invocation.output, { ...task.memoryMetadata, outputToMemory: task.outputToMemory });
         }
 
         // Update completed outputs for cross-task context
-        this.completedOutputs.push({ persona: exid, category: cat, summary: output.slice(0, 300) });
+        this.completedOutputs.push({ persona: exid, category: cat, summary: invocation.output.slice(0, 300) });
 
         // Restore original persona/executor
         task.persona = originalPersona;
         if (task.executor !== undefined) task.executor = originalExecutor;
 
-        this.logger.log("task_success", { taskId: task.id, executor: exid, durationMs: duration });
+        this.logger.log("task_success", {
+          taskId: task.id,
+          executor: exid,
+          durationMs: duration,
+          delegated: invocation.delegated,
+          childCount: childRecords.length,
+        });
+        if (childRecords.length > 0) {
+          this.logger.log("task_child_records", { taskId: task.id, executor: exid, childRecords });
+        }
 
-        return { task, success: true, output, durationMs: duration, retries };
+        return {
+          task,
+          success: true,
+          output: invocation.output,
+          durationMs: duration,
+          retries,
+          artifacts,
+          childRecords,
+          delegated: invocation.delegated,
+          modelUsed: invocation.modelUsed,
+          effectiveExecutor: exid,
+        };
 
       } catch (error) {
         const duration = Date.now() - t0;
@@ -1790,6 +2180,7 @@ class SwarmOrchestrator {
 
   private async buildOptimizedPrompt(task: Task, executorId: string, recentOutputs: string[]): Promise<string> {
     const basePrompt = task.task;
+    const delegation = evaluateDelegation(task, executorId, this.config);
 
     // v5.1: RAG enrichment — auto-inject relevant SDK patterns
     let ragContext = "";
@@ -1801,7 +2192,7 @@ class SwarmOrchestrator {
       this.logger.log("rag_enrichment", { taskId: task.id, patterns, latencyMs });
     }
 
-    // v4.9: Resolve agency persona
+    // Resolve agency persona
     let personaContext = "";
     if (task.agencyPersona) {
       const personaMd = resolveAgencyPersona(task.agencyPersona);
@@ -1862,6 +2253,8 @@ Consider approaching this as a "${stagnation.suggestedPersona}" would.
     if (crossTaskContext) fullPrompt += crossTaskContext + "\n\n";
     if (ragContext) fullPrompt += ragContext + "\n\n";
 
+    fullPrompt += renderHierarchicalPolicyBlock(task, executorId, delegation);
+
     fullPrompt += `## Your Task\n\n${basePrompt}`;
 
     // Token budget check
@@ -1899,7 +2292,7 @@ Consider approaching this as a "${stagnation.suggestedPersona}" would.
   // AGENT COMMUNICATION
   // --------------------------------------------------------------------------
 
-  private async callLocalAgent(executorId: string, bridge: string, prompt: string, timeoutSeconds: number): Promise<string> {
+  private async callLocalAgent(executorId: string, bridge: string, prompt: string, timeoutSeconds: number): Promise<LocalAgentInvocation> {
     const timeoutMs = timeoutSeconds * 1000;
 
     const resultFileName = `result-${randomUUID()}.json`;
@@ -1939,14 +2332,40 @@ Consider approaching this as a "${stagnation.suggestedPersona}" would.
             const content = readFileSync(resultFilePath, "utf-8");
             const structured = JSON.parse(content);
             if (structured.output !== undefined) {
-              resolve(structured.output);
+              const parsed = stripDelegationReport(String(structured.output || ""));
+              const childRecords = parsed.childRecords.map(record => ({
+                ...record,
+                parentTaskId: record.parentTaskId || executorId,
+              }));
+              resolve({
+                output: parsed.cleanOutput,
+                modelUsed: typeof structured.metrics?.model === "string" ? structured.metrics.model.trim() : undefined,
+                artifacts: [
+                  ...(Array.isArray(structured.artifacts?.filesCreated) ? structured.artifacts.filesCreated : []),
+                  ...(Array.isArray(structured.artifacts?.filesModified) ? structured.artifacts.filesModified : []),
+                  ...(Array.isArray(structured.artifacts?.filesDeleted) ? structured.artifacts.filesDeleted : []),
+                  ...parsed.artifacts,
+                ],
+                childRecords,
+                delegated: parsed.delegated,
+              });
               return;
             }
           }
         } catch {}
 
         if (code === 0) {
-          resolve(stdout.trim() || "OK");
+          const parsed = stripDelegationReport(stdout.trim() || "OK");
+          resolve({
+            output: parsed.cleanOutput,
+            artifacts: parsed.artifacts,
+            childRecords: parsed.childRecords.map(record => ({
+              ...record,
+              parentTaskId: record.parentTaskId || executorId,
+            })),
+            delegated: parsed.delegated,
+            modelUsed: undefined,
+          });
         } else {
           reject(new Error(stderr || `Exit code ${code}`));
         }
@@ -1998,6 +2417,8 @@ Consider approaching this as a "${stagnation.suggestedPersona}" would.
   private async saveResults(totalDurationMs: number): Promise<void> {
     const successful = this.results.filter(r => r.success).length;
     const failed = this.results.filter(r => !r.success).length;
+    const delegatedTasks = this.results.filter(r => r.delegated).length;
+    const childTaskCount = this.results.reduce((sum, result) => sum + (result.childRecords?.length || 0), 0);
 
     const results = {
       swarmId: this.swarmId,
@@ -2006,6 +2427,8 @@ Consider approaching this as a "${stagnation.suggestedPersona}" would.
       completed: successful,
       failed,
       total: this.results.length,
+      delegatedTasks,
+      childTaskCount,
       elapsedMs: totalDurationMs,
       results: this.results,
     };
@@ -2014,31 +2437,43 @@ Consider approaching this as a "${stagnation.suggestedPersona}" would.
     writeFileSync(resultsPath, JSON.stringify(results, null, 2));
 
     // Create episode
-    this.createEpisode(successful, failed, totalDurationMs);
+    this.createEpisode(successful, failed, totalDurationMs, delegatedTasks, childTaskCount);
   }
 
-  private createEpisode(successful: number, failed: number, durationMs: number): void {
+  private createEpisode(successful: number, failed: number, durationMs: number, delegatedTasks: number, childTaskCount: number): void {
     try {
       if (!existsSync(MEMORY_DB)) return;
 
       const db = new Database(MEMORY_DB);
       db.run(`CREATE TABLE IF NOT EXISTS episodes (
-        id INTEGER PRIMARY KEY, summary TEXT, outcome TEXT,
-        happened_at INTEGER, entities TEXT, metadata TEXT)`);
+        id TEXT PRIMARY KEY, summary TEXT NOT NULL, outcome TEXT NOT NULL,
+        happened_at INTEGER NOT NULL, duration_ms INTEGER, procedure_id TEXT, metadata TEXT,
+        created_at INTEGER DEFAULT (strftime('%s','now')))`);
 
       const outcome = failed === 0 ? "success" : failed < successful ? "partial" : "failure";
       const summary = `Swarm ${this.swarmId}: ${successful} succeeded, ${failed} failed in ${Math.round(durationMs / 1000)}s`;
       const executorIds = [...this.localExecutors.keys()];
+      const episodeId = randomUUID();
 
       db.run(
-        `INSERT INTO episodes (summary,outcome,happened_at,entities,metadata)
-         VALUES (?,?,?,?,?)`,
+        `INSERT INTO episodes (id,summary,outcome,happened_at,duration_ms,metadata)
+         VALUES (?,?,?,?,?,?)`,
         [
+          episodeId,
           summary,
           outcome,
           Math.floor(Date.now() / 1000),
-          JSON.stringify(executorIds.map(e => `executor.${e}`)),
-          JSON.stringify({ swarm_id: this.swarmId, tasks: this.results.length, succeeded: successful, failed, elapsed_ms: durationMs }),
+          durationMs,
+          JSON.stringify({
+            swarm_id: this.swarmId,
+            tasks: this.results.length,
+            succeeded: successful,
+            failed,
+            elapsed_ms: durationMs,
+            delegated_tasks: delegatedTasks,
+            child_task_count: childTaskCount,
+            executors: executorIds,
+          }),
         ]
       );
       db.close();
@@ -2048,6 +2483,12 @@ Consider approaching this as a "${stagnation.suggestedPersona}" would.
   private async printSummary(totalDurationMs: number): Promise<void> {
     const successful = this.results.filter(r => r.success).length;
     const failed = this.results.filter(r => !r.success).length;
+    const telemetry = summarizePersistedTelemetry({
+      swarmId: this.swarmId,
+      delegatedTasks: this.results.filter(r => r.delegated).length,
+      childTaskCount: this.results.reduce((sum, result) => sum + (result.childRecords?.length || 0), 0),
+      results: this.results,
+    });
 
     console.log("\n" + "=".repeat(60));
     console.log(`📊 Swarm ${this.swarmId} Summary`);
@@ -2056,6 +2497,10 @@ Consider approaching this as a "${stagnation.suggestedPersona}" would.
     console.log(`   Successful:  ${successful} ✅`);
     console.log(`   Failed:      ${failed} ${failed > 0 ? "❌" : ""}`);
     console.log(`   Duration:    ${Math.round(totalDurationMs / 1000)}s`);
+    console.log(`   Delegated:   ${telemetry.delegatedTasks} parent / ${telemetry.childTaskCount} child`);
+    console.log(`   Artifacts:   ${telemetry.artifactCount}`);
+    console.log(`   Reroutes:    ${telemetry.reroutedTasks}`);
+    console.log(`   Executors:   ${telemetry.effectiveExecutors.join(", ") || "n/a"}`);
     console.log(`   Results:     ${join(RESULTS_DIR, `${this.swarmId}.json`)}`);
     console.log("=".repeat(60));
   }
@@ -2095,6 +2540,59 @@ function statusCmd(swid: string): void {
   if (existsSync(rf)) {
     const stats = readFileSync(rf);
     console.log(`   Results: ${rf} (${Math.round(stats.length / 1024)}KB)`);
+    try {
+      const results = JSON.parse(stats.toString("utf8")) as PersistedResultsFile;
+      const telemetry = summarizePersistedTelemetry(results);
+      const elapsedSeconds = typeof results.elapsedMs === "number" ? Math.round(results.elapsedMs / 1000) : null;
+      const completed = typeof results.completed === "number" ? results.completed : results.results?.filter(result => result.success).length;
+      const failed = typeof results.failed === "number" ? results.failed : results.results?.filter(result => !result.success).length;
+      const total = typeof results.total === "number" ? results.total : results.results?.length;
+
+      console.log(`   Outcome: ${completed ?? 0}/${total ?? 0} succeeded, ${failed ?? 0} failed`);
+      if (elapsedSeconds !== null) {
+        console.log(`   Duration: ${elapsedSeconds}s`);
+      }
+      console.log(`   Delegated: ${telemetry.delegatedTasks} parent / ${telemetry.childTaskCount} child`);
+      console.log(`   Artifacts: ${telemetry.artifactCount}`);
+      console.log(`   Reroutes: ${telemetry.reroutedTasks}`);
+      console.log(`   Executors: ${telemetry.effectiveExecutors.join(", ") || "n/a"}`);
+    } catch {}
+  }
+}
+
+function historyCmd(limit = 10): void {
+  const rows = readExecutorHistory(limit);
+
+  console.log("📚 Swarm Executor History");
+  console.log(`   DB: ${HISTORY_DB}`);
+
+  if (rows.length === 0) {
+    console.log("   No executor history found.");
+    return;
+  }
+
+  for (const row of rows) {
+    const successRate = row.attempts > 0 ? Math.round((row.successes / row.attempts) * 100) : 0;
+    const delegatedRate = row.delegated_attempts > 0
+      ? Math.round((row.delegated_successes / row.delegated_attempts) * 100)
+      : null;
+    const childRate = row.child_attempts > 0
+      ? Math.round((row.child_successes / row.child_attempts) * 100)
+      : null;
+    const updated = row.last_updated ? new Date(row.last_updated * 1000).toISOString() : "n/a";
+
+    console.log(`\n   ${row.executor} [${row.category}]`);
+    console.log(`     Base: ${row.successes}/${row.attempts} (${successRate}%) avg ${Math.round(row.avg_ms)}ms`);
+    console.log(
+      `     Delegation: ${row.delegated_attempts} attempts`
+      + (delegatedRate !== null ? ` (${delegatedRate}% success)` : ""),
+    );
+    console.log(
+      `     Children: ${row.child_successes}/${row.child_attempts}`
+      + (childRate !== null ? ` (${childRate}%)` : "")
+      + ` avg count ${row.avg_child_count.toFixed(1)} avg child ${Math.round(row.avg_child_duration_ms)}ms`,
+    );
+    console.log(`     Updated: ${updated}`);
   }
 }
 
@@ -2135,6 +2633,7 @@ async function main(): Promise<void> {
   if (args.length < 1) {
     console.log("Usage: bun orchestrate-v5.ts <tasks.json> [options]");
     console.log("       bun orchestrate-v5.ts status <swarm-id>");
+    console.log("       bun orchestrate-v5.ts history [limit]");
     console.log("       bun orchestrate-v5.ts doctor");
     console.log("\nOptions:");
     console.log("  --swarm-id ID         Set swarm ID");
@@ -2161,6 +2660,12 @@ async function main(): Promise<void> {
 
   if (args[0] === "doctor") {
     doctorCmd();
+    process.exit(0);
+  }
+
+  if (args[0] === "history") {
+    const limit = args[1] ? parseInt(args[1], 10) : 10;
+    historyCmd(Number.isFinite(limit) && limit > 0 ? limit : 10);
     process.exit(0);
   }
 
@@ -2223,11 +2728,6 @@ async function main(): Promise<void> {
   const orchestrator = new SwarmOrchestrator(swarmId, config);
   await orchestrator.run(tasks);
 }
-
-main().catch(e => {
-  console.error(`Fatal error: ${e}`);
-  process.exit(1);
-});
 
 main().catch(e => {
   console.error(`Fatal error: ${e}`);
