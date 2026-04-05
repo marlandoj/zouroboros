@@ -462,7 +462,8 @@ async function verifyAC(criterion: AcceptanceCriterion, workspacePath: string, o
     
     case "test_pass": {
       const exitCode = await new Promise<number>((resolve) => {
-        const proc = spawn("bash", ["-c", criterion.test_command!], {
+        const cmd = criterion.test_command ?? criterion.command ?? "true";
+        const proc = spawn("bash", ["-c", cmd], {
           cwd: workspacePath,
         });
         proc.on("close", resolve);
