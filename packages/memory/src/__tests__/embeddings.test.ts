@@ -1,10 +1,14 @@
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect, beforeEach, mock } from 'bun:test';
 import {
   cosineSimilarity,
   serializeEmbedding,
   deserializeEmbedding,
   blendEmbeddings,
+  generateEmbedding,
+  throttleMetrics,
+  resetThrottleState,
 } from '../embeddings.js';
+import type { MemoryConfig } from 'zouroboros-core';
 
 describe('cosineSimilarity', () => {
   test('identical vectors return 1', () => {
@@ -78,5 +82,96 @@ describe('blendEmbeddings', () => {
 
   test('throws on mismatched dimensions', () => {
     expect(() => blendEmbeddings([1], [1, 2])).toThrow('same dimension');
+  });
+});
+
+// ─── ECC-010: Memory Explosion Throttling ────────────────────────────────────
+
+const MOCK_EMBEDDING = [0.1, 0.2, 0.3];
+const BASE_CONFIG: MemoryConfig = {
+  vectorEnabled: true,
+  ollamaUrl: 'http://localhost:11434',
+  ollamaModel: 'nomic-embed-text',
+  dbPath: ':memory:',
+  maxMemories: 1000,
+  decayEnabled: false,
+  decayHalfLifeDays: 30,
+};
+
+// Patch global fetch for embedding tests
+let fetchCallCount = 0;
+const originalFetch = globalThis.fetch;
+
+function mockOllamaFetch(): void {
+  globalThis.fetch = async (_url: string | URL | Request, _opts?: RequestInit) => {
+    fetchCallCount++;
+    return new Response(JSON.stringify({ embedding: MOCK_EMBEDDING }), {
+      status: 200, headers: { 'Content-Type': 'application/json' },
+    });
+  };
+}
+
+function restoreFetch(): void {
+  globalThis.fetch = originalFetch;
+}
+
+describe('ECC-010: Memory Explosion Throttling', () => {
+  beforeEach(() => {
+    resetThrottleState();
+    fetchCallCount = 0;
+    mockOllamaFetch();
+  });
+
+  test('normal flow — first call hits Ollama', async () => {
+    const result = await generateEmbedding('hello world', BASE_CONFIG, 'conv-001');
+    expect(result).toEqual(MOCK_EMBEDDING);
+    expect(fetchCallCount).toBe(1);
+    expect(throttleMetrics.dedupCount).toBe(0);
+    expect(throttleMetrics.throttleCount).toBe(0);
+    restoreFetch();
+  });
+
+  test('dedup hit — same content within cooldown skips Ollama', async () => {
+    await generateEmbedding('deduplicate me', BASE_CONFIG, 'conv-002');
+    const result = await generateEmbedding('deduplicate me', BASE_CONFIG, 'conv-002');
+    expect(result).toEqual(MOCK_EMBEDDING);
+    expect(fetchCallCount).toBe(1); // second call served from cache
+    expect(throttleMetrics.dedupCount).toBe(1);
+    restoreFetch();
+  });
+
+  test('rate limit trigger — 21st call in same window returns tail sample', async () => {
+    const convId = 'conv-rate-limited';
+    // Exhaust the 20-per-minute budget
+    for (let i = 0; i < 20; i++) {
+      await generateEmbedding(`unique content ${i}`, BASE_CONFIG, convId);
+    }
+    expect(throttleMetrics.throttleCount).toBe(0);
+
+    // 21st call should be throttled
+    const result = await generateEmbedding('unique content 21', BASE_CONFIG, convId);
+    expect(throttleMetrics.throttleCount).toBe(1);
+    expect(result).toEqual(MOCK_EMBEDDING); // tail sample from last produced embedding
+    expect(fetchCallCount).toBe(20); // 21st did NOT hit Ollama
+    restoreFetch();
+  });
+
+  test('no conversationId — bypasses throttling entirely', async () => {
+    for (let i = 0; i < 25; i++) {
+      await generateEmbedding(`bypass content ${i}`, BASE_CONFIG);
+    }
+    expect(fetchCallCount).toBe(25); // all 25 hit Ollama
+    expect(throttleMetrics.throttleCount).toBe(0);
+    expect(throttleMetrics.dedupCount).toBe(0);
+    restoreFetch();
+  });
+
+  test('throttleMetrics.dedupCount and throttleCount exported correctly', async () => {
+    const convId = 'conv-metrics';
+    await generateEmbedding('same text', BASE_CONFIG, convId);
+    await generateEmbedding('same text', BASE_CONFIG, convId); // dedup
+    expect(throttleMetrics.dedupCount).toBe(1);
+    expect(throttleMetrics.throttleCount).toBe(0);
+    restoreFetch();
   });
 });

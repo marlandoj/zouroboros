@@ -1,27 +1,104 @@
 /**
  * Vector embeddings for semantic search
+ *
+ * ECC-010: Memory Explosion Throttling
+ *   - Rate limiting: max MAX_EMBEDDINGS_PER_MINUTE per conversation (sliding window)
+ *   - Dedup: same content hash within DEDUP_COOLDOWN_MS returns cached embedding
+ *   - Tail sampling: when rate limited, return last cached embedding for the conversation
+ *   - Metrics: throttleCount / dedupCount exported for observability
  */
 
+import { createHash } from 'node:crypto';
 import type { MemoryConfig } from 'zouroboros-core';
 
+// ─── ECC-010 Constants ────────────────────────────────────────────────────────
+
+const MAX_EMBEDDINGS_PER_MINUTE = 20;
+const DEDUP_COOLDOWN_MS = 300_000; // 5 minutes
+const TAIL_SAMPLE_K = 10;          // keep last K embeddings per conversation when limited
+
+// ─── ECC-010 Module-Scoped State ─────────────────────────────────────────────
+
+interface RateWindow {
+  count: number;
+  windowStart: number;
+  /** Tail buffer: last K embeddings produced in this window */
+  tail: number[][];
+}
+
+interface DedupEntry {
+  embedding: number[];
+  expiresAt: number;
+}
+
+/** Per-conversation sliding rate window. Key: conversationId. */
+const _rateWindows = new Map<string, RateWindow>();
+
+/** Per-content dedup cache. Key: SHA-256 hex of text. */
+const _dedupCache = new Map<string, DedupEntry>();
+
+/** Exported metrics counters — reset only on process restart. */
+export const throttleMetrics = {
+  throttleCount: 0,
+  dedupCount: 0,
+};
+
+function contentHash(text: string): string {
+  return createHash('sha256').update(text).digest('hex');
+}
+
 /**
- * Generate embeddings for text using Ollama
+ * ECC-010: Check rate limit for a conversation window.
+ * Returns the tail-sampled embedding if over limit, or null if under limit.
  */
-export async function generateEmbedding(
-  text: string,
-  config: MemoryConfig
-): Promise<number[]> {
-  if (!config.vectorEnabled) {
-    throw new Error('Vector search is disabled in configuration');
+function checkRateLimit(conversationId: string): number[] | null {
+  const now = Date.now();
+  let window = _rateWindows.get(conversationId);
+
+  if (!window || now - window.windowStart > 60_000) {
+    window = { count: 0, windowStart: now, tail: [] };
+    _rateWindows.set(conversationId, window);
   }
 
+  if (window.count >= MAX_EMBEDDINGS_PER_MINUTE) {
+    // Return tail sample (last produced in this window) or empty fallback
+    const sample = window.tail[window.tail.length - 1] ?? [];
+    throttleMetrics.throttleCount++;
+    return sample;
+  }
+
+  return null;
+}
+
+/** ECC-010: Record a produced embedding in the rate window tail buffer. */
+function recordInWindow(conversationId: string, embedding: number[]): void {
+  const window = _rateWindows.get(conversationId);
+  if (!window) return;
+  window.count++;
+  window.tail.push(embedding);
+  if (window.tail.length > TAIL_SAMPLE_K) {
+    window.tail.shift();
+  }
+}
+
+/** ECC-010: Reset throttle state (for testing). */
+export function resetThrottleState(): void {
+  _rateWindows.clear();
+  _dedupCache.clear();
+  throttleMetrics.throttleCount = 0;
+  throttleMetrics.dedupCount = 0;
+}
+
+// ─── Internal Ollama call ─────────────────────────────────────────────────────
+
+async function _generateEmbeddingFromOllama(
+  text: string,
+  config: MemoryConfig,
+): Promise<number[]> {
   const response = await fetch(`${config.ollamaUrl}/api/embeddings`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: config.ollamaModel,
-      prompt: text,
-    }),
+    body: JSON.stringify({ model: config.ollamaModel, prompt: text }),
   });
 
   if (!response.ok) {
@@ -30,6 +107,51 @@ export async function generateEmbedding(
 
   const data = await response.json() as { embedding: number[] };
   return data.embedding;
+}
+
+/**
+ * Generate embeddings for text using Ollama.
+ *
+ * ECC-010: Throttling applied when conversationId is provided:
+ *   1. Dedup check — returns cached embedding if same content seen within 5 min
+ *   2. Rate limit check — returns tail-sampled embedding if > 20/min per conversation
+ *   3. Ollama call — only reached if dedup and rate limit both pass
+ *
+ * @param conversationId  Optional. When provided, enables per-conversation throttling.
+ */
+export async function generateEmbedding(
+  text: string,
+  config: MemoryConfig,
+  conversationId?: string,
+): Promise<number[]> {
+  if (!config.vectorEnabled) {
+    throw new Error('Vector search is disabled in configuration');
+  }
+
+  if (conversationId) {
+    // Layer 1: Dedup check
+    const hash = contentHash(text);
+    const cached = _dedupCache.get(hash);
+    if (cached && Date.now() < cached.expiresAt) {
+      throttleMetrics.dedupCount++;
+      return cached.embedding;
+    }
+
+    // Layer 2: Rate limit check (tail sampling on overflow)
+    const sampled = checkRateLimit(conversationId);
+    if (sampled !== null) {
+      return sampled;
+    }
+
+    // Layer 3: Produce embedding and cache it
+    const embedding = await _generateEmbeddingFromOllama(text, config);
+    _dedupCache.set(hash, { embedding, expiresAt: Date.now() + DEDUP_COOLDOWN_MS });
+    recordInWindow(conversationId, embedding);
+    return embedding;
+  }
+
+  // No conversationId: bypass throttling (internal/system calls)
+  return _generateEmbeddingFromOllama(text, config);
 }
 
 /**
