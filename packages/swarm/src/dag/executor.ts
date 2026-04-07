@@ -4,9 +4,16 @@
  * Executes tasks in dependency order using streaming or wave-based modes.
  * Integrates CascadeManager for failure handling and ContextSharingManager
  * for passing context between dependent tasks.
+ *
+ * ECC-009: 5-layer Observer Loop Guard
+ *   Layer 1 — Origin header propagation (swarmOrigin on task options)
+ *   Layer 2 — Loop depth limit (maxLoopDepth, default 10)
+ *   Layer 3 — Cyclic call detection (DFS at construction + runtime callStack)
+ *   Layer 4 — Recursive chain timeout (loopTimeoutMs, default 30s)
+ *   Layer 5 — Circuit breaker opens on LoopDetectedError
  */
 
-import type { Task, TaskResult, SwarmConfig } from '../types.js';
+import type { Task, TaskResult, SwarmConfig, LoopGuardConfig } from '../types.js';
 import type { ExecutorTransport } from '../transport/types.js';
 import type { CascadeManager } from '../cascade/manager.js';
 import type { ContextSharingManager } from '../context/sharing.js';
@@ -18,6 +25,10 @@ export interface ExecutionContext {
   getExecutor: (executorId: string) => ExecutorTransport | undefined;
   cascadeManager?: CascadeManager;
   contextManager?: ContextSharingManager;
+  /** ECC-009 Layer 1: propagated origin identifier for nested swarm invocations */
+  swarmOrigin?: string;
+  /** ECC-009 Layer 2: current nesting depth (incremented by orchestrator on recursion) */
+  loopDepth?: number;
 }
 
 export interface ExecutionProgress {
@@ -28,22 +39,131 @@ export interface ExecutionProgress {
   percentComplete: number;
 }
 
+/** ECC-009: Thrown when a routing loop is detected. Opens the circuit breaker. */
+export class LoopDetectedError extends Error {
+  constructor(
+    public readonly taskId: string,
+    public readonly reason: 'cycle' | 'depth_exceeded' | 'timeout',
+    public readonly details: string,
+  ) {
+    super(`Loop detected on task "${taskId}" [${reason}]: ${details}`);
+    this.name = 'LoopDetectedError';
+  }
+}
+
+const DEFAULT_LOOP_GUARD: LoopGuardConfig = {
+  maxLoopDepth: 10,
+  loopTimeoutMs: 30_000,
+  openCircuitOnLoop: true,
+};
+
 export class DAGExecutor {
   private tasks: Map<string, Task>;
   private results: Map<string, TaskResult>;
   private inProgress: Set<string>;
   private context: ExecutionContext;
+  /** ECC-009 Layer 3: runtime call stack for cycle detection */
+  private callStack: Set<string>;
+  /** ECC-009 Layer 4: timestamp when this execution started */
+  private executionStartMs: number;
+  private loopGuard: LoopGuardConfig;
 
   constructor(tasks: Task[], context: ExecutionContext) {
     this.tasks = new Map(tasks.map(t => [t.id, t]));
     this.results = new Map();
     this.inProgress = new Set();
+    this.callStack = new Set();
+    this.executionStartMs = Date.now();
     this.context = context;
+    this.loopGuard = { ...DEFAULT_LOOP_GUARD, ...context.config.loopGuard };
+
+    // ECC-009 Layer 3: static cycle detection via DFS before execution starts
+    this.detectStaticCycles(tasks);
 
     // Build cascade dependency graph if manager is provided
     if (context.cascadeManager) {
       context.cascadeManager.buildDependencyGraph(tasks);
     }
+  }
+
+  /**
+   * ECC-009 Layer 3 (static): Detect dependency cycles using DFS.
+   * Throws LoopDetectedError immediately if a cycle is found in dependsOn.
+   */
+  private detectStaticCycles(tasks: Task[]): void {
+    const visited = new Set<string>();
+    const inStack = new Set<string>();
+
+    const dfs = (taskId: string): void => {
+      if (inStack.has(taskId)) {
+        throw new LoopDetectedError(taskId, 'cycle', `Static cycle detected in dependsOn graph at task "${taskId}"`);
+      }
+      if (visited.has(taskId)) return;
+      visited.add(taskId);
+      inStack.add(taskId);
+      const task = this.tasks.get(taskId);
+      for (const dep of task?.dependsOn ?? []) {
+        dfs(dep);
+      }
+      inStack.delete(taskId);
+    };
+
+    for (const taskId of this.tasks.keys()) {
+      dfs(taskId);
+    }
+  }
+
+  /**
+   * ECC-009: Check all loop guard layers before dispatching a task.
+   * Throws LoopDetectedError if any layer triggers.
+   */
+  private checkLoopGuard(taskId: string): void {
+    // Layer 2: depth limit
+    const currentDepth = this.context.loopDepth ?? 0;
+    if (currentDepth >= this.loopGuard.maxLoopDepth) {
+      throw new LoopDetectedError(
+        taskId, 'depth_exceeded',
+        `Execution depth ${currentDepth} reached maxLoopDepth ${this.loopGuard.maxLoopDepth} (origin: ${this.context.swarmOrigin ?? 'root'})`,
+      );
+    }
+
+    // Layer 3: runtime cycle detection
+    if (this.callStack.has(taskId)) {
+      throw new LoopDetectedError(
+        taskId, 'cycle',
+        `Task "${taskId}" is already in the active call stack: [${[...this.callStack].join(' → ')} → ${taskId}]`,
+      );
+    }
+
+    // Layer 4: recursive chain timeout
+    const elapsed = Date.now() - this.executionStartMs;
+    if (elapsed >= this.loopGuard.loopTimeoutMs) {
+      throw new LoopDetectedError(
+        taskId, 'timeout',
+        `Recursive chain exceeded loopTimeoutMs (${elapsed}ms >= ${this.loopGuard.loopTimeoutMs}ms)`,
+      );
+    }
+  }
+
+  /**
+   * ECC-009 Layer 5: Open the circuit breaker and log the loop incident.
+   */
+  private handleLoopDetected(taskId: string, err: LoopDetectedError): TaskResult {
+    const task = this.tasks.get(taskId)!;
+    console.error(`[ECC-009] LOOP INCIDENT — ${err.message}`);
+    console.error(`[ECC-009] Origin: ${this.context.swarmOrigin ?? 'root'} | Depth: ${this.context.loopDepth ?? 0} | Call stack: [${[...this.callStack].join(' → ')}]`);
+
+    if (this.loopGuard.openCircuitOnLoop && this.context.cascadeManager) {
+      this.context.cascadeManager.handleFailure(taskId, err.message);
+    }
+
+    return {
+      task,
+      success: false,
+      error: err.message,
+      durationMs: Date.now() - this.executionStartMs,
+      retries: 0,
+    };
   }
 
   async execute(mode: ExecutionMode): Promise<TaskResult[]> {
@@ -88,6 +208,19 @@ export class DAGExecutor {
       this.inProgress.add(taskId);
       pending.delete(taskId);
 
+      // ECC-009: loop guard check before dispatch
+      try {
+        this.checkLoopGuard(taskId);
+      } catch (err) {
+        if (err instanceof LoopDetectedError) {
+          this.inProgress.delete(taskId);
+          this.results.set(taskId, this.handleLoopDetected(taskId, err));
+          return;
+        }
+        throw err;
+      }
+
+      this.callStack.add(taskId);
       try {
         const executor = this.context.getExecutor(task.executor || 'claude-code');
         if (!executor) {
@@ -105,9 +238,13 @@ export class DAGExecutor {
           taskContext = this.context.contextManager.buildTaskContext(taskId, task.dependsOn || []);
         }
 
+        // ECC-009 Layer 1: propagate origin header on task dispatch
+        const swarmOrigin = this.context.swarmOrigin ?? 'root';
+
         const result = await executor.execute(task, {
           timeoutMs: (task.timeoutSeconds || this.context.config.timeoutSeconds) * 1000,
           ...(taskContext ? { context: taskContext } : {}),
+          headers: { 'x-swarm-origin': swarmOrigin, 'x-swarm-depth': String(this.context.loopDepth ?? 0) },
         });
 
         this.results.set(taskId, result);
@@ -136,6 +273,7 @@ export class DAGExecutor {
           }
         }
       } finally {
+        this.callStack.delete(taskId);
         this.inProgress.delete(taskId);
       }
     };
@@ -205,6 +343,17 @@ export class DAGExecutor {
             return;
           }
 
+          // ECC-009: loop guard check before dispatch (waves mode)
+          try {
+            this.checkLoopGuard(taskId);
+          } catch (err) {
+            if (err instanceof LoopDetectedError) {
+              this.results.set(taskId, this.handleLoopDetected(taskId, err));
+              return;
+            }
+            throw err;
+          }
+
           const executor = this.context.getExecutor(task.executor || 'claude-code');
           if (!executor) {
             this.results.set(taskId, {
@@ -221,10 +370,15 @@ export class DAGExecutor {
             taskContext = this.context.contextManager.buildTaskContext(taskId, task.dependsOn || []);
           }
 
+          // ECC-009 Layer 1: propagate origin header (waves mode)
+          const swarmOrigin = this.context.swarmOrigin ?? 'root';
+          this.callStack.add(taskId);
           const result = await executor.execute(task, {
             timeoutMs: (task.timeoutSeconds || this.context.config.timeoutSeconds) * 1000,
             ...(taskContext ? { context: taskContext } : {}),
+            headers: { 'x-swarm-origin': swarmOrigin, 'x-swarm-depth': String(this.context.loopDepth ?? 0) },
           });
+          this.callStack.delete(taskId);
 
           this.results.set(taskId, result);
 

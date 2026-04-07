@@ -81,6 +81,15 @@ export interface TaskResult {
   effectiveExecutor?: string;
 }
 
+export interface LoopGuardConfig {
+  /** Maximum DAG nesting depth before a LoopDetectedError is thrown. Default: 10 */
+  maxLoopDepth: number;
+  /** Milliseconds before a recursive chain times out. Default: 30000 */
+  loopTimeoutMs: number;
+  /** Whether to open the circuit breaker on loop detection. Default: true */
+  openCircuitOnLoop: boolean;
+}
+
 export interface SwarmConfig {
   localConcurrency: number;
   timeoutSeconds: number;
@@ -92,6 +101,7 @@ export interface SwarmConfig {
   useSixSignalRouting: boolean;
   stagnationEnabled: boolean;
   hierarchicalDelegation?: HierarchicalDelegationConfig;
+  loopGuard?: Partial<LoopGuardConfig>;
 }
 
 export interface CircuitBreakerState {

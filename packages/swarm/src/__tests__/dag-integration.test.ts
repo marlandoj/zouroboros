@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { DAGExecutor, type ExecutionContext } from '../dag/executor.js';
+import { DAGExecutor, LoopDetectedError, type ExecutionContext } from '../dag/executor.js';
 import { CascadeManager } from '../cascade/manager.js';
 import { ContextSharingManager } from '../context/sharing.js';
 import type { Task, TaskResult, SwarmConfig } from '../types.js';
@@ -262,5 +262,82 @@ describe('DAGExecutor ↔ ContextSharingManager', () => {
       expect(badChild?.success).toBe(false);
       expect(badChild?.error).toContain('cascade');
     });
+  });
+});
+
+// ─── ECC-009: Loop Guard Tests ────────────────────────────────────────────────
+
+describe('ECC-009: DAGExecutor Loop Guard', () => {
+  const successExecutor = {
+    execute: async (task: Task): Promise<TaskResult> => ({
+      task, success: true, output: 'ok', durationMs: 1, retries: 0,
+    }),
+    executeWithUpdates: () => ({ updates: (async function* () {})(), result: Promise.resolve({ task: {} as Task, success: true, durationMs: 0, retries: 0 }) }),
+    healthCheck: async () => ({ healthy: true }),
+    shutdown: async () => {},
+  };
+
+  it('passes a linear chain without triggering loop guard', async () => {
+    const tasks = [makeTask('a'), makeTask('b', ['a']), makeTask('c', ['b'])];
+    const ctx: ExecutionContext = { config: BASE_CONFIG, getExecutor: () => successExecutor as any };
+    const executor = new DAGExecutor(tasks, ctx);
+    const results = await executor.execute('streaming');
+    expect(results.every(r => r.success)).toBe(true);
+  });
+
+  it('throws LoopDetectedError at construction for static dependsOn cycle', () => {
+    // A -> B -> A forms a cycle
+    const tasks = [makeTask('a', ['b']), makeTask('b', ['a'])];
+    const ctx: ExecutionContext = { config: BASE_CONFIG, getExecutor: () => successExecutor as any };
+    expect(() => new DAGExecutor(tasks, ctx)).toThrow(LoopDetectedError);
+  });
+
+  it('rejects tasks when loop depth exceeds maxLoopDepth', async () => {
+    const tasks = [makeTask('deep-task')];
+    const ctx: ExecutionContext = {
+      config: { ...BASE_CONFIG, loopGuard: { maxLoopDepth: 2 } },
+      getExecutor: () => successExecutor as any,
+      loopDepth: 5,
+    };
+    const executor = new DAGExecutor(tasks, ctx);
+    const results = await executor.execute('streaming');
+    expect(results[0]?.success).toBe(false);
+    expect(results[0]?.error).toContain('depth_exceeded');
+  });
+
+  it('rejects tasks when loopTimeoutMs is exceeded', async () => {
+    const tasks = [makeTask('timeout-task')];
+    const ctx: ExecutionContext = {
+      config: { ...BASE_CONFIG, loopGuard: { loopTimeoutMs: 0 } },
+      getExecutor: () => successExecutor as any,
+    };
+    // loopTimeoutMs=0 means already timed out on first check
+    const executor = new DAGExecutor(tasks, ctx);
+    const results = await executor.execute('streaming');
+    expect(results[0]?.success).toBe(false);
+    expect(results[0]?.error).toContain('timeout');
+  });
+
+  it('propagates x-swarm-origin header on task dispatch', async () => {
+    const capturedHeaders: Record<string, string>[] = [];
+    const headerCapturingExecutor = {
+      execute: async (task: Task, opts: any): Promise<TaskResult> => {
+        capturedHeaders.push(opts.headers ?? {});
+        return { task, success: true, output: 'ok', durationMs: 1, retries: 0 };
+      },
+      executeWithUpdates: () => ({ updates: (async function* () {})(), result: Promise.resolve({ task: {} as Task, success: true, durationMs: 0, retries: 0 }) }),
+      healthCheck: async () => ({ healthy: true }),
+      shutdown: async () => {},
+    };
+    const tasks = [makeTask('origin-task')];
+    const ctx: ExecutionContext = {
+      config: BASE_CONFIG,
+      getExecutor: () => headerCapturingExecutor as any,
+      swarmOrigin: 'test-campaign-001',
+    };
+    const executor = new DAGExecutor(tasks, ctx);
+    await executor.execute('streaming');
+    expect(capturedHeaders[0]?.['x-swarm-origin']).toBe('test-campaign-001');
+    expect(capturedHeaders[0]?.['x-swarm-depth']).toBe('0');
   });
 });

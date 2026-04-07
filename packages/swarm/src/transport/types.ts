@@ -19,6 +19,8 @@ export interface TransportOptions {
   workdir?: string;
   env?: Record<string, string>;
   context?: Record<string, unknown>;
+  /** ECC-009 Layer 1: propagated loop guard headers (x-swarm-origin, x-swarm-depth) */
+  headers?: Record<string, string>;
 }
 
 export interface HealthStatus {
