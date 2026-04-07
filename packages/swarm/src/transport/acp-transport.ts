@@ -161,8 +161,8 @@ export class ACPTransport implements ExecutorTransport {
     return spawn(bin, args, {
       stdio: ['pipe', 'pipe', 'pipe'],
       env,
-      // setsid equivalent: detached creates a new process group
-      detached: false,
+      // setsid equivalent: detached creates a new process group for isolation
+      detached: true,
     });
   }
 

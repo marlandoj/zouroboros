@@ -6,6 +6,7 @@
       "id": "claude-code",
       "name": "Claude Code",
       "executor": "local",
+      "transport": "acp",
       "bridge": "Skills/zo-swarm-executors/bridges/claude-code-bridge.sh",
       "description": "Claude Code CLI in one-shot mode — full codebase context, file editing, terminal access",
       "expertise": [
@@ -32,6 +33,15 @@
           "CLAUDE_CODE_TIMEOUT": "Timeout in seconds (default: 600)"
         }
       },
+      "capabilities": {
+        "fileRead": true,
+        "fileWrite": true,
+        "shellExec": true,
+        "webResearch": false,
+        "imageGen": false,
+        "mcp": true,
+        "streaming": true
+      },
       "healthCheck": {
         "command": "command -v claude || test -x /root/.local/bin/claude",
         "expectedPattern": "claude",
@@ -42,6 +52,7 @@
       "id": "hermes",
       "name": "Hermes Agent",
       "executor": "local",
+      "transport": "bridge",
       "bridge": "Skills/zo-swarm-executors/bridges/hermes-bridge.sh",
       "description": "Hermes AI agent with tool-calling, web search, and multi-modal capabilities",
       "expertise": [
@@ -76,6 +87,15 @@
           "OPENROUTER_API_KEY": "Required — LLM API access for Hermes"
         }
       },
+      "capabilities": {
+        "fileRead": true,
+        "fileWrite": true,
+        "shellExec": true,
+        "webResearch": true,
+        "imageGen": true,
+        "mcp": false,
+        "streaming": false
+      },
       "healthCheck": {
         "command": "test -f /home/workspace/hermes-agent/cli.py && test -f /home/workspace/hermes-agent/.venv/bin/activate",
         "expectedPattern": "",
@@ -86,6 +106,7 @@
       "id": "gemini",
       "name": "Gemini CLI",
       "executor": "local",
+      "transport": "acp",
       "bridge": "Skills/zo-swarm-executors/bridges/gemini-bridge.sh",
       "description": "Google Gemini CLI with persistent daemon — large-context reasoning, multimodal analysis, code generation. Daemon eliminates ~10s Node.js startup overhead per call.",
       "expertise": [
@@ -134,6 +155,15 @@
         "hook": "Skills/zo-swarm-executors/scripts/pre-swarm-hook.sh",
         "recommended": "Run before swarm execution — starts daemon automatically (~12s → ~2s per call)"
       },
+      "capabilities": {
+        "fileRead": true,
+        "fileWrite": true,
+        "shellExec": true,
+        "webResearch": true,
+        "imageGen": false,
+        "mcp": true,
+        "streaming": true
+      },
       "healthCheck": {
         "command": "command -v gemini",
         "expectedPattern": "gemini",
@@ -144,6 +174,7 @@
       "id": "codex",
       "name": "Codex CLI",
       "executor": "local",
+      "transport": "acp",
       "bridge": "Skills/zo-swarm-executors/bridges/codex-bridge.sh",
       "description": "OpenAI Codex CLI (Rust) — fastest local executor (~3s per call). Code generation, shell commands, file editing with full sandbox support.",
       "expertise": [
@@ -170,11 +201,28 @@
           "CODEX_TIMEOUT": "Timeout in seconds (default: 300)"
         }
       },
+      "capabilities": {
+        "fileRead": true,
+        "fileWrite": true,
+        "shellExec": true,
+        "webResearch": false,
+        "imageGen": false,
+        "mcp": true,
+        "streaming": true
+      },
       "healthCheck": {
         "command": "command -v codex",
         "expectedPattern": "codex",
         "description": "Verify Codex CLI is installed"
       }
+    }
+  ],
+  "deferredExecutors": [
+    {
+      "id": "cursor",
+      "status": "deferred",
+      "reason": "Cursor CLI is in beta (Jan 2026). Known issues: headless mode hangs, hooks broken. ACP support exists (March 2026) but not production-ready. Re-evaluate mid-2026.",
+      "requirements": ["cursor-agent binary", "CURSOR_API_KEY", "Cursor Pro subscription ($20/mo)"]
     }
   ]
 }

@@ -123,6 +123,16 @@ export interface ExecutorCapability {
   isLocal: boolean;
 }
 
+export interface ExecutorCapabilities {
+  fileRead: boolean;
+  fileWrite: boolean;
+  shellExec: boolean;
+  webResearch: boolean;
+  imageGen: boolean;
+  mcp: boolean;
+  streaming: boolean;
+}
+
 export interface ExecutorRegistryEntry {
   id: string;
   name: string;
@@ -137,6 +147,7 @@ export interface ExecutorRegistryEntry {
     envVars?: Record<string, string>;
   };
   transport?: 'bridge' | 'acp';
+  capabilities?: ExecutorCapabilities;
   healthCheck?: {
     command: string;
     expectedPattern: string;

@@ -34,7 +34,13 @@ export function createTransport(
     case 'bridge':
       return new BridgeTransport(entry, circuitBreaker);
     case 'acp': {
-      const spec = ACP_ADAPTERS[entry.id] ?? { bin: 'claude-agent-acp' };
+      const spec = ACP_ADAPTERS[entry.id];
+      if (!spec) {
+        throw new Error(
+          `No ACP adapter mapping for executor '${entry.id}'. ` +
+          `Add an entry to ACP_ADAPTERS in transport/factory.ts.`,
+        );
+      }
       return new ACPTransport(entry, circuitBreaker, {
         adapterBin: spec.bin,
         adapterArgs: spec.args,
