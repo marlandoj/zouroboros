@@ -39,18 +39,23 @@ This roadmap tracks the consolidation of all Zouroboros enhancements into a unif
 - [x] Facts storage and retrieval
 - [x] Exact, vector, and hybrid search
 - [x] Episodic memory (events)
-- [ ] Auto-capture for conversations
-- [ ] Cognitive profiles
-- [ ] HyDE expansion
-- [ ] Graph-boosted search
-- [ ] MCP server for memory access
-- [ ] CLI commands
+- [x] Auto-capture for conversations
+- [x] Cognitive profiles
+- [x] HyDE expansion
+- [x] Graph-boosted search
+- [x] MCP server for memory access
+- [x] CLI commands
 
 ### Files Created
 - `packages/memory/src/database.ts` - SQLite schema and migrations
-- `packages/memory/src/embeddings.ts` - Ollama vector embeddings
+- `packages/memory/src/embeddings.ts` - Ollama vector embeddings (includes HyDE)
 - `packages/memory/src/facts.ts` - Fact storage and search
 - `packages/memory/src/episodes.ts` - Event-based memory
+- `packages/memory/src/capture.ts` - Auto-capture for conversations
+- `packages/memory/src/profiles.ts` - Cognitive profile tracking
+- `packages/memory/src/graph.ts` - Graph-boosted search
+- `packages/memory/src/mcp-server.ts` - MCP server (stdio transport)
+- `packages/memory/src/cli.ts` - CLI commands
 
 ---
 
@@ -265,11 +270,13 @@ docker/
 
 ## Final Status
 
-**🎉 PROJECT COMPLETE 🎉**
+**✅ PHASES COMPLETE — v1.0.0 Hardening In Progress**
 
-**Overall Progress:** 100% (8/8 phases)
+**Overall Progress:** 8/8 phases implemented
 **Repository:** https://github.com/marlandoj/zouroboros
-**Status:** Private, production-ready
+**Status:** Private — v1.0.0 release pending (loop guard, memory throttling, CI expansion)
+
+> **Note:** Phases 4 and 5 each have deferred items (`Token optimization`, `Stagnation detection`, `SkillsMP API client`) that are explicitly scoped to future work. These do not block v1.0.0. See BACKLOG.md (ECC-009, ECC-010) for active hardening work.
 
 ### Completed Packages (8)
 | Package | Status | Description |
