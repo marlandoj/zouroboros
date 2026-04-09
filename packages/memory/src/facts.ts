@@ -42,6 +42,7 @@ interface StoreFactInput {
   entity: string;
   key?: string;
   value: string;
+  persona?: string;
   category?: Category;
   decay?: DecayClass;
   importance?: number;
@@ -80,11 +81,12 @@ export async function storeFact(
 
   // Insert fact
   db.run(
-    `INSERT INTO facts (id, entity, key, value, text, category, decay_class, importance, source, 
+    `INSERT INTO facts (id, persona, entity, key, value, text, category, decay_class, importance, source,
                         created_at, expires_at, confidence, metadata)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
+      input.persona || 'shared',
       input.entity,
       input.key || null,
       input.value,
@@ -127,14 +129,15 @@ export function searchFacts(
   options: {
     entity?: string;
     category?: string;
+    persona?: string;
     limit?: number;
   } = {}
 ): MemoryEntry[] {
   const db = getDatabase();
-  const { entity, category, limit = 10 } = options;
+  const { entity, category, persona, limit = 10 } = options;
 
   let sql = `
-    SELECT id, entity, key, value, category, decay_class as decayClass, 
+    SELECT id, persona, entity, key, value, category, decay_class as decayClass,
            importance, source, created_at as createdAt, expires_at as expiresAt,
            confidence, metadata
     FROM facts
@@ -142,6 +145,11 @@ export function searchFacts(
       AND (expires_at IS NULL OR expires_at > strftime('%s', 'now'))
   `;
   const params: (string | number)[] = [`%${query}%`, `%${query}%`, `%${query}%`];
+
+  if (persona) {
+    sql += ' AND (persona = ? OR persona = ?)';
+    params.push(persona, 'shared');
+  }
 
   if (entity) {
     sql += ' AND entity = ?';
@@ -193,6 +201,7 @@ export async function searchFactsVector(
     limit?: number;
     threshold?: number;
     useHyDE?: boolean;
+    persona?: string;
   } = {}
 ): Promise<MemorySearchResult[]> {
   if (!config.vectorEnabled) {
@@ -214,13 +223,23 @@ export async function searchFactsVector(
   }
 
   // Get all facts with embeddings
-  const rows = db.query(`
+  let factsSql = `
     SELECT f.id, f.entity, f.key, f.value, f.category, f.decay_class as decayClass,
-           f.importance, f.created_at as createdAt, fe.embedding
+           f.importance, f.created_at as createdAt, f.persona, fe.embedding
     FROM facts f
     JOIN fact_embeddings fe ON f.id = fe.fact_id
-    WHERE f.expires_at IS NULL OR f.expires_at > strftime('%s', 'now')
-  `).all() as Array<{
+    WHERE (f.expires_at IS NULL OR f.expires_at > strftime('%s', 'now'))
+  `;
+  const factsParams: string[] = [];
+  if (options.persona) {
+    factsSql += ' AND (f.persona = ? OR f.persona = ?)';
+    factsParams.push(options.persona, 'shared');
+  }
+
+  const rows = (factsParams.length > 0
+    ? db.query(factsSql).all(...factsParams)
+    : db.query(factsSql).all()
+  ) as Array<{
     id: string;
     entity: string;
     key: string | null;
@@ -272,22 +291,23 @@ export async function searchFactsHybrid(
     limit?: number;
     vectorWeight?: number;
     rerank?: boolean;
+    persona?: string;
   } = {}
 ): Promise<MemorySearchResult[]> {
-  const { limit = 10, vectorWeight = 0.7 } = options;
+  const { limit = 10, vectorWeight = 0.7, persona } = options;
   const shouldRerank = options.rerank ?? config.reranker?.enabled ?? false;
 
   // When reranking, fetch more candidates for the reranker to choose from
   const fetchLimit = shouldRerank ? Math.max(limit * 2, 20) : limit;
 
   // Get exact matches
-  const exactMatches = searchFacts(query, { limit: fetchLimit * 2 });
+  const exactMatches = searchFacts(query, { limit: fetchLimit * 2, persona });
 
   // Get vector matches
   let vectorMatches: MemorySearchResult[] = [];
   if (config.vectorEnabled) {
     try {
-      vectorMatches = await searchFactsVector(query, config, { limit: fetchLimit * 2 });
+      vectorMatches = await searchFactsVector(query, config, { limit: fetchLimit * 2, persona });
     } catch (error) {
       console.warn('Vector search failed:', error);
     }

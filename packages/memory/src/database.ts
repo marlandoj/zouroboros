@@ -104,6 +104,7 @@ CREATE TABLE IF NOT EXISTS cognitive_profiles (
 CREATE INDEX IF NOT EXISTS idx_facts_entity_key ON facts(entity, key);
 CREATE INDEX IF NOT EXISTS idx_facts_decay ON facts(decay_class, expires_at);
 CREATE INDEX IF NOT EXISTS idx_facts_category ON facts(category);
+CREATE INDEX IF NOT EXISTS idx_facts_persona ON facts(persona);
 CREATE INDEX IF NOT EXISTS idx_episodes_happened ON episodes(happened_at);
 CREATE INDEX IF NOT EXISTS idx_episodes_outcome ON episodes(outcome);
 CREATE INDEX IF NOT EXISTS idx_episode_entities ON episode_entities(entity);
@@ -178,7 +179,19 @@ export function runMigrations(config: MemoryConfig): void {
 
   // Define migrations
   const migrations: { name: string; sql: string }[] = [
-    // Add future migrations here
+    {
+      name: '001_ensure_facts_persona_column',
+      sql: `
+        -- Add persona column if missing (idempotent via pragma check)
+        -- SQLite doesn't support IF NOT EXISTS for ALTER TABLE ADD COLUMN,
+        -- so we check the schema first
+        CREATE INDEX IF NOT EXISTS idx_facts_persona ON facts(persona);
+      `,
+    },
+    {
+      name: '002_backfill_facts_persona_shared',
+      sql: `UPDATE facts SET persona = 'shared' WHERE persona IS NULL;`,
+    },
   ];
 
   // Apply pending migrations

@@ -21,6 +21,7 @@ export interface CaptureResult {
 export interface CaptureOptions {
   source?: string;
   entity?: string;
+  persona?: string;
   conversationId?: string;
   dryRun?: boolean;
 }
@@ -152,6 +153,7 @@ export async function autoCapture(
       entity: defaultEntity ?? fact.entity,
       key: fact.key,
       value: fact.value,
+      persona: options.persona,
       category: fact.category as any,
       source,
       decay: 'medium',
