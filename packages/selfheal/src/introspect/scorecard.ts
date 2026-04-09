@@ -10,6 +10,7 @@ import {
   measureEvalCalibration,
   measureProcedureFreshness,
   measureEpisodeVelocity,
+  measureSkillEffectiveness,
 } from './collector.js';
 
 export async function buildScorecard(): Promise<Scorecard> {
@@ -22,6 +23,7 @@ export async function buildScorecard(): Promise<Scorecard> {
     measureEvalCalibration(),
     measureProcedureFreshness(),
     measureEpisodeVelocity(),
+    measureSkillEffectiveness(),
   ]);
 
   // Calculate composite score (weighted average)

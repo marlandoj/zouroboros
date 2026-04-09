@@ -1,5 +1,9 @@
 /**
  * Metric collection for introspection
+ *
+ * Fixes #47 (wrong script paths), #48 (wrong procedure query),
+ * #49 (missing Skill Effectiveness), #50 (Episode Velocity = duplicate),
+ * #51 (Graph Connectivity SQLite parse failure)
  */
 
 import { execSync } from 'child_process';
@@ -8,9 +12,24 @@ import { join } from 'path';
 import type { MetricResult } from '../types.js';
 
 const WORKSPACE = process.env.ZO_WORKSPACE || '/home/workspace';
-const MONOREPO_ROOT = join(import.meta.dirname || __dirname, '../../../..');
-const MEMORY_SCRIPTS = join(MONOREPO_ROOT, 'packages/memory/src');
 const MEMORY_DB = join(WORKSPACE, '.zo/memory/shared-facts.db');
+
+const EVAL_SCRIPT_CANDIDATES = [
+  join(WORKSPACE, 'Skills/zo-memory-system/scripts/eval-continuation.ts'),
+  join(WORKSPACE, 'zouroboros/packages/memory/scripts/self-enhance/eval-continuation.ts'),
+];
+
+const GRAPH_SCRIPT_CANDIDATES = [
+  join(WORKSPACE, 'Skills/zo-memory-system/scripts/graph.ts'),
+  join(WORKSPACE, '.zo/memory/scripts/graph.ts'),
+];
+
+function findScript(candidates: string[]): string | null {
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
+  }
+  return null;
+}
 
 interface RunResult {
   stdout: string;
@@ -78,13 +97,18 @@ function buildMetric(
   };
 }
 
+function sqliteQuery(db: string, sql: string): string {
+  const result = run(`sqlite3 "${db}" "${sql}"`);
+  return result.ok ? result.stdout : '';
+}
+
 // --- Metric Collectors ---
 
 export async function measureMemoryRecall(): Promise<MetricResult> {
-  const evalScript = join(MEMORY_SCRIPTS, 'eval-continuation.ts');
-  if (!existsSync(evalScript)) {
+  const evalScript = findScript(EVAL_SCRIPT_CANDIDATES);
+  if (!evalScript) {
     return buildMetric('Memory Recall', 0.22, 0.85, 0.70, 0.25,
-      'eval-continuation.ts not found',
+      'eval-continuation.ts not found in Skills/ or packages/',
       'Install zo-memory-system skill',
       false
     );
@@ -126,65 +150,62 @@ export async function measureMemoryRecall(): Promise<MetricResult> {
 }
 
 export async function measureGraphConnectivity(): Promise<MetricResult> {
-  const graphScript = join(MEMORY_SCRIPTS, 'graph.ts');
-  if (!existsSync(graphScript)) {
-    if (existsSync(MEMORY_DB)) {
-      const dbResult = run(`sqlite3 "${MEMORY_DB}" "SELECT COUNT(*) FROM facts; SELECT COUNT(DISTINCT source_id) + COUNT(DISTINCT target_id) FROM fact_links;"`);
-      const lines = dbResult.stdout.split('\n').filter(Boolean);
-      if (lines.length >= 2) {
-        const total = parseInt(lines[0]);
-        const linked = parseInt(lines[1]);
-        const ratio = total > 0 ? Math.min(linked / total, 1.0) : 0;
-        return buildMetric('Graph Connectivity', ratio, 0.80, 0.60, 0.15,
-          `${linked}/${total} facts have graph links (${(ratio * 100).toFixed(1)}%)`,
-          ratio < 0.80
-            ? 'Run wikilink auto-capture on orphan entities'
-            : 'Graph connectivity is healthy',
-          false
-        );
-      }
+  const graphScript = findScript(GRAPH_SCRIPT_CANDIDATES);
+
+  if (graphScript) {
+    const result = run(`bun "${graphScript}" knowledge-gaps 2>&1`);
+    const linkedMatch = result.stdout.match(/Linked facts:\s*(\d+)\s*\(([\d.]+)%\)/);
+    const orphanMatch = result.stdout.match(/Orphan facts:\s*(\d+)/);
+
+    if (linkedMatch) {
+      const linkedPct = parseFloat(linkedMatch[2]) / 100;
+      const orphanCount = orphanMatch ? parseInt(orphanMatch[1]) : 0;
+      return buildMetric('Graph Connectivity', linkedPct, 0.80, 0.60, 0.15,
+        `${(linkedPct * 100).toFixed(1)}% linked (${orphanCount} orphans)`,
+        linkedPct < 0.80
+          ? `Link ${orphanCount} orphan facts; run wikilink auto-capture`
+          : 'Graph connectivity is healthy',
+        false
+      );
     }
-    return buildMetric('Graph Connectivity', 0.14, 0.80, 0.60, 0.15,
-      'graph.ts not found and DB not available',
-      'Install zo-memory-system skill',
-      false
-    );
   }
 
-  const result = run(`bun "${graphScript}" knowledge-gaps 2>&1`);
-  const linkedMatch = result.stdout.match(/Linked facts:\s*(\d+)\s*\(([\d.]+)%\)/);
-  const orphanMatch = result.stdout.match(/Orphan facts:\s*(\d+)/);
-
-  if (linkedMatch) {
-    const linkedPct = parseFloat(linkedMatch[2]) / 100;
-    const orphanCount = orphanMatch ? parseInt(orphanMatch[1]) : 0;
-    return buildMetric('Graph Connectivity', linkedPct, 0.80, 0.60, 0.15,
-      `${(linkedPct * 100).toFixed(1)}% linked (${orphanCount} orphans)`,
-      linkedPct < 0.80
-        ? `Link ${orphanCount} orphan facts; run wikilink auto-capture`
-        : 'Graph connectivity is healthy',
-      false
-    );
+  if (existsSync(MEMORY_DB)) {
+    const totalStr = sqliteQuery(MEMORY_DB, 'SELECT COUNT(*) FROM facts');
+    const linkedStr = sqliteQuery(MEMORY_DB,
+      'SELECT COUNT(DISTINCT source_id) + COUNT(DISTINCT target_id) FROM fact_links');
+    const total = parseInt(totalStr) || 0;
+    const linked = parseInt(linkedStr) || 0;
+    if (total > 0) {
+      const ratio = Math.min(linked / total, 1.0);
+      return buildMetric('Graph Connectivity', ratio, 0.80, 0.60, 0.15,
+        `${linked}/${total} facts have graph links (${(ratio * 100).toFixed(1)}%)`,
+        ratio < 0.80
+          ? 'Run wikilink auto-capture on orphan entities'
+          : 'Graph connectivity is healthy',
+        false
+      );
+    }
   }
 
-  return buildMetric('Graph Connectivity', 0.5, 0.80, 0.60, 0.15,
-    'Could not parse graph output',
-    'Check graph.ts knowledge-gaps output format',
+  return buildMetric('Graph Connectivity', 0.14, 0.80, 0.60, 0.15,
+    'No graph data available',
+    'Install zo-memory-system skill',
     false
   );
 }
 
 export async function measureRoutingAccuracy(): Promise<MetricResult> {
-  // Query episode outcomes from memory DB
   if (existsSync(MEMORY_DB)) {
-    const result = run(`sqlite3 "${MEMORY_DB}" "SELECT COUNT(*) as total, SUM(CASE WHEN outcome='success' THEN 1 ELSE 0 END) as successes FROM episodes WHERE created_at > strftime('%s','now','-14 days');"`);
-    const parts = result.stdout.split('|');
+    const result = sqliteQuery(MEMORY_DB,
+      "SELECT COUNT(*), SUM(CASE WHEN outcome='success' THEN 1 ELSE 0 END) FROM episodes WHERE created_at > strftime('%s','now','-7 days')");
+    const parts = result.split('|');
     if (parts.length >= 2) {
       const total = parseInt(parts[0]) || 0;
       const successes = parseInt(parts[1]) || 0;
       const rate = total > 0 ? successes / total : 0;
       return buildMetric('Routing Accuracy', rate, 0.85, 0.70, 0.20,
-        `${successes}/${total} episodes succeeded (${(rate * 100).toFixed(1)}%) over 14 days`,
+        `${successes}/${total} episodes succeeded (${(rate * 100).toFixed(1)}%) over 7 days`,
         rate < 0.85
           ? 'Review failed episodes for routing mismatches'
           : 'Routing accuracy is healthy',
@@ -200,7 +221,6 @@ export async function measureRoutingAccuracy(): Promise<MetricResult> {
 }
 
 export async function measureEvalCalibration(): Promise<MetricResult> {
-  // Check Stage 3 override rate from evaluation report files
   const evalDir = join(WORKSPACE, '.zo/evaluations');
   if (existsSync(evalDir)) {
     const result = run(`find "${evalDir}" -name "*.json" -mtime -14 -exec grep -l '"stage3Override"' {} \\; | wc -l`);
@@ -224,51 +244,97 @@ export async function measureEvalCalibration(): Promise<MetricResult> {
 }
 
 export async function measureProcedureFreshness(): Promise<MetricResult> {
-  // Check stale procedure ratio from memory DB
   if (existsSync(MEMORY_DB)) {
-    const result = run(`sqlite3 "${MEMORY_DB}" "SELECT COUNT(*) as total, SUM(CASE WHEN last_accessed > strftime('%s','now','-14 days') THEN 1 ELSE 0 END) as fresh FROM facts WHERE category='convention' OR category='reference';"`);
-    const parts = result.stdout.split('|');
+    const result = sqliteQuery(MEMORY_DB,
+      "SELECT COUNT(*), SUM(CASE WHEN created_at > strftime('%s','now','-14 days') THEN 1 ELSE 0 END) FROM procedures");
+    const parts = result.split('|');
     if (parts.length >= 2) {
       const total = parseInt(parts[0]) || 0;
       const fresh = parseInt(parts[1]) || 0;
-      const rate = total > 0 ? fresh / total : 0;
-      return buildMetric('Procedure Freshness', rate, 0.70, 0.50, 0.15,
-        `${fresh}/${total} procedures accessed in last 14 days (${(rate * 100).toFixed(1)}%)`,
-        rate < 0.70
-          ? 'Review and update stale procedures'
-          : 'Procedure freshness is healthy',
-        false
-      );
+      if (total > 0) {
+        const staleRatio = (total - fresh) / total;
+        return buildMetric('Procedure Freshness', staleRatio, 0.30, 0.60, 0.15,
+          `${fresh}/${total} procedures updated in last 14 days (${total - fresh} stale)`,
+          staleRatio > 0.30
+            ? `Evolve ${total - fresh} stale procedures: bun memory.ts procedures --evolve <id>`
+            : 'Procedure freshness is healthy',
+          true
+        );
+      }
     }
   }
-  return buildMetric('Procedure Freshness', 0, 0.70, 0.50, 0.15,
+  return buildMetric('Procedure Freshness', 1.0, 0.30, 0.60, 0.15,
     'No procedure data available',
     'Ensure procedures are stored in memory DB',
-    false
+    true
   );
 }
 
 export async function measureEpisodeVelocity(): Promise<MetricResult> {
-  // Analyze 14-day success trend from episodes
   if (existsSync(MEMORY_DB)) {
-    const result = run(`sqlite3 "${MEMORY_DB}" "SELECT COUNT(*) as total, SUM(CASE WHEN outcome='success' THEN 1 ELSE 0 END) as successes FROM episodes WHERE created_at > strftime('%s','now','-14 days');"`);
-    const parts = result.stdout.split('|');
-    if (parts.length >= 2) {
-      const total = parseInt(parts[0]) || 0;
-      const successes = parseInt(parts[1]) || 0;
-      const rate = total > 0 ? successes / total : 0;
-      return buildMetric('Episode Velocity', rate, 0.75, 0.60, 0.10,
-        `${successes}/${total} episodes succeeded over 14 days (${(rate * 100).toFixed(1)}%)`,
-        rate < 0.75
-          ? 'Investigate recurring failure patterns in recent episodes'
-          : 'Episode velocity is healthy',
+    const currentStr = sqliteQuery(MEMORY_DB,
+      "SELECT COUNT(*), SUM(CASE WHEN outcome='success' THEN 1 ELSE 0 END) FROM episodes WHERE created_at > strftime('%s','now','-7 days')");
+    const priorStr = sqliteQuery(MEMORY_DB,
+      "SELECT COUNT(*), SUM(CASE WHEN outcome='success' THEN 1 ELSE 0 END) FROM episodes WHERE created_at > strftime('%s','now','-14 days') AND created_at <= strftime('%s','now','-7 days')");
+
+    const cur = currentStr.split('|');
+    const prev = priorStr.split('|');
+
+    if (cur.length >= 2 && prev.length >= 2) {
+      const curTotal = parseInt(cur[0]) || 0;
+      const curSuccess = parseInt(cur[1]) || 0;
+      const prevTotal = parseInt(prev[0]) || 0;
+      const prevSuccess = parseInt(prev[1]) || 0;
+
+      const curRate = curTotal > 0 ? curSuccess / curTotal : 0;
+      const prevRate = prevTotal > 0 ? prevSuccess / prevTotal : 0;
+      const delta = curRate - prevRate;
+      const trendIcon = delta > 0.05 ? '↑' : delta < -0.05 ? '↓' : '→';
+
+      const velocityScore = 0.5 + delta;
+      return buildMetric('Episode Velocity', velocityScore, 0.50, -0.20, 0.10,
+        `${(curRate * 100).toFixed(1)}% current vs ${(prevRate * 100).toFixed(1)}% prior 7d ${trendIcon}`,
+        delta < 0
+          ? 'Investigate declining success rate in recent episodes'
+          : 'Episode velocity is healthy — success rate trending up',
         false
       );
     }
   }
-  return buildMetric('Episode Velocity', 0, 0.75, 0.60, 0.10,
+  return buildMetric('Episode Velocity', 0, 0.50, -0.20, 0.10,
     'No episode data available',
     'Ensure episodes are being recorded',
+    false
+  );
+}
+
+export async function measureSkillEffectiveness(): Promise<MetricResult> {
+  if (existsSync(MEMORY_DB)) {
+    const tableCheck = sqliteQuery(MEMORY_DB,
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='skill_executions'");
+    if (tableCheck.includes('skill_executions')) {
+      const result = sqliteQuery(MEMORY_DB,
+        "SELECT COUNT(*), SUM(CASE WHEN outcome='success' THEN 1 ELSE 0 END) FROM skill_executions WHERE created_at > strftime('%s','now','-7 days')");
+      const parts = result.split('|');
+      if (parts.length >= 2) {
+        const total = parseInt(parts[0]) || 0;
+        const successes = parseInt(parts[1]) || 0;
+        if (total > 0) {
+          const rate = successes / total;
+          return buildMetric('Skill Effectiveness', rate, 0.85, 0.70, 0.10,
+            `${successes}/${total} skill executions succeeded (${(rate * 100).toFixed(1)}%) over 7 days`,
+            rate < 0.85
+              ? 'Analyze failing skills for error patterns'
+              : 'Skill effectiveness is healthy',
+            false
+          );
+        }
+      }
+    }
+  }
+  return buildMetric('Skill Effectiveness', 1.0, 0.85, 0.70, 0.10,
+    'No skill execution data (assuming healthy)',
+    'Instrument skills with execution tracking',
     false
   );
 }
