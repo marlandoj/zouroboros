@@ -414,9 +414,10 @@ async function main() {
 
     // Spawn inline-capture detached (survives parent exit)
     const captureSource = `inline:chat/${gate.keywords.join("-")}`;
+    const personaArgs = personaSlug ? ["--persona", personaSlug] : [];
     const captureArgs = conversationContext
-      ? ["bun", INLINE_CAPTURE_SCRIPT, "--message", message, "--context", conversationContext, "--source", captureSource]
-      : ["bun", INLINE_CAPTURE_SCRIPT, "--message", message, "--source", captureSource];
+      ? ["bun", INLINE_CAPTURE_SCRIPT, "--message", message, "--context", conversationContext, "--source", captureSource, ...personaArgs]
+      : ["bun", INLINE_CAPTURE_SCRIPT, "--message", message, "--source", captureSource, ...personaArgs];
 
     const proc = Bun.spawn(captureArgs, {
       stdout: "inherit",

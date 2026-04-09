@@ -25,6 +25,7 @@ interface InlineOptions {
   source: string;
   captureMode: "inline" | "batch";
   dryRun: boolean;
+  persona: string;
 }
 
 function parseArgs(): InlineOptions {
@@ -34,6 +35,7 @@ function parseArgs(): InlineOptions {
   let source = "inline:unknown";
   let captureMode: "inline" | "batch" = "inline";
   let dryRun = false;
+  let persona = "shared";
 
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
@@ -49,6 +51,10 @@ function parseArgs(): InlineOptions {
       case "-s":
         source = args[++i] || source;
         break;
+      case "--persona":
+      case "-p":
+        persona = args[++i] || "shared";
+        break;
       case "--batch":
         captureMode = "batch";
         break;
@@ -58,14 +64,14 @@ function parseArgs(): InlineOptions {
     }
   }
 
-  return { message, context, source, captureMode, dryRun };
+  return { message, context, source, captureMode, dryRun, persona };
 }
 
 async function main() {
   const opts = parseArgs();
 
   if (!opts.message && !opts.context) {
-    console.error("Usage: bun inline-capture.ts --message '...' --context '...' [--source x] [--dry-run]");
+    console.error("Usage: bun inline-capture.ts --message '...' --context '...' [--persona <slug>] [--source x] [--dry-run]");
     process.exit(1);
   }
 
@@ -83,6 +89,7 @@ async function main() {
     source: opts.source,
     captureMode: opts.captureMode,
     dryRun: opts.dryRun,
+    persona: opts.persona,
   });
 
   if (result.stored.length > 0) {
