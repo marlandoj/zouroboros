@@ -27,6 +27,7 @@ Zouroboros is a self-enhancing AI platform built natively on [Zo Computer](https
 - **Persona Framework** — SOUL/IDENTITY architecture with 8-phase creation workflow and persona-scoped fact storage.
 - **Spec-First Development** — Interview, three-stage evaluate, gap audit (4 checks), unstuck, and autoloop tools.
 - **Self-Healing** — Daily introspection, prescription, and autonomous evolution with 12 playbooks and a governor safety gate.
+- **Health Council** — Four autonomous watchers (Healer, Doctor, Introspector, Steward) monitor runtime, orchestration, capability, and knowledge layers with zero overlap.
 - **API Server** — Hono REST API with SSE event streaming for real-time budget, heartbeat, and task events.
 - **Heartbeat Scheduler** — Persistent wake cycles with SQLite state for long-running swarm campaigns.
 
@@ -271,6 +272,7 @@ pnpm test  # 757+ tests
 - **[Installation Guide](./docs/getting-started/installation.md)** — Get started in minutes
 - **[Quick Start](./docs/getting-started/quickstart.md)** — Build your first project
 - **[Architecture Overview](./docs/architecture/overview.md)** — System design
+- **[Health Council](./docs/architecture/health-council.md)** — Self-monitoring watchers
 - **[CLI Reference](./docs/reference/cli-commands.md)** — Complete command reference
 
 ## Contributing
