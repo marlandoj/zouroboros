@@ -46,6 +46,16 @@ The CLI and TUI Dashboard sit at the top as the command layer. Below, three core
 - **Prescribe**: Generate improvement plans
 - **Evolve**: Execute autonomous improvements
 
+### Health Council
+Four autonomous watchers monitor distinct layers — see [Health Council](./health-council.md) for full details.
+
+| Seat | Layer | Cadence |
+|------|-------|---------|
+| Healer | Runtime (model availability) | Every 2 hours |
+| Doctor | Orchestration (agent fleet) | Weekly |
+| Introspector | Capability (skills, identity) | Weekly |
+| Steward (Mimir) | Knowledge (memory graph) | Daily |
+
 ## Data Flow
 
 <p align="center">
