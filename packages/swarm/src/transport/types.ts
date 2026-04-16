@@ -55,4 +55,4 @@ export interface ExecutorTransport {
   shutdown(): Promise<void>;
 }
 
-export type TransportType = 'bridge' | 'acp';
+export type TransportType = 'bridge' | 'acp' | 'mimir';

@@ -104,6 +104,7 @@ function seedDefaultRoles(db: Database): void {
     { id: 'researcher', name: 'Researcher', executor_id: 'hermes', model: null, tags: '["research","web","multi-platform","analysis","investigation"]', description: 'Web research, multi-platform analysis, data gathering' },
     { id: 'junior-developer', name: 'Junior Developer', executor_id: 'gemini', model: 'flash', tags: '["simple","quick","edit","fix"]', description: 'Simple edits, quick fixes, low-complexity tasks' },
     { id: 'ops-engineer', name: 'Ops Engineer', executor_id: 'hermes', model: null, tags: '["infrastructure","deployment","devops","monitoring","chat"]', description: 'Infrastructure, deployment, chat delivery, operations' },
+    { id: 'memory-sage', name: 'Memory Sage (Mimir)', executor_id: 'mimir', model: null, tags: '["memory","context","sage","mimir","recall","history"]', description: 'Queries Mimir for historical context relevant to a task. Injects institutional knowledge into downstream nodes.' },
   ];
 
   const stmt = db.prepare(

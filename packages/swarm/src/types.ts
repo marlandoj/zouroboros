@@ -173,7 +173,7 @@ export interface ExecutorRegistryEntry {
     model?: string;
     envVars?: Record<string, string>;
   };
-  transport?: 'bridge' | 'acp';
+  transport?: 'bridge' | 'acp' | 'mimir';
   capabilities?: ExecutorCapabilities;
   healthCheck?: {
     command: string;

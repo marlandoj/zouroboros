@@ -124,6 +124,9 @@ export type {
 // ACP transport
 export { ACPTransport, type ACPTransportConfig } from './transport/acp-transport.js';
 
+// Mimir transport (memory sage)
+export { MimirTransport } from './transport/mimir-transport.js';
+
 // Heartbeat
 export { HeartbeatScheduler } from './heartbeat/scheduler.js';
 
