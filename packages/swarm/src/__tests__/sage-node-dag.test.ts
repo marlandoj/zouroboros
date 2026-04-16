@@ -1,4 +1,5 @@
 import { test, expect, describe, mock } from 'bun:test';
+import { join } from 'path';
 import { MimirTransport } from '../transport/mimir-transport.js';
 import { createTransport } from '../transport/factory.js';
 import { loadRegistry, findExecutor } from '../registry/loader.js';
@@ -6,10 +7,12 @@ import type { Task, TaskResult } from '../types.js';
 import type { TransportOptions } from '../transport/types.js';
 
 const defaultOptions: TransportOptions = { timeoutMs: 15000 };
+const REGISTRY_PATH = join(import.meta.dir, '..', 'executor', 'registry', 'executor-registry.json');
+const SCHEMA_PATH = join(import.meta.dir, '..', 'db', 'schema.ts');
 
 describe('Sage Node — DAG Integration', () => {
   test('registry resolves mimir executor with transport: mimir', () => {
-    const registry = loadRegistry();
+    const registry = loadRegistry(REGISTRY_PATH);
     const mimir = findExecutor(registry, 'mimir');
 
     expect(mimir).toBeDefined();
@@ -20,7 +23,7 @@ describe('Sage Node — DAG Integration', () => {
   });
 
   test('factory creates MimirTransport for mimir executor', () => {
-    const registry = loadRegistry();
+    const registry = loadRegistry(REGISTRY_PATH);
     const entry = findExecutor(registry, 'mimir')!;
 
     // Factory needs a circuit breaker — pass a minimal mock
@@ -116,9 +119,7 @@ describe('Sage Node — DAG Integration', () => {
 
   test('memory-sage role exists in DB schema seed', async () => {
     // Verify the role seed in schema.ts references memory-sage
-    const schemaFile = await Bun.file(
-      '/home/workspace/zouroboros/packages/swarm/src/db/schema.ts'
-    ).text();
+    const schemaFile = await Bun.file(SCHEMA_PATH).text();
     
     expect(schemaFile).toContain("'memory-sage'");
     expect(schemaFile).toContain('Memory Sage (Mimir)');
