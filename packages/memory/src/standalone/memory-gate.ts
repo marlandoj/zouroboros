@@ -15,12 +15,12 @@
  */
 
 import { detectContinuation } from "./continuation";
+import { generate } from "./model-client";
 import { extractWikilinks } from "./wikilink-utils";
-import { getPersonaDomain, getPersonaDomains } from "./domain-map.ts";
+import { getPersonaDomain } from "./domain-map.ts";
 import { generateBriefing } from "./session-briefing.ts";
+import { logGateDecision } from "./scorecard.ts";
 
-const OLLAMA_URL = process.env.OLLAMA_URL || "http://localhost:11434";
-const GATE_MODEL = process.env.ZO_GATE_MODEL || "qwen2.5:1.5b";
 const MEMORY_SCRIPT = "/home/workspace/Skills/zo-memory-system/scripts/memory.ts";
 const MAX_RESULTS = 5;
 
@@ -58,32 +58,16 @@ User: "check the current zo resources"
 Now classify this message:
 User: "${message.replace(/"/g, '\\"').replace(/\n/g, ' ')}"`;
 
-  const resp = await fetch(`${OLLAMA_URL}/api/generate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: GATE_MODEL,
-      prompt,
-      stream: false,
-      keep_alive: "24h",
-      options: {
-        temperature: 0.1,
-        num_predict: 150,
-      },
-    }),
+  // Route through model-client: picks up ZO_MODEL_GATE from env, defaults to ollama:qwen2.5:1.5b
+  const result = await generate({
+    prompt,
+    workload: "gate",
   });
 
-  if (!resp.ok) {
-    throw new Error(`Ollama error: ${resp.status} ${await resp.text()}`);
-  }
-
-  const data = await resp.json();
-  const raw = data.response.trim();
-
-  // Extract JSON from response (handle markdown code blocks)
+  const raw = result.content.trim();
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
-    throw new Error(`Failed to parse Ollama response as JSON: ${raw}`);
+    throw new Error(`Failed to parse gate response as JSON: ${raw}`);
   }
 
   const parsed = JSON.parse(jsonMatch[0]);
@@ -97,7 +81,7 @@ User: "${message.replace(/"/g, '\\"').replace(/\n/g, ' ')}"`;
 async function searchMemory(keywords: string[], preferExact: boolean = false): Promise<string> {
   const query = keywords.join(" ");
   const command = preferExact ? "search" : "hybrid";
-  const extraArgs = preferExact ? [] : ["--no-hyde"];
+  const extraArgs: string[] = [];
   const proc = Bun.spawn(
     ["bun", MEMORY_SCRIPT, command, query, "--limit", String(MAX_RESULTS), ...extraArgs],
     {
@@ -128,7 +112,7 @@ async function searchMemory(keywords: string[], preferExact: boolean = false): P
 
 async function searchContinuation(message: string): Promise<string> {
   const proc = Bun.spawn(
-    ["bun", MEMORY_SCRIPT, "continuation", message, "--limit", String(MAX_RESULTS), "--no-hyde"],
+    ["bun", MEMORY_SCRIPT, "continuation", message, "--limit", String(MAX_RESULTS)],
     {
       stdout: "pipe",
       stderr: "pipe",
@@ -149,16 +133,30 @@ export interface GateDecision {
 }
 
 const KEYWORD_MEMORY_PATTERNS = [
-  /\b(update|check|status|progress|continue|resume|review|where did we|left off|last time)\b/i,
+  /\b(update|check|status|progress|continue|resume|review|where did we|left off|last time|remind|current|decided?)\b/i,
   /\b(project|system|config|persona|swarm|memory|episode|procedure)\./i,
-  /\b(what happened|how is|show me|find)\b.*\b(with|about|for|in)\b/i,
+  /\b(what happened|how is|show me|find)\b.*\b(with|about|for|in|doing|going)\b/i,
+  /\b(remind me|what did we|where did we)\b/i,
 ];
 
 const KEYWORD_SKIP_PATTERNS = [
   /^(hi|hello|hey|thanks|thank you|ok|sure|yes|no|bye|goodbye)\s*[!?.]*$/i,
   /^(what is|define|explain|how to|how do you)\s/i,
   /^\d+\s*[\+\-\*\/]\s*\d+/,
+  /^good (morning|afternoon|evening)\b/i,
+  /^(thanks|thank you) for\b/i,
+  /^(write|create|build|implement|generate|code)\b.+\b(function|class|method|script|program|algorithm|component|module|app)\b/i,
 ];
+
+/** Extract search keywords from a message by removing stop words */
+function extractKeywordsFromMessage(message: string): string[] {
+  const STOP_WORDS = new Set(["the","a","an","is","are","was","were","be","been","have","has","had","do","does","did","will","would","could","should","may","can","to","of","in","for","on","with","at","by","from","about","how","what","where","when","who","why","which","that","this","it","its","me","my","we","our","you","your","he","she","they","them","and","but","or","if","so","up","out","no","not","just","get","got","let","going","doing"]);
+  return message
+    .toLowerCase()
+    .replace(/[?!.,;:'"]/g, '')
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !STOP_WORDS.has(w));
+}
 
 export function markBriefingInjected(): void {
   process.env.BRIEFING_INJECTED = "1";
@@ -174,30 +172,24 @@ export function markBriefingInjected(): void {
  */
 export async function injectSessionBriefing(personaSlug: string): Promise<string | null> {
   // No persona exclusions — CLI transports (claude-code, gemini-cli, codex-cli)
-  // should never be passed here; the caller maps them to the intended persona.
+  // should never be passed here; the rule maps them to the intended persona (e.g., "alaric").
   // Hermes is excluded at the rule level (omits --persona flag).
 
   try {
-    // Multi-domain personas (e.g., alaric) pass no domain — generateBriefing
-    // detects the multi-domain config and aggregates across all domains.
-    const multiDomains = getPersonaDomains(personaSlug);
-    let effectiveDomain: string | undefined;
-    if (!multiDomains) {
-      const domain = getPersonaDomain(personaSlug);
-      effectiveDomain = domain === "shared" || domain === "personal" ? undefined : domain;
-    }
-
+    const domain = getPersonaDomain(personaSlug);
+    const effectiveDomain = domain === "shared" || domain === "personal" ? undefined : domain;
     const result = await generateBriefing(personaSlug, effectiveDomain);
 
     if (!result.briefing || result.briefing.startsWith("No recent activity")) {
       return null;
     }
 
+    // Set the flag so shouldInjectMemory() skips Tier 3 on the first message
     markBriefingInjected();
 
-    const domainLabel = result.domain || effectiveDomain;
+    // Format for injection into conversation context
     const parts: string[] = [
-      `[Session Briefing — ${personaSlug}${domainLabel ? ` (${domainLabel})` : ""} — ${result.latency_ms}ms]`,
+      `[Session Briefing — ${personaSlug}${effectiveDomain ? ` (${effectiveDomain})` : ""} — ${result.latency_ms}ms]`,
       result.briefing,
     ];
     if (result.active_items.length > 0) {
@@ -247,7 +239,7 @@ export async function shouldInjectMemory(taskText: string): Promise<GateDecision
     ]);
     return {
       inject: gate.needs_memory,
-      method: "ollama_classifier",
+      method: "llm_classifier",
       latency_ms: Date.now() - start,
     };
   } catch {
@@ -284,6 +276,17 @@ function markBriefingSentinel(persona: string): void {
 
 // --- CLI entry point (backward compatible) ---
 
+function exitWithLog(opts: { code: number; method: string; memoryFound: boolean; persona?: string; latencyMs?: number; startMs?: number }) {
+  logGateDecision({
+    exitCode: opts.code,
+    method: opts.method,
+    memoryFound: opts.memoryFound,
+    persona: opts.persona ?? undefined,
+    latencyMs: opts.latencyMs ?? (opts.startMs ? Date.now() - opts.startMs : undefined),
+  });
+  process.exit(opts.code);
+}
+
 async function main() {
   // Parse --persona flag if present
   const args = process.argv.slice(2);
@@ -316,6 +319,8 @@ async function main() {
   }
 
   try {
+    const gateStart = Date.now();
+
     // Tier 0a: Auto-inject briefing on first call for this persona (sentinel-based)
     if (personaSlug && !isBriefingFresh(personaSlug)) {
       const briefing = await injectSessionBriefing(personaSlug);
@@ -330,7 +335,7 @@ async function main() {
     if (process.env.BRIEFING_INJECTED === "1") {
       delete process.env.BRIEFING_INJECTED;
       console.log(JSON.stringify({ inject: false, method: "briefing_skip", latency_ms: 0 }));
-      process.exit(2);
+      exitWithLog({ code: 2, method: "briefing_skip", memoryFound: false, persona: personaSlug ?? undefined, startMs: gateStart });
     }
 
     const continuation = detectContinuation(message);
@@ -339,7 +344,7 @@ async function main() {
       const continuationResults = await searchContinuation(message);
       if (continuationResults && !continuationResults.includes("No continuation context found")) {
         console.log(continuationResults);
-        process.exit(0);
+        exitWithLog({ code: 0, method: "continuation", memoryFound: true, persona: personaSlug ?? undefined, startMs: gateStart });
       }
     }
 
@@ -351,26 +356,48 @@ async function main() {
       if (results && !results.includes("No results") && !results.includes("Found 0 results") && results.length >= 10) {
         console.log(`[Memory Context — wikilink fast-path: ${wlKeywords.join(", ")}]`);
         console.log(results);
-        process.exit(0);
+        exitWithLog({ code: 0, method: "wikilink_fast_path", memoryFound: true, persona: personaSlug ?? undefined, startMs: gateStart });
       }
     }
 
+    // Keyword heuristic: deterministic pre-check before Ollama
+    const hasMemoryKw = KEYWORD_MEMORY_PATTERNS.some(p => p.test(message));
+    const hasSkipKw = KEYWORD_SKIP_PATTERNS.some(p => p.test(message));
+
+    if (hasSkipKw && !hasMemoryKw) {
+      exitWithLog({ code: 2, method: "keyword_heuristic", memoryFound: false, persona: personaSlug ?? undefined, startMs: gateStart });
+    }
+
+    if (hasMemoryKw) {
+      const keywords = extractKeywordsFromMessage(message);
+      if (keywords.length > 0) {
+        const results = await searchMemory(keywords, continuation.needsMemory);
+        if (results && !results.includes("No results") && !results.includes("Found 0 results") && results.length >= 10) {
+          console.log(`[Memory Context — keywords: ${keywords.join(", ")}]`);
+          console.log(results);
+          exitWithLog({ code: 0, method: "keyword_heuristic", memoryFound: true, persona: personaSlug ?? undefined, startMs: gateStart });
+        }
+        exitWithLog({ code: 3, method: "keyword_heuristic", memoryFound: false, persona: personaSlug ?? undefined, startMs: gateStart });
+      }
+    }
+
+    // Ollama classifier (fallback for ambiguous cases)
     const gate = await callOllama(message);
 
     if (!gate.needs_memory) {
       // No memory needed — exit silently
-      process.exit(2);
+      exitWithLog({ code: 2, method: "llm_classifier", memoryFound: false, persona: personaSlug ?? undefined, startMs: gateStart });
     }
 
     if (gate.keywords.length === 0) {
       console.error("Gate said memory needed but extracted no keywords");
-      process.exit(3);
+      exitWithLog({ code: 3, method: "llm_classifier", memoryFound: false, persona: personaSlug ?? undefined, startMs: gateStart });
     }
 
     const results = await searchMemory(gate.keywords, continuation.needsMemory);
 
     if (!results || results.includes("No results") || results.includes("Found 0 results") || results.length < 10) {
-      process.exit(3);
+      exitWithLog({ code: 3, method: "llm_classifier", memoryFound: false, persona: personaSlug ?? undefined, startMs: gateStart });
     }
 
     // Output results for injection into context
@@ -414,10 +441,11 @@ async function main() {
 
     // Spawn inline-capture detached (survives parent exit)
     const captureSource = `inline:chat/${gate.keywords.join("-")}`;
-    const personaArgs = personaSlug ? ["--persona", personaSlug] : [];
+    const capturePersona = personaSlug || "shared";
+    const baseArgs = ["bun", INLINE_CAPTURE_SCRIPT, "--message", message, "--persona", capturePersona, "--source", captureSource];
     const captureArgs = conversationContext
-      ? ["bun", INLINE_CAPTURE_SCRIPT, "--message", message, "--context", conversationContext, "--source", captureSource, ...personaArgs]
-      : ["bun", INLINE_CAPTURE_SCRIPT, "--message", message, "--source", captureSource, ...personaArgs];
+      ? [...baseArgs, "--context", conversationContext]
+      : baseArgs;
 
     const proc = Bun.spawn(captureArgs, {
       stdout: "inherit",
@@ -426,7 +454,7 @@ async function main() {
     // Detach so subprocess outlives parent gate process
     proc.unref();
 
-    process.exit(0);
+    exitWithLog({ code: 0, method: "llm_classifier", memoryFound: true, persona: personaSlug ?? undefined, startMs: gateStart });
 
   } catch (err) {
     console.error(`memory-gate error: ${err}`);
