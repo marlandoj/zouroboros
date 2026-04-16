@@ -90,6 +90,7 @@ async function toolSwarmExecute(args: {
     "--tasks", tasksPath,
     "--name", campaignId,
     "--local-concurrency", concurrency.toString(),
+    "--swarm-events",
   ];
 
   if (args.waitForCompletion) {

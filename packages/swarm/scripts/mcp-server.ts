@@ -98,12 +98,13 @@ async function toolSwarmExecute(args: {
   const tasksPath = `/tmp/swarm-tasks-${campaignId}.json`;
   await Bun.write(tasksPath, JSON.stringify(tasks, null, 2));
 
-  // Build command
+  // Build command (v5.3: sentinel events enabled by default)
   const cmd = [
     "bun", "run", `${SWARM_SCRIPTS_DIR}/orchestrate-v5.ts`,
     "--tasks", tasksPath,
     "--name", campaignId,
     "--local-concurrency", concurrency.toString(),
+    "--swarm-events",
   ];
 
   if (args.waitForCompletion) {

@@ -9,6 +9,7 @@ import type { ExecutorRegistryEntry } from '../types.js';
 import { CircuitBreaker } from '../circuit/breaker.js';
 import { BridgeTransport } from './bridge-transport.js';
 import { ACPTransport } from './acp-transport.js';
+import { MimirTransport } from './mimir-transport.js';
 import type { ExecutorTransport, TransportType } from './types.js';
 
 /** Per-executor ACP adapter config. */
@@ -27,8 +28,7 @@ export function createTransport(
   entry: ExecutorRegistryEntry,
   circuitBreaker: CircuitBreaker,
 ): ExecutorTransport {
-  const transport: TransportType =
-    (entry as ExecutorRegistryEntry & { transport?: TransportType }).transport ?? 'bridge';
+  const transport: TransportType = entry.transport ?? 'bridge';
 
   switch (transport) {
     case 'bridge':
@@ -45,6 +45,10 @@ export function createTransport(
         adapterBin: spec.bin,
         adapterArgs: spec.args,
       });
+    }
+    case 'mimir': {
+      const gateUrl = process.env.MIMIR_GATE_URL || 'http://localhost:7820';
+      return new MimirTransport(gateUrl);
     }
     default:
       throw new Error(`Unknown transport type '${transport}' for executor '${entry.id}'`);
