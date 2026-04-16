@@ -7,9 +7,9 @@
  * to score task complexity and parallelism potential.
  *
  * Exit codes:
- *   0 = SWARM — engage full swarm pipeline (score > 0.60 or FORCE override)
- *   2 = DIRECT — skip swarm, execute directly (score < 0.35)
- *   3 = SUGGEST — recommend swarm but proceed direct (score 0.35–0.60)
+ *   0 = SWARM — engage full swarm pipeline (score > 0.45 or FORCE override)
+ *   2 = DIRECT — skip swarm, execute directly (score < 0.30)
+ *   3 = SUGGEST — recommend swarm but proceed direct (score 0.30–0.45)
  *   1 = error
  *
  * Usage:
@@ -32,8 +32,8 @@ const WEIGHTS = {
 
 // ─── Thresholds ─────────────────────────────────────────────────────────────
 
-const THRESHOLD_SWARM  = 0.55;
-const THRESHOLD_SUGGEST = 0.35;
+const THRESHOLD_SWARM  = 0.45;
+const THRESHOLD_SUGGEST = 0.30;
 const BIAS_DIRECT_PENALTY = 0.15;
 
 // ─── Override detection ─────────────────────────────────────────────────────
@@ -371,7 +371,8 @@ function scoreArchetypes(msg: string): number {
   if (/\b(set\s*up|configure|architect)\b/i.test(lower) && /\b(bridge|architecture|pattern|framework|bot)\b/i.test(lower)) bonus += 0.15;
 
   // Pattern: blog/content creation (multi-step pipeline)
-  if (/\b(blog\s+post|write\s+a\s+blog|create\s+a?\s*blog|draft\s+a?\s*blog|publish\s+a?\s*blog)\b/i.test(lower)) bonus += 0.2;
+  // Pattern: blog/content creation (multi-step pipeline: strategist → writer → humanizer + 3 route updates)
+  if (/\b(blog\s+post|write\s+a\s+blog|create\s+a?\s*blog|draft\s+a?\s*blog|publish\s+a?\s*blog)\b/i.test(lower)) bonus += 0.45;
 
   return Math.min(bonus, 0.45); // Cap archetype bonus
 }
