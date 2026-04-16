@@ -17,11 +17,9 @@ import { parseArgs } from "util";
 import { loadPersonaContext } from "./vault-persona-loader.ts";
 import { searchCrossPersona, getAccessiblePersonas } from "./cross-persona.ts";
 import { getPersonaDomain, getPersonaDomains } from "./domain-map.ts";
-import { getMemoryDbPath } from "zouroboros-core";
+import { generate as mcGenerate } from "./model-client";
 
-const DB_PATH = getMemoryDbPath();
-const OLLAMA_URL = process.env.OLLAMA_URL || "http://localhost:11434";
-const SYNTHESIS_MODEL = process.env.PKA_MODEL || "qwen2.5:1.5b";
+const DEFAULT_DB_PATH = process.env.ZO_MEMORY_DB || "/home/workspace/.zo/memory/shared-facts.db";
 const DEFAULT_MAX_TOKENS = 500;
 
 interface SessionBriefing {
@@ -52,8 +50,8 @@ function getVaultContext(persona: string, domain?: string): string[] {
 
 // ── Step 2: Recent Episodes ────────────────────────────────────────────────
 
-function getRecentEpisodes(domain?: string, limit = 5): string[] {
-  const db = new Database(DB_PATH, { readonly: true });
+function getRecentEpisodes(domain?: string, limit = 5, dbPath?: string): string[] {
+  const db = new Database(dbPath ?? DEFAULT_DB_PATH, { readonly: true });
   try {
     const fourteenDaysAgo = Math.floor(Date.now() / 1000) - 14 * 86400;
     let rows: { summary: string; outcome: string; happened_at: number }[];
@@ -103,8 +101,8 @@ function getRecentEpisodes(domain?: string, limit = 5): string[] {
 
 // ── Step 3: Open Loops ─────────────────────────────────────────────────────
 
-function getOpenLoops(persona: string, limit = 5): string[] {
-  const db = new Database(DB_PATH, { readonly: true });
+function getOpenLoops(persona: string, limit = 5, dbPath?: string): string[] {
+  const db = new Database(dbPath ?? DEFAULT_DB_PATH, { readonly: true });
   try {
     const hasTable = db.prepare(
       "SELECT name FROM sqlite_master WHERE type='table' AND name='open_loops'"
@@ -132,8 +130,8 @@ function getOpenLoops(persona: string, limit = 5): string[] {
 
 // ── Step 4: Cross-Persona Facts ────────────────────────────────────────────
 
-function getInheritedFacts(persona: string, domain?: string, limit = 3): string[] {
-  const db = new Database(DB_PATH, { readonly: true });
+function getInheritedFacts(persona: string, domain?: string, limit = 3, dbPath?: string): string[] {
+  const db = new Database(dbPath ?? DEFAULT_DB_PATH, { readonly: true });
   try {
     const accessible = getAccessiblePersonas(db, persona);
     if (accessible.length <= 1) return []; // only self
@@ -201,24 +199,13 @@ ${input}
 Respond with ONLY the briefing text, no headers or bullets.`;
 
   try {
-    const response = await fetch(`${OLLAMA_URL}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: SYNTHESIS_MODEL,
-        prompt,
-        stream: false,
-        options: { temperature: 0.3, num_predict: 200 },
-      }),
-      signal: AbortSignal.timeout(15000),
+    const result = await mcGenerate({
+      prompt,
+      workload: "briefing",
+      temperature: 0.3,
+      maxTokens: 200,
     });
-
-    if (!response.ok) {
-      return `[Synthesis unavailable — Ollama returned ${response.status}] Raw context: ${input.slice(0, 300)}`;
-    }
-
-    const data = await response.json() as { response: string };
-    return data.response.trim();
+    return result.content.trim();
   } catch (err) {
     return `[Synthesis unavailable — ${err instanceof Error ? err.message : "timeout"}] Raw context: ${input.slice(0, 300)}`;
   }
@@ -230,6 +217,7 @@ export async function generateBriefing(
   persona: string,
   domain?: string,
   maxTokens = DEFAULT_MAX_TOKENS,
+  dbPath?: string,
 ): Promise<SessionBriefing> {
   const start = performance.now();
 
@@ -243,7 +231,7 @@ export async function generateBriefing(
     const seenEpisodes = new Set<string>();
 
     for (const d of multiDomains) {
-      const domainEps = getRecentEpisodes(d, 3);
+      const domainEps = getRecentEpisodes(d, 3, dbPath); // 3 per domain to keep total manageable
       for (const ep of domainEps) {
         if (!seenEpisodes.has(ep)) {
           seenEpisodes.add(ep);
@@ -256,7 +244,8 @@ export async function generateBriefing(
       }
     }
 
-    const generalEps = getRecentEpisodes(undefined, 3);
+    // Also get un-scoped episodes (captures, swarm runs, etc.)
+    const generalEps = getRecentEpisodes(undefined, 3, dbPath);
     for (const ep of generalEps) {
       if (!seenEpisodes.has(ep)) {
         seenEpisodes.add(ep);
@@ -264,9 +253,10 @@ export async function generateBriefing(
       }
     }
 
-    const openLoops = getOpenLoops(persona);
-    const inheritedFacts = getInheritedFacts(persona, undefined);
+    const openLoops = getOpenLoops(persona, 5, dbPath);
+    const inheritedFacts = getInheritedFacts(persona, undefined, 3, dbPath);
 
+    // Sort episodes by date (most recent first) and cap at 8
     const episodes = allEpisodes.slice(0, 8);
     const vaultContext = allVault.slice(0, 8);
     const domainLabel = multiDomains.join("+");
@@ -299,9 +289,9 @@ export async function generateBriefing(
 
   const [vaultContext, episodes, openLoops, inheritedFacts] = await Promise.all([
     Promise.resolve(getVaultContext(persona, domain)),
-    Promise.resolve(getRecentEpisodes(domain)),
-    Promise.resolve(getOpenLoops(persona)),
-    Promise.resolve(getInheritedFacts(persona, domain)),
+    Promise.resolve(getRecentEpisodes(domain, 5, dbPath)),
+    Promise.resolve(getOpenLoops(persona, 5, dbPath)),
+    Promise.resolve(getInheritedFacts(persona, domain, 3, dbPath)),
   ]);
 
   const briefing = await synthesize(
