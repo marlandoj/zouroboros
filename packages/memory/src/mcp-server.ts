@@ -7,7 +7,7 @@
  * Usage: bun run packages/memory/src/mcp-server.ts [--db-path <path>]
  */
 
-import { initDatabase, closeDatabase, getDbStats } from './database.js';
+import { initDatabase, closeDatabase, getDbStats, getDatabase } from './database.js';
 import { storeFact, searchFacts, searchFactsHybrid, getFact, deleteFact, cleanupExpiredFacts } from './facts.js';
 import { rerankResults } from './reranker.js';
 import { answerWithCoT } from './cot-answer.js';
@@ -153,6 +153,27 @@ const TOOLS: McpToolDefinition[] = [
       properties: {},
     },
   },
+  {
+    name: 'memory_delete',
+    description: 'Delete a specific fact by ID. Cascades to embeddings, links, and activation.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'The fact UUID to delete' },
+      },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'memory_prune',
+    description: 'Garbage-collect expired facts. Returns count of deleted facts.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        dry_run: { type: 'boolean', description: 'Preview what would be pruned without deleting (default false)' },
+      },
+    },
+  },
 ];
 
 // ============================================================================
@@ -278,6 +299,27 @@ async function handleToolCall(
       const dbStats = getDbStats(config);
       const epStats = getEpisodeStats();
       return { database: dbStats, episodes: epStats };
+    }
+
+    case 'memory_delete': {
+      const id = args.id as string;
+      if (!id) throw new Error('id is required');
+      const deleted = deleteFact(id);
+      if (!deleted) throw new Error(`Fact not found: ${id}`);
+      return { deleted: true, id };
+    }
+
+    case 'memory_prune': {
+      const dryRun = (args.dry_run as boolean) ?? false;
+      if (dryRun) {
+        const db = getDatabase();
+        const rows = db.query(
+          "SELECT id FROM facts WHERE expires_at IS NOT NULL AND expires_at < strftime('%s', 'now')"
+        ).all() as Array<{ id: string }>;
+        return { dry_run: true, would_delete: rows.length, ids: rows.slice(0, 20).map(r => r.id) };
+      }
+      const count = cleanupExpiredFacts();
+      return { pruned: count };
     }
 
     default:
