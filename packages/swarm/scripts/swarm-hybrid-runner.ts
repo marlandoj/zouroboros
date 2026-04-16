@@ -190,6 +190,12 @@ async function main() {
     console.log(`   📱 Auto-enabled SMS notifications (use --notify email to change)`);
   }
 
+  // Enable sentinel events by default (v5.3: watch pattern integration)
+  const hasSwarmEvents = extraArgs.some(arg => arg === "--swarm-events");
+  if (!hasSwarmEvents) {
+    extraArgs.push("--swarm-events");
+  }
+
   // Build orchestrator command
   const orchestratorScript = join(import.meta.dir, "orchestrate-v5.ts");
   const cmd = ["bun", orchestratorScript, campaignFile, "--swarm-id", swarmId, ...extraArgs];

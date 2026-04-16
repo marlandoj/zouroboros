@@ -65,6 +65,12 @@ import { enrichTaskWithRAG, shouldEnrichWithRAG } from "./rag-enrichment";
 import { buildDepGraph } from "./dep-graph";
 import { getMemoryDbPath, getWorkspaceRoot } from "zouroboros-core";
 
+// v5.3: Swarm events — sentinel-based watch pattern integration
+import { consumeSentinels, cleanStaleSentinels, type SwarmEvent } from "./swarm-events/sentinel";
+
+// v5.4: SMS alerts for swarm failures
+import { sendSwarmFailureAlert } from "./swarm-events/alerts";
+
 // ============================================================================
 // PATHS & CONFIG
 // ============================================================================
@@ -326,6 +332,9 @@ interface OrchestratorConfig {
   hierarchicalDelegation: HierarchicalDelegationConfig;
   // Pipeline enforcement (v5.1)
   pipeline: PipelineConfig;
+  // Swarm events (v5.3)
+  enableSentinelEvents: boolean;
+  sentinelDir: string;
 }
 
 interface LocalAgentInvocation {
@@ -598,6 +607,8 @@ const DEFAULT_CONFIG: OrchestratorConfig = {
     gapAudit: true,
     memoryGateIntegration: true,
   },
+  enableSentinelEvents: false,
+  sentinelDir: process.env.SWARM_SENTINEL_DIR || "/tmp/swarm-events",
 };
 
 function ensureExecutorHistorySchema(): void {
@@ -1860,6 +1871,12 @@ class SwarmOrchestrator {
     console.log(`\n🚀 Swarm ${this.swarmId} v5.0.0`);
     console.log(`   Tasks: ${tasks.length} | Concurrency: ${this.config.localConcurrency} | Strategy: ${this.config.routingStrategy}`);
 
+    if (this.config.enableSentinelEvents) {
+      const cleaned = cleanStaleSentinels({ dir: this.config.sentinelDir });
+      if (cleaned > 0) console.log(`   🧹 Cleaned ${cleaned} stale sentinel(s)`);
+      console.log(`   📡 Sentinel events enabled: ${this.config.sentinelDir}`);
+    }
+
     // Campaign locking
     const lockPath = join(LOCK_DIR, `${this.swarmId}.lock`);
     const STALE_LOCK_MS = 30 * 60 * 1000;
@@ -1903,6 +1920,43 @@ class SwarmOrchestrator {
     await this.logger.close();
 
     return this.results;
+  }
+
+  // --------------------------------------------------------------------------
+  // SENTINEL EVENT CONSUMPTION (v5.3)
+  // --------------------------------------------------------------------------
+
+  private processSentinelEvents(
+    taskIds: Set<string>,
+    completed: Set<string>,
+    failed: Set<string>,
+  ): SwarmEvent[] {
+    if (!this.config.enableSentinelEvents) return [];
+
+    const events = consumeSentinels(taskIds, { dir: this.config.sentinelDir });
+    for (const event of events) {
+      const label = `[sentinel:${event.event_type}] ${event.task_id}`;
+      if (event.event_type === "pattern_match") {
+        console.log(`  📡 ${label} — pattern="${event.pattern}" line="${event.matched_line?.slice(0, 80)}"`);
+        this.logger.log("sentinel_event", {
+          task_id: event.task_id,
+          event_type: event.event_type,
+          pattern: event.pattern,
+          matched_line: event.matched_line,
+          source: event.source,
+        });
+      } else if (event.event_type === "task_complete") {
+        console.log(`  📡 ${label} — external completion signal`);
+        completed.add(event.task_id);
+        this.logger.log("sentinel_completion", { task_id: event.task_id, source: event.source });
+      } else if (event.event_type === "task_failed") {
+        console.log(`  📡 ${label} — external failure signal`);
+        failed.add(event.task_id);
+        this.logger.log("sentinel_failure", { task_id: event.task_id, source: event.source });
+      }
+    }
+
+    return events;
   }
 
   // --------------------------------------------------------------------------
@@ -1979,6 +2033,10 @@ class SwarmOrchestrator {
         await Promise.race(running.values());
       }
 
+      // Check sentinel events between iterations (v5.3)
+      const allTaskIds = new Set([...pending.keys(), ...running.keys(), ...completed, ...failed]);
+      this.processSentinelEvents(allTaskIds, completed, failed);
+
       await new Promise(r => setTimeout(r, 100));
     }
   }
@@ -2054,6 +2112,10 @@ class SwarmOrchestrator {
       }
 
       this.writeProgress();
+
+      // Check sentinel events between waves (v5.3)
+      const allTaskIds = new Set([...remaining, ...completed, ...failed]);
+      this.processSentinelEvents(allTaskIds, completed, failed);
     }
   }
 
@@ -2293,6 +2355,13 @@ class SwarmOrchestrator {
 
     task.persona = originalPersona;
     if (task.executor !== undefined) task.executor = originalExecutor;
+
+    // Fire SMS alert for task failures after all retries/reroutes exhausted.
+    sendSwarmFailureAlert(
+      this.swarmId,
+      task.id,
+      recentOutputs.length > 0 ? recentOutputs[recentOutputs.length - 1] : "Max retries exceeded"
+    ).catch(() => {/* alert failure must never crash orchestrator */});
 
     return {
       task,
@@ -2812,6 +2881,8 @@ async function main(): Promise<void> {
     console.log("  --notify CHANNEL     none|sms|email (default: none)");
     console.log("  --omniroute          Enable OmniRoute failover");
     console.log("  --4-signal           Use 4-signal routing (default: 6-signal)");
+    console.log("  --swarm-events       Enable sentinel event consumption from watch patterns");
+    console.log("  --sentinel-dir DIR   Sentinel directory (default: /tmp/swarm-events)");
     process.exit(1);
   }
 
@@ -2886,6 +2957,15 @@ async function main(): Promise<void> {
         break;
       case "--4-signal":
         config.useSixSignalRouting = false;
+        break;
+      case "--swarm-events":
+        config.enableSentinelEvents = true;
+        break;
+      case "--sentinel-dir":
+        if (i + 1 < args.length) {
+          config.sentinelDir = args[++i];
+          config.enableSentinelEvents = true;
+        }
         break;
     }
   }
