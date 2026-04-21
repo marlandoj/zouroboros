@@ -83,17 +83,25 @@ export function setInheritance(db: Database, childPersona: string, parentPersona
 }
 
 export function getAccessiblePersonas(db: Database, persona: string): string[] {
-  const direct = [persona];
+  const accessible = new Set<string>([persona]);
   // Direct pool membership
   const pools = db.prepare("SELECT pool_id FROM persona_pool_members WHERE persona = ?").all(persona) as Array<Record<string, unknown>>;
   for (const pool of pools) {
     const members = db.prepare("SELECT persona FROM persona_pool_members WHERE pool_id = ? AND persona != ?").all(pool.pool_id as string, persona) as Array<Record<string, unknown>>;
-    for (const m of members) direct.push(m.persona as string);
+    for (const m of members) accessible.add(m.persona as string);
   }
-  // Inheritance chain
+  // Inheritance chain (with transitive pool peers of each parent — closes cp-12 inheritance-chain gap)
   const parents = db.prepare("SELECT parent_persona FROM persona_inheritance WHERE child_persona = ? ORDER BY depth ASC").all(persona) as Array<Record<string, unknown>>;
-  for (const parent of parents) direct.push(parent.parent_persona as string);
-  return [...new Set(direct)];
+  for (const parent of parents) {
+    const parentName = parent.parent_persona as string;
+    accessible.add(parentName);
+    const parentPools = db.prepare("SELECT pool_id FROM persona_pool_members WHERE persona = ?").all(parentName) as Array<Record<string, unknown>>;
+    for (const pp of parentPools) {
+      const peers = db.prepare("SELECT persona FROM persona_pool_members WHERE pool_id = ?").all(pp.pool_id as string) as Array<Record<string, unknown>>;
+      for (const m of peers) accessible.add(m.persona as string);
+    }
+  }
+  return [...accessible];
 }
 
 export interface CrossPersonaResult {
@@ -123,11 +131,20 @@ function resolveAccessPaths(db: Database, persona: string, accessible: string[])
     }
   }
 
-  // Inheritance-based access
+  // Inheritance-based access (including transitive pool peers of each parent)
   const parents = db.prepare("SELECT parent_persona, depth FROM persona_inheritance WHERE child_persona = ? ORDER BY depth ASC").all(persona) as Array<Record<string, unknown>>;
   for (const parent of parents) {
-    const p = parent.parent_persona as string;
-    if (!paths[p]) paths[p] = `inherited:depth-${parent.depth}`;
+    const parentName = parent.parent_persona as string;
+    if (!paths[parentName]) paths[parentName] = `inherited:depth-${parent.depth}`;
+    const parentPools = db.prepare("SELECT pool_id FROM persona_pool_members WHERE persona = ?").all(parentName) as Array<Record<string, unknown>>;
+    for (const pp of parentPools) {
+      const poolName = (db.prepare("SELECT name FROM persona_pools WHERE id = ?").get(pp.pool_id as string) as Record<string, unknown> | null)?.name as string | undefined;
+      const peers = db.prepare("SELECT persona FROM persona_pool_members WHERE pool_id = ? AND persona != ?").all(pp.pool_id as string, parentName) as Array<Record<string, unknown>>;
+      for (const m of peers) {
+        const p = m.persona as string;
+        if (!paths[p]) paths[p] = `inherited-via:${parentName}@${poolName || pp.pool_id}`;
+      }
+    }
   }
 
   return paths;
