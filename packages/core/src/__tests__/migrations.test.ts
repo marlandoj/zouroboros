@@ -154,6 +154,78 @@ describe('migrate', () => {
     expect(indexNames).toContain('idx_open_loops_priority');
   });
 
+  test('upgrades open_loops to the 14-column continuation schema (issue #70)', () => {
+    // Seed a row against the v1 schema before migrating
+    db.run(
+      `INSERT INTO open_loops (id, summary, entity, status, priority, created_at, resolved_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      ['ol-1', 'Ship the thing', 'alice', 'open', 3, 1700000000, null],
+    );
+
+    const runner = createMigrationRunner(db);
+    const result = runner.migrate();
+    expect(result.errors).toEqual([]);
+
+    const cols = db
+      .query("PRAGMA table_info(open_loops)")
+      .all() as { name: string }[];
+    const names = cols.map((c) => c.name);
+    for (const required of [
+      'persona',
+      'title',
+      'kind',
+      'fingerprint',
+      'metadata',
+      'updated_at',
+      'source',
+      'related_episode_id',
+    ]) {
+      expect(names).toContain(required);
+    }
+
+    // Existing row should have been preserved with sensible defaults
+    const row = db
+      .query(
+        `SELECT id, persona, title, summary, kind, status, entity, fingerprint
+         FROM open_loops WHERE id = 'ol-1'`,
+      )
+      .all() as Array<Record<string, unknown>>;
+    expect(row.length).toBe(1);
+    expect(row[0].persona).toBe('shared');
+    expect(row[0].title).toBe('Ship the thing');
+    expect(row[0].kind).toBe('task');
+    expect(row[0].status).toBe('open');
+    expect(row[0].fingerprint).toBe('ol-1');
+  });
+
+  test('creates the full standalone-compatible schema (issue #69)', () => {
+    const runner = createMigrationRunner(db);
+    runner.migrate();
+
+    const tables = db
+      .query("SELECT name FROM sqlite_master WHERE type IN ('table','virtual')")
+      .all() as { name: string }[];
+    // SQLite stores fts5 virtual tables as type='table', so just select all tables.
+    const allTables = db
+      .query("SELECT name FROM sqlite_master WHERE type='table'")
+      .all() as { name: string }[];
+    const tableNames = new Set(allTables.map((t) => t.name));
+
+    for (const required of [
+      'fact_links',
+      'procedure_episodes',
+      'episode_documents',
+      'episode_documents_fts',
+      'open_loops_fts',
+      'facts_fts',
+      'capture_log',
+    ]) {
+      expect(tableNames.has(required)).toBe(true);
+    }
+    // Silence the unused `tables` variable — kept for debugging.
+    expect(tables.length).toBeGreaterThan(0);
+  });
+
   test('stops on first error and reports it', () => {
     // Create a runner with a bad migration injected via the DB interface
     const badRunner = createMigrationRunner(db);

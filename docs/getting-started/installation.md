@@ -88,18 +88,43 @@ backwards compatibility.
 ### Zo Computer Integration
 
 If you're using Zo Computer and want Zouroboros to share the same memory DB as
-other Zo tooling, point it at `~/.zo/memory/shared-facts.db` by adding to your
-`~/.bashrc` or `~/.zshrc`:
+other Zo tooling, export `ZOUROBOROS_MEMORY_DB` **before** running
+`zouroboros init` so the CLI initialises the shared DB instead of creating a
+separate `~/.zouroboros/memory.db`. Add the following to your `~/.bashrc` or
+`~/.zshrc`:
 
 ```bash
+# Point Zouroboros at the shared Zo memory database
+# (run BEFORE `zouroboros init` so the schema is created in the right file)
+export ZOUROBOROS_MEMORY_DB="$HOME/.zo/memory/shared-facts.db"
+
 # Zouroboros CLI
 export PATH="$PATH:/home/workspace/zouroboros/cli/bin"
 
-# Zouroboros memory
+# Optional — install exported skills into the Zo workspace Skills dir
+export ZOUROBOROS_WORKSPACE="/home/workspace"
+
+# Handy aliases
 alias zm='zouroboros memory'
 alias zs='zouroboros swarm'
 alias zp='zouroboros persona'
 ```
+
+Reload your shell (`source ~/.bashrc`) and then run:
+
+```bash
+zouroboros init
+zouroboros migrate up   # idempotent — brings the DB to the latest schema
+```
+
+`zouroboros skills install` will now export to `/home/workspace/Skills/` (the
+Zo native skills directory) instead of `/root/Skills/`.
+
+> If you already ran `zouroboros init` without `ZOUROBOROS_MEMORY_DB` set, you
+> now have two databases: `~/.zouroboros/memory.db` (empty) and
+> `~/.zo/memory/shared-facts.db` (the one Zo tooling writes to). You can
+> safely delete the empty `~/.zouroboros/memory.db` and re-run
+> `zouroboros init` with the env var exported.
 
 ## Next Steps
 

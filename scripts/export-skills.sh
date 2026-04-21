@@ -6,7 +6,17 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DEST="${ZOUROBOROS_SKILLS_DIR:-${HOME}/Skills}"
+# Default destination: ZOUROBOROS_SKILLS_DIR > <workspace>/Skills > ~/Skills
+# Honors ZOUROBOROS_WORKSPACE / ZO_WORKSPACE so Zo Computer users land in
+# /home/workspace/Skills instead of /root/Skills.
+_DEFAULT_WORKSPACE="${ZOUROBOROS_WORKSPACE:-${ZO_WORKSPACE:-}}"
+if [[ -n "${ZOUROBOROS_SKILLS_DIR:-}" ]]; then
+  DEST="$ZOUROBOROS_SKILLS_DIR"
+elif [[ -n "$_DEFAULT_WORKSPACE" && -d "$_DEFAULT_WORKSPACE/Skills" ]]; then
+  DEST="$_DEFAULT_WORKSPACE/Skills"
+else
+  DEST="${HOME}/Skills"
+fi
 SKILL_FILTER=""
 
 while [[ $# -gt 0 ]]; do

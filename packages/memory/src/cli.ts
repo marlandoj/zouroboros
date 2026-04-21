@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { parseArgs } from 'util';
-import { join } from 'path';
+import { join, resolve } from 'path';
+import { existsSync } from 'fs';
 import { VERSION } from './index.js';
 
 const { values, positionals } = parseArgs({
@@ -65,7 +66,15 @@ const command = positionals[0];
 
 if (command) {
   const { execSync } = require('child_process');
-  const srcDir = import.meta.dir;
+  // When running from the compiled dist/ output, import.meta.dir points at
+  // packages/memory/dist/. The subcommand scripts are Bun-native .ts files
+  // that only live under src/, so map dist → src at runtime. See issue #74.
+  const thisDir = import.meta.dir;
+  const candidateSrcDir = thisDir.replace(/(^|\/)dist(\/|$)/, '$1src$2');
+  const srcDir =
+    candidateSrcDir !== thisDir && existsSync(candidateSrcDir)
+      ? candidateSrcDir
+      : thisDir;
   const subArgs = process.argv.slice(3).join(' ');
 
   const commandMap: Record<string, string> = {
