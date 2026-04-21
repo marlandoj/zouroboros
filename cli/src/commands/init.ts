@@ -4,7 +4,12 @@ import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { execSync } from 'child_process';
 import { join } from 'path';
 import { homedir } from 'os';
-import { loadConfig, saveConfig, DEFAULT_CONFIG } from 'zouroboros-core';
+import {
+  saveConfig,
+  DEFAULT_CONFIG,
+  createMigrationRunner,
+  MIGRATIONS,
+} from 'zouroboros-core';
 import { runDoctor } from '../utils/doctor.js';
 
 export const initCommand = new Command('init')
@@ -57,7 +62,20 @@ export const initCommand = new Command('init')
     // Initialize memory database
     console.log(chalk.cyan('💾 Initializing memory database...'));
     try {
-      const dbPath = config.memory.dbPath;
+      // Honor ZOUROBOROS_MEMORY_DB / ZO_MEMORY_DB if set (issue #71) so that
+      // Zo Computer users and anyone pointing at a shared DB land on the
+      // right file instead of the hardcoded default.
+      const envDbPath = process.env.ZOUROBOROS_MEMORY_DB || process.env.ZO_MEMORY_DB;
+      const dbPath = envDbPath || config.memory.dbPath;
+      if (envDbPath && envDbPath !== config.memory.dbPath) {
+        config.memory.dbPath = envDbPath;
+        saveConfig(config, configPath);
+        console.log(
+          chalk.gray(
+            `   Using ZOUROBOROS_MEMORY_DB override: ${envDbPath}`,
+          ),
+        );
+      }
       const dbDir = join(dbPath, '..');
       mkdirSync(dbDir, { recursive: true });
 
@@ -168,7 +186,37 @@ CREATE INDEX IF NOT EXISTS idx_open_loops_entity ON open_loops(entity, status);
       });
 
       console.log(chalk.green('✅ Memory database initialized'));
-      console.log(chalk.gray(`   ${dbPath}\n`));
+      console.log(chalk.gray(`   ${dbPath}`));
+
+      // Run built-in migrations so the fresh DB reaches the full schema
+      // (FTS5 tables, fact_links, episode_documents, upgraded open_loops,
+      // etc.). Without this, standalone scripts would silently create
+      // partial schemas lazily on first use — see issues #69, #70.
+      try {
+        const { Database } = await import('bun:sqlite');
+        const memDb = new Database(dbPath);
+        const runner = createMigrationRunner(memDb);
+        const result = runner.migrate();
+        memDb.close();
+        if (result.errors.length > 0) {
+          console.log(
+            chalk.yellow(
+              `⚠️  ${result.errors.length} migration(s) failed — run \`zouroboros migrate up\` for details`,
+            ),
+          );
+        } else if (result.applied.length > 0) {
+          console.log(
+            chalk.gray(`   Applied ${result.applied.length} migrations (up to #${MIGRATIONS[MIGRATIONS.length - 1].id})\n`),
+          );
+        } else {
+          console.log('');
+        }
+      } catch (err) {
+        console.log(
+          chalk.yellow('⚠️  Migrations could not be auto-applied — run `zouroboros migrate up`'),
+        );
+        console.log(chalk.gray(`   ${err instanceof Error ? err.message : String(err)}\n`));
+      }
     } catch (error) {
       console.log(chalk.yellow('⚠️  Memory database initialization failed — will be created on first use'));
       console.log(chalk.gray(`   ${error instanceof Error ? error.message : String(error)}\n`));

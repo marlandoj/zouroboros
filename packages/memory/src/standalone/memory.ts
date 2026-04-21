@@ -19,8 +19,6 @@
 
 import { Database } from "bun:sqlite";
 import { randomUUID, createHash } from "crypto";
-import { join } from "path";
-import { readFileSync } from "fs";
 import { computeGraphBoost, findGraphNeighbors } from "./graph-boost";
 import { extractWikilinks, resolveWikilinkTargets, autoCorrectWikilinks, shouldExcludeFromWrapping, ENTITY_LIKE_PATTERN } from "./wikilink-utils";
 import { getMemoryDbPath } from "zouroboros-core";
@@ -181,26 +179,24 @@ async function initDb(): Promise<Database> {
 }
 
 async function runMigration(): Promise<void> {
+  // v2 + v3 migration SQL used to be read from sibling .sql files that were
+  // never committed (issue #71). The tables they created (episodes,
+  // episode_entities, procedures, procedure_episodes, episode_documents,
+  // upgraded open_loops, episode_documents_fts, open_loops_fts) are all now
+  // created by `initDb()` + `ensureContinuationSchema()` or the core
+  // `zouroboros migrate up` runner. So `memory migrate` is just an alias
+  // that makes sure the DB is initialized and reports the result.
   const db = await initDb();
-  
-  try {
-    const sqlV2 = readFileSync(join(import.meta.dir, "migrate-v2.sql"), "utf-8");
-    db.exec(sqlV2);
 
-    const v3Path = join(import.meta.dir, "migrate-v3.sql");
-    try {
-      const sqlV3 = readFileSync(v3Path, "utf-8");
-      db.exec(sqlV3);
-    } catch {
-    }
-    
+  try {
     const tables = db.prepare(
       "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('episodes','episode_entities','procedures','procedure_episodes','episode_documents','open_loops') ORDER BY name"
     ).all() as Array<{ name: string }>;
-    
+
     console.log("Migration complete.");
     console.log(`  Tables created/verified: ${tables.map(t => t.name).join(", ")}`);
-    
+    console.log(`  For the full schema (FTS, fact_links, metrics) run: zouroboros migrate up`);
+
     const factCount = db.prepare("SELECT COUNT(*) as cnt FROM facts").get() as { cnt: number };
     const embCount = db.prepare("SELECT COUNT(*) as cnt FROM fact_embeddings").get() as { cnt: number };
     console.log(`  Existing facts: ${factCount.cnt}`);

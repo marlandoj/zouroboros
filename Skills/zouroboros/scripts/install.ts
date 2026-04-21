@@ -41,10 +41,20 @@ WHAT IT DOES:
   process.exit(0);
 }
 
-const WORKSPACE = process.env.ZO_WORKSPACE || "/home/workspace";
+const WORKSPACE =
+  process.env.ZOUROBOROS_WORKSPACE ||
+  process.env.ZO_WORKSPACE ||
+  "/home/workspace";
 const SKILL_DIR = join(WORKSPACE, "Skills/zouroboros");
-const DB_DIR = join(WORKSPACE, ".zo/memory");
-const DB_PATH = join(DB_DIR, "shared-facts.db");
+// Honor ZOUROBOROS_MEMORY_DB / ZO_MEMORY_DB so the standalone installer
+// and the monorepo CLI (`zouroboros init`) converge on the same database
+// file. Without this, users end up with ~/.zouroboros/memory.db AND
+// .zo/memory/shared-facts.db diverging silently (issue #71).
+const DB_PATH =
+  process.env.ZOUROBOROS_MEMORY_DB ||
+  process.env.ZO_MEMORY_DB ||
+  join(WORKSPACE, ".zo/memory/shared-facts.db");
+const DB_DIR = join(DB_PATH, "..");
 
 function run(cmd: string, opts: { cwd?: string; timeout?: number } = {}) {
   try {

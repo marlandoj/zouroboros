@@ -73,6 +73,198 @@ export const MIGRATIONS: Migration[] = [
     up: `CREATE INDEX IF NOT EXISTS idx_open_loops_priority ON open_loops(priority, status);`,
     down: `DROP INDEX IF EXISTS idx_open_loops_priority;`,
   },
+  // -----------------------------------------------------------------
+  // Migrations 6-12 (see issues #69, #70): bring any DB to the full
+  // schema needed by standalone scripts. Before these, `zouroboros init`
+  // + `migrate up` produced only 9 tables; standalone hybrid search,
+  // graph traversal, continuation, and FTS lookups would silently
+  // create their own subset lazily or fail outright.
+  // -----------------------------------------------------------------
+  {
+    id: 6,
+    name: '006_upgrade_open_loops_to_continuation_schema',
+    // Rebuild `open_loops` to match the 14-column schema that
+    // standalone `continuation.ts#ensureContinuationSchema` expects.
+    // Safe for fresh DBs (rebuild is a no-op if the 7-column table is
+    // empty) and for DBs with existing rows (we migrate matching
+    // columns and synthesise reasonable defaults for the new ones).
+    up: `
+      ALTER TABLE open_loops RENAME TO open_loops_v1;
+
+      CREATE TABLE open_loops (
+        id TEXT PRIMARY KEY,
+        persona TEXT NOT NULL DEFAULT 'shared',
+        title TEXT NOT NULL,
+        summary TEXT NOT NULL,
+        kind TEXT NOT NULL DEFAULT 'task' CHECK(kind IN ('task','bug','incident','approval','commitment','other')),
+        status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','resolved','stale','superseded')),
+        priority REAL DEFAULT 0.6,
+        entity TEXT,
+        source TEXT,
+        related_episode_id TEXT REFERENCES episodes(id) ON DELETE SET NULL,
+        fingerprint TEXT NOT NULL,
+        metadata TEXT,
+        created_at INTEGER DEFAULT (strftime('%s','now')),
+        updated_at INTEGER DEFAULT (strftime('%s','now')),
+        resolved_at INTEGER
+      );
+
+      INSERT INTO open_loops (
+        id, persona, title, summary, kind, status, priority, entity,
+        fingerprint, created_at, updated_at, resolved_at
+      )
+      SELECT
+        id,
+        'shared' AS persona,
+        summary AS title,
+        summary,
+        'task' AS kind,
+        CASE WHEN status IN ('open','resolved','stale','superseded') THEN status ELSE 'open' END,
+        CAST(COALESCE(priority, 1) AS REAL) / 5.0,
+        entity,
+        id AS fingerprint,
+        created_at,
+        created_at,
+        resolved_at
+      FROM open_loops_v1;
+
+      DROP TABLE open_loops_v1;
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_open_loops_active_fingerprint
+        ON open_loops(fingerprint, status);
+      CREATE INDEX IF NOT EXISTS idx_open_loops_status_updated
+        ON open_loops(status, updated_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_open_loops_entity
+        ON open_loops(entity);
+      CREATE INDEX IF NOT EXISTS idx_open_loops_persona
+        ON open_loops(persona);
+      CREATE INDEX IF NOT EXISTS idx_open_loops_priority
+        ON open_loops(priority, status);
+    `,
+    down: `
+      ALTER TABLE open_loops RENAME TO open_loops_v2;
+      CREATE TABLE open_loops (
+        id TEXT PRIMARY KEY,
+        summary TEXT NOT NULL,
+        entity TEXT NOT NULL,
+        status TEXT DEFAULT 'open' CHECK(status IN ('open', 'resolved')),
+        priority INTEGER DEFAULT 1,
+        created_at INTEGER DEFAULT (strftime('%s', 'now')),
+        resolved_at INTEGER
+      );
+      INSERT INTO open_loops (id, summary, entity, status, priority, created_at, resolved_at)
+      SELECT
+        id,
+        summary,
+        COALESCE(entity, '') AS entity,
+        CASE WHEN status IN ('open','resolved') THEN status ELSE 'open' END,
+        CAST(priority * 5 AS INTEGER),
+        created_at,
+        resolved_at
+      FROM open_loops_v2;
+      DROP TABLE open_loops_v2;
+      CREATE INDEX IF NOT EXISTS idx_open_loops_entity ON open_loops(entity, status);
+      CREATE INDEX IF NOT EXISTS idx_open_loops_priority ON open_loops(priority, status);
+    `,
+  },
+  {
+    id: 7,
+    name: '007_add_fact_links',
+    up: `
+      CREATE TABLE IF NOT EXISTS fact_links (
+        source_id TEXT NOT NULL REFERENCES facts(id) ON DELETE CASCADE,
+        target_id TEXT NOT NULL REFERENCES facts(id) ON DELETE CASCADE,
+        relation TEXT NOT NULL,
+        weight REAL DEFAULT 1.0,
+        created_at INTEGER DEFAULT (strftime('%s','now')),
+        PRIMARY KEY (source_id, target_id, relation)
+      );
+      CREATE INDEX IF NOT EXISTS idx_fact_links_source ON fact_links(source_id);
+      CREATE INDEX IF NOT EXISTS idx_fact_links_target ON fact_links(target_id);
+    `,
+    down: `
+      DROP INDEX IF EXISTS idx_fact_links_target;
+      DROP INDEX IF EXISTS idx_fact_links_source;
+      DROP TABLE IF EXISTS fact_links;
+    `,
+  },
+  {
+    id: 8,
+    name: '008_add_procedure_episodes',
+    up: `
+      CREATE TABLE IF NOT EXISTS procedure_episodes (
+        procedure_id TEXT NOT NULL REFERENCES procedures(id) ON DELETE CASCADE,
+        episode_id TEXT NOT NULL REFERENCES episodes(id) ON DELETE CASCADE,
+        PRIMARY KEY (procedure_id, episode_id)
+      );
+    `,
+    down: `DROP TABLE IF EXISTS procedure_episodes;`,
+  },
+  {
+    id: 9,
+    name: '009_add_episode_documents_and_fts',
+    up: `
+      CREATE TABLE IF NOT EXISTS episode_documents (
+        episode_id TEXT PRIMARY KEY REFERENCES episodes(id) ON DELETE CASCADE,
+        text TEXT NOT NULL,
+        updated_at INTEGER DEFAULT (strftime('%s','now'))
+      );
+      CREATE VIRTUAL TABLE IF NOT EXISTS episode_documents_fts USING fts5(
+        episode_id UNINDEXED,
+        text
+      );
+    `,
+    down: `
+      DROP TABLE IF EXISTS episode_documents_fts;
+      DROP TABLE IF EXISTS episode_documents;
+    `,
+  },
+  {
+    id: 10,
+    name: '010_add_open_loops_fts',
+    up: `
+      CREATE VIRTUAL TABLE IF NOT EXISTS open_loops_fts USING fts5(
+        loop_id UNINDEXED,
+        text
+      );
+    `,
+    down: `DROP TABLE IF EXISTS open_loops_fts;`,
+  },
+  {
+    id: 11,
+    name: '011_add_facts_fts',
+    up: `
+      CREATE VIRTUAL TABLE IF NOT EXISTS facts_fts USING fts5(
+        fact_id UNINDEXED,
+        text,
+        entity UNINDEXED,
+        content='facts',
+        content_rowid='rowid'
+      );
+      INSERT INTO facts_fts(rowid, fact_id, text, entity)
+        SELECT rowid, id, text, entity FROM facts;
+    `,
+    down: `DROP TABLE IF EXISTS facts_fts;`,
+  },
+  {
+    id: 12,
+    name: '012_add_capture_log',
+    up: `
+      CREATE TABLE IF NOT EXISTS capture_log (
+        source_hash TEXT PRIMARY KEY,
+        source TEXT NOT NULL,
+        captured_at INTEGER DEFAULT (strftime('%s','now')),
+        fact_count INTEGER DEFAULT 0,
+        metadata TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_capture_log_captured_at
+        ON capture_log(captured_at DESC);
+    `,
+    down: `
+      DROP INDEX IF EXISTS idx_capture_log_captured_at;
+      DROP TABLE IF EXISTS capture_log;
+    `,
+  },
 ];
 
 export interface MigrationRunner {
