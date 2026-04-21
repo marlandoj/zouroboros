@@ -84,17 +84,25 @@ export function setInheritance(db: Database, childPersona: string, parentPersona
 }
 
 export function getAccessiblePersonas(db: Database, persona: string): string[] {
-  const direct = [persona];
+  const accessible = new Set<string>([persona]);
   // Direct pool membership
   const pools = db.prepare("SELECT pool_id FROM persona_pool_members WHERE persona = ?").all(persona) as Array<Record<string, unknown>>;
   for (const pool of pools) {
     const members = db.prepare("SELECT persona FROM persona_pool_members WHERE pool_id = ? AND persona != ?").all(pool.pool_id, persona) as Array<Record<string, unknown>>;
-    for (const m of members) direct.push(m.persona as string);
+    for (const m of members) accessible.add(m.persona as string);
   }
-  // Inheritance chain
+  // Inheritance chain (with transitive pool peers of each parent — closes cp-12 inheritance-chain gap)
   const parents = db.prepare("SELECT parent_persona FROM persona_inheritance WHERE child_persona = ? ORDER BY depth ASC").all(persona) as Array<Record<string, unknown>>;
-  for (const parent of parents) direct.push(parent.parent_persona as string);
-  return [...new Set(direct)];
+  for (const parent of parents) {
+    const parentName = parent.parent_persona as string;
+    accessible.add(parentName);
+    const parentPools = db.prepare("SELECT pool_id FROM persona_pool_members WHERE persona = ?").all(parentName) as Array<Record<string, unknown>>;
+    for (const pp of parentPools) {
+      const peers = db.prepare("SELECT persona FROM persona_pool_members WHERE pool_id = ?").all(pp.pool_id) as Array<Record<string, unknown>>;
+      for (const m of peers) accessible.add(m.persona as string);
+    }
+  }
+  return [...accessible];
 }
 
 export function searchCrossPersona(db: Database, persona: string, query: string, limit = 10): Array<Record<string, unknown>> {
