@@ -23,7 +23,8 @@ jobs:
           # Pinned to avoid flakes from unvetted bun releases.
           # 1.3.13 has a parallel module-loader race that mis-reports
           # "Export named 'X' not found" during test parse. 1.3.12 is stable.
-          # Bump intentionally after verifying the test runner is stable.
+          # Upstream: https://github.com/oven-sh/bun/issues/29576
+          # Bump intentionally after the upstream fix lands and we re-verify.
           bun-version: 1.3.12
 
       - uses: pnpm/action-setup@v4
