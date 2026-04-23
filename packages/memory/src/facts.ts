@@ -4,7 +4,7 @@
 
 import { randomUUID } from 'crypto';
 import { getDatabase } from './database.js';
-import { generateEmbedding, serializeEmbedding, deserializeEmbedding, generateHyDEExpansion, blendEmbeddings } from './embeddings.js';
+import { generateEmbedding, serializeEmbedding, deserializeEmbedding, generateHyDEExpansion, blendEmbeddings, resolveEmbeddingProvider } from './embeddings.js';
 import { invalidateGraphCache } from './graph.js';
 import { rerankResults } from './reranker.js';
 import type { MemoryConfig, MemoryEntry, MemorySearchResult, DecayClass } from 'zouroboros-core';
@@ -107,10 +107,11 @@ export async function storeFact(
     try {
       const embedding = await generateEmbedding(text, config);
       const serialized = serializeEmbedding(embedding);
-      
+      const { model } = resolveEmbeddingProvider(config);
+
       db.run(
         'INSERT INTO fact_embeddings (fact_id, embedding, model) VALUES (?, ?, ?)',
-        [id, serialized, config.ollamaModel]
+        [id, serialized, model]
       );
     } catch (error) {
       console.warn('Failed to generate embedding:', error);

@@ -89,16 +89,34 @@ export function resetThrottleState(): void {
   throttleMetrics.dedupCount = 0;
 }
 
-// ─── Internal Ollama call ─────────────────────────────────────────────────────
+// ─── Provider selection ───────────────────────────────────────────────────────
+
+export type EmbeddingProvider = 'openai' | 'ollama';
+
+export interface ResolvedEmbeddingProvider {
+  provider: EmbeddingProvider;
+  model: string;
+}
+
+export function resolveEmbeddingProvider(
+  config: MemoryConfig,
+): ResolvedEmbeddingProvider {
+  const provider: EmbeddingProvider = config.embeddingProvider ?? 'openai';
+  if (provider === 'openai') {
+    return { provider, model: config.embeddingModel ?? 'text-embedding-3-small' };
+  }
+  return { provider: 'ollama', model: config.embeddingModel ?? config.ollamaModel };
+}
 
 async function _generateEmbeddingFromOllama(
   text: string,
   config: MemoryConfig,
 ): Promise<number[]> {
+  const { model } = resolveEmbeddingProvider(config);
   const response = await fetch(`${config.ollamaUrl}/api/embeddings`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: config.ollamaModel, prompt: text }),
+    body: JSON.stringify({ model, prompt: text }),
   });
 
   if (!response.ok) {
@@ -107,6 +125,50 @@ async function _generateEmbeddingFromOllama(
 
   const data = await response.json() as { embedding: number[] };
   return data.embedding;
+}
+
+async function _generateEmbeddingFromOpenAI(
+  text: string,
+  config: MemoryConfig,
+): Promise<number[]> {
+  const key = process.env.OPENAI_API_KEY || process.env.ZO_OPENAI_API_KEY;
+  if (!key) throw new Error('OPENAI_API_KEY not set');
+  const { model } = resolveEmbeddingProvider(config);
+
+  const body: Record<string, unknown> = { model, input: text };
+  if (config.embeddingDimension) body.dimensions = config.embeddingDimension;
+
+  const response = await fetch('https://api.openai.com/v1/embeddings', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${key}`,
+    },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(30_000),
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI embeddings ${response.status}: ${await response.text()}`);
+  }
+
+  const data = (await response.json()) as {
+    data?: Array<{ embedding: number[] }>;
+  };
+  const embedding = data.data?.[0]?.embedding;
+  if (!embedding) throw new Error('OpenAI embeddings: empty response');
+  return embedding;
+}
+
+async function _generateEmbeddingProvider(
+  text: string,
+  config: MemoryConfig,
+): Promise<number[]> {
+  const { provider } = resolveEmbeddingProvider(config);
+  switch (provider) {
+    case 'openai': return _generateEmbeddingFromOpenAI(text, config);
+    case 'ollama': return _generateEmbeddingFromOllama(text, config);
+  }
 }
 
 /**
@@ -144,14 +206,14 @@ export async function generateEmbedding(
     }
 
     // Layer 3: Produce embedding and cache it
-    const embedding = await _generateEmbeddingFromOllama(text, config);
+    const embedding = await _generateEmbeddingProvider(text, config);
     _dedupCache.set(hash, { embedding, expiresAt: Date.now() + DEDUP_COOLDOWN_MS });
     recordInWindow(conversationId, embedding);
     return embedding;
   }
 
   // No conversationId: bypass throttling (internal/system calls)
-  return _generateEmbeddingFromOllama(text, config);
+  return _generateEmbeddingProvider(text, config);
 }
 
 /**
