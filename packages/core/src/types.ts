@@ -34,12 +34,17 @@ export interface CoreConfig {
   defaultTimezone: string;
 }
 
+export type EmbeddingProvider = 'openai' | 'ollama';
+
 export interface MemoryConfig {
   enabled: boolean;
   dbPath: string;
   vectorEnabled: boolean;
   ollamaUrl: string;
   ollamaModel: string;
+  embeddingProvider?: EmbeddingProvider;
+  embeddingModel?: string;
+  embeddingDimension?: number;
   autoCapture: boolean;
   captureIntervalMinutes: number;
   graphBoost: boolean;

@@ -92,10 +92,18 @@ const BASE_CONFIG: MemoryConfig = {
   vectorEnabled: true,
   ollamaUrl: 'http://localhost:11434',
   ollamaModel: 'nomic-embed-text',
+  embeddingProvider: 'ollama',
   dbPath: ':memory:',
   maxMemories: 1000,
   decayEnabled: false,
   decayHalfLifeDays: 30,
+};
+
+const OPENAI_CONFIG: MemoryConfig = {
+  ...BASE_CONFIG,
+  embeddingProvider: 'openai',
+  embeddingModel: 'text-embedding-3-small',
+  embeddingDimension: 1536,
 };
 
 // Patch global fetch for embedding tests
@@ -173,5 +181,46 @@ describe('ECC-010: Memory Explosion Throttling', () => {
     expect(throttleMetrics.dedupCount).toBe(1);
     expect(throttleMetrics.throttleCount).toBe(0);
     restoreFetch();
+  });
+});
+
+// ─── OpenAI provider routing ─────────────────────────────────────────────────
+
+describe('OpenAI embedding provider', () => {
+  const ORIGINAL_KEY = process.env.OPENAI_API_KEY;
+
+  beforeEach(() => {
+    resetThrottleState();
+    process.env.OPENAI_API_KEY = 'sk-test-key';
+  });
+
+  test('routes to OpenAI endpoint and parses data[0].embedding', async () => {
+    let capturedUrl = '';
+    let capturedBody: unknown = null;
+    globalThis.fetch = async (url: string | URL | Request, opts?: RequestInit) => {
+      capturedUrl = typeof url === 'string' ? url : url.toString();
+      capturedBody = opts?.body ? JSON.parse(opts.body as string) : null;
+      return new Response(
+        JSON.stringify({ data: [{ embedding: [0.7, 0.8, 0.9], index: 0 }] }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      );
+    };
+
+    const result = await generateEmbedding('hello', OPENAI_CONFIG);
+    expect(capturedUrl).toBe('https://api.openai.com/v1/embeddings');
+    expect((capturedBody as { model: string }).model).toBe('text-embedding-3-small');
+    expect((capturedBody as { dimensions: number }).dimensions).toBe(1536);
+    expect(result).toEqual([0.7, 0.8, 0.9]);
+
+    restoreFetch();
+    if (ORIGINAL_KEY === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = ORIGINAL_KEY;
+  });
+
+  test('throws when OPENAI_API_KEY is missing', async () => {
+    delete process.env.OPENAI_API_KEY;
+    delete process.env.ZO_OPENAI_API_KEY;
+    await expect(generateEmbedding('hi', OPENAI_CONFIG)).rejects.toThrow('OPENAI_API_KEY');
+    if (ORIGINAL_KEY !== undefined) process.env.OPENAI_API_KEY = ORIGINAL_KEY;
   });
 });
