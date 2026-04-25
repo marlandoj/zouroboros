@@ -1,0 +1,78 @@
+direction: down
+
+title: "Zouroboros Architecture"
+
+interface: |md
+  ## Interface Layer
+  - CLI (`orchestrate-v5`, `doctor`, `install`)
+  - TUI dashboard
+  - Hono API + SSE
+  - Scheduled agents (5)
+|
+interface.style.fill: "#F8FAFC"
+interface.style.stroke: "#CBD5E1"
+interface.style.stroke-width: 2
+interface.style.border-radius: 12
+
+core: |md
+  ## Core Systems
+  - Memory system
+  - Swarm orchestration
+  - Workflow tools
+|
+core.style.fill: "#E0F2FE"
+core.style.stroke: "#CBD5E1"
+core.style.stroke-width: 2
+core.style.border-radius: 12
+
+execution: |md
+  ## Execution & Intelligence
+  - Executor registry: Claude Code, Gemini CLI, Codex CLI, Hermes Agent, Mimir Memory Sage
+  - Transport factory: Bridge, ACP, Mimir
+  - Adaptive routing: 6-signal core, budget/role-aware 8-signal path
+  - RAG enrichment: Ollama embeddings + Qdrant (19 SDK KBs)
+|
+execution.style.fill: "#F3E8FF"
+execution.style.stroke: "#CBD5E1"
+execution.style.stroke-width: 2
+execution.style.border-radius: 12
+
+governance: |md
+  ## Governance & Resilience
+  - Pipeline gates: seed validation, post-flight eval, gap audit
+  - Circuit breakers, cascade manager, stagnation detector
+  - Budget governor
+  - Context sharing
+|
+governance.style.fill: "#ECFCCB"
+governance.style.stroke: "#CBD5E1"
+governance.style.stroke-width: 2
+governance.style.border-radius: 12
+
+foundation: |md
+  ## Foundation
+  - Personas & role registry
+  - Self-heal engine
+  - Health Council: Healer, Doctor, Introspector, Steward (Mimir)
+  - Heartbeat scheduler
+|
+foundation.style.fill: "#FFE4E6"
+foundation.style.stroke: "#CBD5E1"
+foundation.style.stroke-width: 2
+foundation.style.border-radius: 12
+
+mimir: |md
+  **Mimir path**
+  Memory system → memory gate → Mimir transport → downstream swarm tasks
+|
+mimir.style.fill: "#FEF3C7"
+mimir.style.stroke: "#CBD5E1"
+mimir.style.stroke-width: 2
+mimir.style.border-radius: 12
+
+interface -> core
+core -> execution
+execution -> governance
+governance -> foundation
+core -> mimir
+execution -> mimir
