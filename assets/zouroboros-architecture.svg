@@ -1,0 +1,124 @@
+<svg width="1600" height="1080" viewBox="0 0 1600 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1080" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A0F1B"/>
+      <stop offset="1" stop-color="#070B14"/>
+    </linearGradient>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="lineGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style>
+      .title { font: 700 40px Inter, ui-sans-serif, system-ui, sans-serif; fill: #F8FAFC; }
+      .section { font: 600 12px Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.32em; fill: #6B7280; }
+      .cardTitle { font: 700 28px Inter, ui-sans-serif, system-ui, sans-serif; }
+      .cardBody { font: 500 17px Inter, ui-sans-serif, system-ui, sans-serif; fill: #CBD5E1; }
+      .chipText { font: 500 15px Inter, ui-sans-serif, system-ui, sans-serif; fill: #94A3B8; }
+      .tiny { font: 600 12px Inter, ui-sans-serif, system-ui, sans-serif; fill: #64748B; letter-spacing: 0.08em; }
+      .topTitle { font: 800 26px Inter, ui-sans-serif, system-ui, sans-serif; fill: #22D3EE; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1080" fill="url(#bg)"/>
+  <text x="56" y="64" class="title">Architecture</text>
+  <rect x="40" y="84" width="1520" height="2" rx="1" fill="#1F2937"/>
+
+  <g filter="url(#softGlow)">
+    <rect x="440" y="135" width="720" height="98" rx="18" fill="#09111F" stroke="#0EA5E9" stroke-width="3"/>
+  </g>
+  <text x="800" y="174" text-anchor="middle" class="topTitle">CLI + Dashboard + API Server</text>
+  <g>
+    <rect x="494" y="187" width="132" height="26" rx="8" fill="#172133" stroke="#23314A"/>
+    <text x="560" y="205" text-anchor="middle" class="tiny">CLI</text>
+    <rect x="640" y="187" width="132" height="26" rx="8" fill="#172133" stroke="#23314A"/>
+    <text x="706" y="205" text-anchor="middle" class="tiny">REST API</text>
+    <rect x="786" y="187" width="132" height="26" rx="8" fill="#172133" stroke="#23314A"/>
+    <text x="852" y="205" text-anchor="middle" class="tiny">SSE stream</text>
+    <rect x="932" y="187" width="174" height="26" rx="8" fill="#172133" stroke="#23314A"/>
+    <text x="1019" y="205" text-anchor="middle" class="tiny">scheduled agents</text>
+  </g>
+
+  <line x1="800" y1="252" x2="800" y2="283" stroke="#0F766E" stroke-width="3" filter="url(#lineGlow)"/>
+  <text x="800" y="302" text-anchor="middle" class="section">CORE SYSTEMS</text>
+
+  <g filter="url(#softGlow)">
+    <rect x="245" y="325" width="360" height="250" rx="20" fill="#09111F" stroke="#06B6D4" stroke-width="3"/>
+    <rect x="620" y="325" width="360" height="250" rx="20" fill="#0C1224" stroke="#3B82F6" stroke-width="3"/>
+    <rect x="995" y="325" width="360" height="250" rx="20" fill="#0E1120" stroke="#A855F7" stroke-width="3"/>
+  </g>
+  <text x="425" y="372" text-anchor="middle" class="cardTitle" fill="#22D3EE">Memory System</text>
+  <text x="800" y="372" text-anchor="middle" class="cardTitle" fill="#60A5FA">Swarm Orchestration</text>
+  <text x="1175" y="372" text-anchor="middle" class="cardTitle" fill="#C084FC">Workflow Tools</text>
+
+  <g>
+    <rect x="266" y="400" width="318" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="425" y="419" text-anchor="middle" class="chipText">Episodic · Procedural · Cognitive</text>
+    <rect x="266" y="438" width="318" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="425" y="457" text-anchor="middle" class="chipText">Graph search + contradiction handling</text>
+    <rect x="266" y="476" width="318" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="425" y="495" text-anchor="middle" class="chipText">Context injection + session briefings</text>
+    <rect x="266" y="514" width="318" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="425" y="533" text-anchor="middle" class="chipText">Memory gate + Mimir synthesis path</text>
+
+    <rect x="641" y="400" width="318" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="800" y="419" text-anchor="middle" class="chipText">DAG execution (streamed waves)</text>
+    <rect x="641" y="438" width="318" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="800" y="457" text-anchor="middle" class="chipText">Seed validation · post-flight eval · gap audit</text>
+    <rect x="641" y="476" width="318" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="800" y="495" text-anchor="middle" class="chipText">Circuit breakers (8) + retry / fallback cascade</text>
+    <rect x="641" y="514" width="318" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="800" y="533" text-anchor="middle" class="chipText">Streaming capture guard + ECC-009 loop guard</text>
+
+    <rect x="1016" y="400" width="318" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1175" y="419" text-anchor="middle" class="chipText">Spec interview</text>
+    <rect x="1016" y="438" width="318" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1175" y="457" text-anchor="middle" class="chipText">Three-stage evaluate</text>
+    <rect x="1016" y="476" width="318" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1175" y="495" text-anchor="middle" class="chipText">Gap audit loop (4 checks)</text>
+    <rect x="1016" y="514" width="318" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1175" y="533" text-anchor="middle" class="chipText">Unstuck + autoloop</text>
+  </g>
+
+  <line x1="800" y1="632" x2="800" y2="666" stroke="#0F766E" stroke-width="3" filter="url(#lineGlow)"/>
+  <text x="800" y="686" text-anchor="middle" class="section">EXECUTION &amp; INTELLIGENCE LAYER</text>
+
+  <g filter="url(#softGlow)">
+    <rect x="190" y="711" width="455" height="180" rx="20" fill="#09111F" stroke="#14B8A6" stroke-width="3"/>
+    <rect x="650" y="711" width="300" height="180" rx="20" fill="#11131F" stroke="#F59E0B" stroke-width="3"/>
+    <rect x="955" y="711" width="455" height="180" rx="20" fill="#11131F" stroke="#F59E0B" stroke-width="3"/>
+  </g>
+  <text x="417" y="756" text-anchor="middle" class="cardTitle" fill="#2DD4BF">Executor System</text>
+  <text x="800" y="756" text-anchor="middle" class="cardTitle" fill="#FBBF24">Routing Engine</text>
+  <text x="1182" y="756" text-anchor="middle" class="cardTitle" fill="#FBBF24">RAG Enrichment</text>
+
+  <g>
+    <rect x="215" y="784" width="405" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="417" y="803" text-anchor="middle" class="chipText">Claude · Gemini · Codex · Hermes · Mimir</text>
+    <rect x="215" y="822" width="405" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="417" y="841" text-anchor="middle" class="chipText">Transports: ACP · Bridge · Mimir</text>
+    <rect x="215" y="860" width="405" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="417" y="879" text-anchor="middle" class="chipText">5-priority selector + retry fallback cascade</text>
+
+    <rect x="674" y="784" width="252" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="800" y="803" text-anchor="middle" class="chipText">6-signal core scoring</text>
+    <rect x="674" y="822" width="252" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="800" y="841" text-anchor="middle" class="chipText">Budget / role aware 8-signal path</text>
+    <rect x="674" y="860" width="252" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="800" y="879" text-anchor="middle" class="chipText">Cost-aware downgrade</text>
+
+    <rect x="980" y="784" width="405" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1182" y="803" text-anchor="middle" class="chipText">Ollama embeddings</text>
+    <rect x="980" y="822" width="405" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1182" y="841" text-anchor="middle" class="chipText">Qdrant vector search</text>
+    <rect x="980" y="860" width="405" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1182" y="879" text-anchor="middle" class="chipText">19 SDK knowledge bases</text>
+  </g>
+
+  <line x1="800" y1="915" x2="800" y2="948" stroke="#0F766E" stroke-width="3" filter="url(#lineGlow)"/>
+  <text x="800" y="968" text-anchor="middle" class="section">RESILIENCE &amp; GOVERNANCE</text>
+
+  <g filter="url(#softGlow)">
+    <rect x="92" y="986" width="330" height="76" rx="18" fill="#111120" stroke="#EC4899" stroke-width="3"/>
+    <rect x="437" y="986" width="330" height="76" rx="18" fill="#111120" stroke="#EC4899" stroke-width="3"/>
+    <rect x="782" y="986" width="330" height="76" rx="18" fill="#111120" stroke="#EAB308" stroke-width="3"/>
+    <rect x="1127" y="986" width="381" height="76" rx="18" fill="#111120" stroke="#3B82F6" stroke-width="3"/>
+  </g>
+  <text x="257" y="1018" text-anchor="middle" class="cardTitle" fill="#F472B6" font-size="22">Pipeline Gates</text>
+  <text x="602" y="1018" text-anchor="middle" class="cardTitle" fill="#F472B6" font-size="22">Cascade + Stagnation</text>
+  <text x="947" y="1018" text-anchor="middle" class="cardTitle" fill="#FDE047" font-size="22">Budget Governor</text>
+  <text x="1318" y="1018" text-anchor="middle" class="cardTitle" fill="#60A5FA" font-size="22">Foundation</text>
+  <text x="257" y="1045" text-anchor="middle" class="cardBody">seed validation · eval · gap audit</text>
+  <text x="602" y="1045" text-anchor="middle" class="cardBody">circuit breakers · recovery policies</text>
+  <text x="947" y="1045" text-anchor="middle" class="cardBody">per-executor tracking · hard caps</text>
+  <rect x="1175" y="1028" width="286" height="20" rx="7" fill="#172133" stroke="#243244"/>
+  <text x="1318" y="1042" text-anchor="middle" class="tiny">roles · council · heartbeat · Mimir</text>
+</svg>

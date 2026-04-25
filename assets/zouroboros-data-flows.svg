@@ -1,0 +1,102 @@
+<svg width="1600" height="1080" viewBox="0 0 1600 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1080" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A0F1B"/>
+      <stop offset="1" stop-color="#070B14"/>
+    </linearGradient>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="lineGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style>
+      .title { font: 700 40px Inter, ui-sans-serif, system-ui, sans-serif; fill: #F8FAFC; }
+      .section { font: 600 12px Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.32em; fill: #6B7280; }
+      .cardTitle { font: 700 27px Inter, ui-sans-serif, system-ui, sans-serif; }
+      .chipText { font: 500 15px Inter, ui-sans-serif, system-ui, sans-serif; fill: #94A3B8; }
+      .body { font: 500 18px Inter, ui-sans-serif, system-ui, sans-serif; fill: #CBD5E1; }
+      .tiny { font: 600 13px Inter, ui-sans-serif, system-ui, sans-serif; fill: #64748B; letter-spacing: 0.08em; }
+    </style>
+    <marker id="arrowCyan" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#22D3EE"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#F59E0B"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#22C55E"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1080" fill="url(#bg)"/>
+  <text x="56" y="64" class="title">Data Flows</text>
+  <rect x="40" y="84" width="1520" height="2" rx="1" fill="#1F2937"/>
+
+  <text x="800" y="132" text-anchor="middle" class="section">PRIMARY EXECUTION LOOPS</text>
+
+  <g filter="url(#softGlow)">
+    <rect x="88" y="165" width="654" height="302" rx="22" fill="#09111F" stroke="#06B6D4" stroke-width="3"/>
+    <rect x="858" y="165" width="654" height="302" rx="22" fill="#0D1121" stroke="#8B5CF6" stroke-width="3"/>
+  </g>
+  <text x="415" y="215" text-anchor="middle" class="cardTitle" fill="#22D3EE">Memory Capture &amp; Briefing</text>
+  <text x="1185" y="215" text-anchor="middle" class="cardTitle" fill="#C084FC">Swarm Execution</text>
+
+  <g>
+    <rect x="118" y="244" width="594" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="415" y="263" text-anchor="middle" class="chipText">1. Conversation + workspace artifacts</text>
+    <rect x="118" y="282" width="594" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="415" y="301" text-anchor="middle" class="chipText">2. conversation-capture (24h default · --all for replay)</text>
+    <rect x="118" y="320" width="594" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="415" y="339" text-anchor="middle" class="chipText">3. model-client extraction + embeddings</text>
+    <rect x="118" y="358" width="594" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="415" y="377" text-anchor="middle" class="chipText">4. SQLite facts / episodes / procedures + graph links</text>
+    <rect x="118" y="396" width="594" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="415" y="415" text-anchor="middle" class="chipText">5. memory-gate emits session briefing + Mimir context</text>
+
+    <rect x="888" y="244" width="594" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1185" y="263" text-anchor="middle" class="chipText">1. Seed spec / YAML</text>
+    <rect x="888" y="282" width="594" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1185" y="301" text-anchor="middle" class="chipText">2. Seed validation gate</text>
+    <rect x="888" y="320" width="594" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1185" y="339" text-anchor="middle" class="chipText">3. Parse DAG + stream ready tasks</text>
+    <rect x="888" y="358" width="594" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1185" y="377" text-anchor="middle" class="chipText">4. Adaptive routing (6-signal core · budget/role-aware 8)</text>
+    <rect x="888" y="396" width="594" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1185" y="415" text-anchor="middle" class="chipText">5. RAG prefetch + transport factory → Claude / Gemini / Codex / Hermes / Mimir</text>
+  </g>
+
+  <path d="M742 316H810" stroke="#22D3EE" stroke-width="3" marker-end="url(#arrowCyan)" filter="url(#lineGlow)"/>
+
+  <text x="800" y="516" text-anchor="middle" class="section">VALIDATION, FEEDBACK, AND MAINTENANCE</text>
+
+  <g filter="url(#softGlow)">
+    <rect x="88" y="548" width="560" height="244" rx="22" fill="#11131F" stroke="#F59E0B" stroke-width="3"/>
+    <rect x="694" y="548" width="818" height="244" rx="22" fill="#0B1220" stroke="#22C55E" stroke-width="3"/>
+  </g>
+  <text x="368" y="598" text-anchor="middle" class="cardTitle" fill="#FBBF24">Evaluation &amp; Feedback</text>
+  <text x="1103" y="598" text-anchor="middle" class="cardTitle" fill="#4ADE80">Health &amp; Scheduled Maintenance</text>
+
+  <g>
+    <rect x="118" y="627" width="500" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="368" y="646" text-anchor="middle" class="chipText">1. Post-flight eval</text>
+    <rect x="118" y="665" width="500" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="368" y="684" text-anchor="middle" class="chipText">2. Gap audit loop</text>
+    <rect x="118" y="703" width="500" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="368" y="722" text-anchor="middle" class="chipText">3. Reroute / recovery / telemetry / budget accounting</text>
+    <rect x="118" y="741" width="500" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="368" y="760" text-anchor="middle" class="chipText">4. Reusable facts + episodes fed back into memory</text>
+
+    <rect x="724" y="627" width="758" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1103" y="646" text-anchor="middle" class="chipText">Health Council diagnostics · drift detection · orchestration review</text>
+    <rect x="724" y="665" width="758" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1103" y="684" text-anchor="middle" class="chipText">Memory embedding backfill · daily memory capture · unified decay</text>
+    <rect x="724" y="703" width="758" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1103" y="722" text-anchor="middle" class="chipText">Self-enhancement summary · vault indexer · benchmark hygiene</text>
+    <rect x="724" y="741" width="758" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1103" y="760" text-anchor="middle" class="chipText">Mimir steward loop keeps graph continuity and briefing quality aligned</text>
+  </g>
+
+  <path d="M1185 467V520H368V539" stroke="#F59E0B" stroke-width="3" marker-end="url(#arrowAmber)" filter="url(#lineGlow)"/>
+
+  <path d="M368 792V900H257V964" stroke="#22C55E" stroke-width="3" marker-end="url(#arrowGreen)" filter="url(#lineGlow)"/>
+
+  <g filter="url(#softGlow)">
+    <rect x="88" y="936" width="560" height="100" rx="18" fill="#09111F" stroke="#06B6D4" stroke-width="3"/>
+    <rect x="694" y="936" width="818" height="100" rx="18" fill="#09111F" stroke="#22C55E" stroke-width="3"/>
+  </g>
+  <text x="368" y="975" text-anchor="middle" class="cardTitle" fill="#22D3EE" font-size="22">Memory outputs</text>
+  <text x="1103" y="975" text-anchor="middle" class="cardTitle" fill="#4ADE80" font-size="22">Operational outputs</text>
+  <text x="368" y="1007" text-anchor="middle" class="body">facts · graph links · briefings · Mimir context</text>
+  <text x="1103" y="1007" text-anchor="middle" class="body">diagnostics · backfills · cadence jobs · drift remediation</text>
+</svg>
