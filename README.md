@@ -17,8 +17,8 @@ Zouroboros is a self-enhancing AI platform built natively on [Zo Computer](https
 ### Key Features
 
 - **Hybrid Memory System** — SQLite + vector embeddings with episodic, procedural, and cognitive memory. Domain context injection bridges operational knowledge into swarm tasks.
-- **Swarm Orchestration (v5)** — Multi-agent DAG execution with 4 executors (Claude Code, Gemini, Codex, Hermes), 8-signal composite routing, executor retry/fallback cascades, and mandatory pipeline gates.
-- **Transport Abstraction** — Bridge and ACP (Agent Client Protocol) transports with real-time streaming, enabling communication with any executor backend.
+- **Swarm Orchestration (v5)** — Multi-agent DAG execution with 5 executors (Claude Code, Gemini, Codex, Hermes, Mimir), adaptive routing (6-signal core with budget/role-aware 8-signal path), executor retry/fallback cascades, and mandatory pipeline gates.
+- **Transport Abstraction** — Bridge, ACP (Agent Client Protocol), and Mimir transports with real-time streaming where supported, enabling communication with executor backends and the memory gate.
 - **Resilience-First** — Category-aware circuit breakers (8 failure types), cascade failure propagation with 4 recovery policies, stagnation detection with auto-recovery, and 5-layer loop guards (ECC-009).
 - **Pipeline Gates** — Mandatory seed validation, post-flight evaluation, and gap audit loops enforce quality at every stage of swarm execution.
 - **RAG Enrichment** — Ollama embeddings + Qdrant vector search across 19 indexed SDK knowledge bases, injected into task prompts automatically.
@@ -41,11 +41,11 @@ The architecture is organized into 5 layers:
 
 | Layer | Components |
 |-------|-----------|
-| **Interface** | orchestrate-v5 CLI, Hono REST API, SSE Event Stream, NL Command Center |
+| **Interface** | orchestrate-v5 CLI, Hono REST API, SSE Event Stream, TUI dashboard, scheduled agents |
 | **Core Systems** | Memory System, Swarm Orchestration, Workflow Tools |
-| **Execution & Intelligence** | Executor System (4 executors, Bridge/ACP transport), 8-Signal Routing Engine, RAG Enrichment (Qdrant + 19 SDKs) |
-| **Resilience & Governance** | Cascade Manager, Stagnation Detector, Budget Governor, Context Sharing |
-| **Foundation** | Personas & Role Registry (57 roles), Self-Heal Engine (12 playbooks), Heartbeat Scheduler |
+| **Execution & Intelligence** | Executor System (5 executors, Bridge/ACP/Mimir transports), adaptive routing, RAG Enrichment (Qdrant + 19 SDKs) |
+| **Resilience & Governance** | Pipeline gates, Cascade Manager, Stagnation Detector, Budget Governor, Context Sharing |
+| **Foundation** | Personas & Role Registry (57 roles), Self-Heal Engine (12 playbooks), Health Council, Heartbeat Scheduler |
 
 ## Quick Start
 
@@ -127,14 +127,15 @@ Seed Spec → Seed Eval Gate → Execute DAG → Post-Flight Eval → Gap Audit 
 
 ### Executor System
 
-4 executors communicate through a transport abstraction layer:
+5 executors communicate through a transport abstraction layer:
 
 | Executor | Transport | Best For |
 |----------|-----------|----------|
-| Claude Code | Bridge / ACP | Complex implementation, architecture |
-| Gemini | Bridge / ACP | Research, analysis, content |
-| Codex | Bridge / ACP | Code generation, refactoring |
+| Claude Code | ACP | Complex implementation, architecture |
+| Gemini | ACP | Research, analysis, content |
+| Codex | ACP | Code generation, refactoring |
 | Hermes | Bridge | Autonomous investigation, web research |
+| Mimir | Mimir | Historical context injection, institutional memory synthesis |
 
 Executors are selected via a **5-priority routing decision tree**:
 1. Explicit executor ID in task

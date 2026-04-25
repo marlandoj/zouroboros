@@ -15,7 +15,7 @@ Zouroboros is designed as a modular, self-enhancing AI infrastructure platform.
   <img src="../../assets/zouroboros-architecture.png" alt="Zouroboros System Architecture" width="100%" />
 </p>
 
-The CLI and TUI Dashboard sit at the top as the command layer. Below, three core pillars — **Memory System**, **Swarm Orchestration**, and **Workflow Tools** — connect to the **Personas Framework** and **Self-Heal Engine** (Introspect, Prescribe, Evolve). Swarm orchestration dispatches to executor bridges (Claude Code, Codex CLI, Gemini CLI, Hermes Agent).
+The command layer consists of the CLI, TUI dashboard, Hono API + SSE surface, and scheduled agents. Below, three core pillars — **Memory System**, **Swarm Orchestration**, and **Workflow Tools** — connect to the **Personas Framework**, **Health Council**, and **Self-Heal Engine**. Swarm orchestration dispatches through a transport factory to five executors: Claude Code, Codex CLI, Gemini CLI, Hermes Agent, and Mimir Memory Sage.
 
 ## Package Structure
 
@@ -32,9 +32,9 @@ The CLI and TUI Dashboard sit at the top as the command layer. Below, three core
 - **HyDE Expansion**: Hypothetical document embeddings
 
 ### Swarm (`zouroboros-swarm`)
-- **6-Signal Routing**: Complexity, context, cost, confidence, continuity, capability
+- **Adaptive Routing**: 6-signal core with budget/role-aware 8-signal path
 - **DAG Streaming**: Dependency-aware parallel execution
-- **Executor Bridges**: Unified interface to local agents
+- **Transport Abstraction**: ACP, bridge, and Mimir transports
 ### Personas (`zouroboros-personas`)
 - **8-Phase Creation**: Planning → Deployment
 - **Template System**: Reusable persona patterns
@@ -62,11 +62,12 @@ Four autonomous watchers monitor distinct layers — see [Health Council](./heal
   <img src="../../assets/zouroboros-data-flows.png" alt="Zouroboros Data Flow Pipelines" width="100%" />
 </p>
 
-Three core pipelines drive the system:
+Four core pipelines drive the system:
 
-- **Memory Capture** — Conversation → Auto-Capture → HyDE Expansion → Vector DB → Graph Relations
-- **Swarm Execution** — Tasks YAML → Parse DAG → 6-Signal Router → Executor Pool → Streaming Results
-- **Self-Healing Loop** — Introspect → Scorecard → Prescribe → Seed YAML → Autoloop → Measure & Evolve (cycles back)
+- **Memory Capture & Briefing** — Conversation artifacts → `conversation-capture` → provider-routed extraction/embeddings → SQLite facts + graph → memory gate → session briefing / Mimir synthesis
+- **Swarm Execution** — Seed spec → seed validation → Parse DAG → adaptive routing → RAG enrichment → transport factory → executor pool → streaming results
+- **Evaluation & Feedback** — Post-flight eval → gap audit loop → reroute / recovery / telemetry → reusable episodes and facts
+- **Health & Scheduled Maintenance** — Health Council + embedding backfill + daily memory capture + unified decay + self-enhancement + vault indexing
 
 ## Configuration
 
