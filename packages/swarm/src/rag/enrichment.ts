@@ -9,6 +9,7 @@
  *
  * Ported from scripts/rag-enrichment.ts for package integration.
  */
+import { emitRAGTelemetry, matchedKeywords } from './telemetry.js';
 
 interface RAGResult {
   content: string;
@@ -150,28 +151,76 @@ export async function enrichTaskWithRAG(
   options: RAGEnrichmentOptions = {},
 ): Promise<{ context: string; latencyMs: number; patterns: number }> {
   const startTime = Date.now();
+  const triggered = shouldEnrichWithRAG(taskText);
+  const triggerKeywords = matchedKeywords(taskText, RAG_TRIGGER_KEYWORDS);
+  const taskTextHead = taskText.slice(0, 120);
 
-  if (!shouldEnrichWithRAG(taskText)) {
+  if (!triggered) {
+    void emitRAGTelemetry({
+      taskTextHead,
+      triggered: false,
+      triggerKeywords,
+      totalLatencyMs: 0,
+    });
     return { context: '', latencyMs: 0, patterns: 0 };
   }
 
+  let embedLatencyMs = 0;
+  let searchLatencyMs = 0;
   try {
+    const embedStart = Date.now();
     const embedding = await getOllamaEmbedding(taskText);
+    embedLatencyMs = Date.now() - embedStart;
+
+    const searchStart = Date.now();
     const results = await searchQdrant(embedding, {
       topK: options.topK || 3,
       minScore: options.minScore || 0.5,
       ...options,
     });
+    searchLatencyMs = Date.now() - searchStart;
 
-    if (results.length === 0) {
-      return { context: '', latencyMs: Date.now() - startTime, patterns: 0 };
+    const topScore = results[0]?.score ?? 0;
+    const hits = results.length;
+    const totalLatencyMs = Date.now() - startTime;
+
+    void emitRAGTelemetry({
+      taskTextHead,
+      triggered: true,
+      triggerKeywords,
+      collectionsQueried: ['code-docs'],
+      perCollectionTopScore: { 'code-docs': topScore },
+      perCollectionHits: { 'code-docs': hits },
+      mergedTopK: hits,
+      topScore,
+      patterns: hits,
+      embedLatencyMs,
+      searchLatencyMs,
+      totalLatencyMs,
+      errored: false,
+    });
+
+    if (hits === 0) {
+      return { context: '', latencyMs: totalLatencyMs, patterns: 0 };
     }
 
     const context = formatRAGContext(results);
-    return { context, latencyMs: Date.now() - startTime, patterns: results.length };
+    return { context, latencyMs: totalLatencyMs, patterns: hits };
   } catch (error) {
+    const totalLatencyMs = Date.now() - startTime;
+    void emitRAGTelemetry({
+      taskTextHead,
+      triggered: true,
+      triggerKeywords,
+      collectionsQueried: ['code-docs'],
+      embedLatencyMs,
+      searchLatencyMs,
+      totalLatencyMs,
+      errored: true,
+      errorMsg: String(error),
+    });
     console.log(`  [RAG] Enrichment failed (non-blocking): ${error}`);
-    return { context: '', latencyMs: Date.now() - startTime, patterns: 0 };
+    return { context: '', latencyMs: totalLatencyMs, patterns: 0 };
   }
 }
 

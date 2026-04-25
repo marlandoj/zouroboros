@@ -10,3 +10,9 @@ export {
   fetchDomainContext,
   enrichTasksWithDomainContext,
 } from './domain-context.js';
+
+export {
+  emitRAGTelemetry,
+  matchedKeywords,
+  type RAGTelemetryRecord,
+} from './telemetry.js';

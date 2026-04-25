@@ -2,7 +2,7 @@
 
 Declarative specs for the Zo Computer agents that power the Zouroboros memory and self-enhancement pipeline.
 
-These agents run on the Zo platform (`create_agent` / `edit_agent`). This directory is the **source of truth** for their configuration — `zouroboros doctor` verifies they are registered and active.
+These agents run on the Zo platform (`create_agent` / `edit_agent`). This directory is the **source of truth** for their configuration, but it is **not auto-deployed** — any live agent changes must be synced to the platform separately.
 
 ## Daily Pipeline (America/Phoenix)
 
@@ -41,12 +41,12 @@ vault-indexer (independent, hourly)
 zouroboros agents sync
 ```
 
-This writes the marker so `doctor` reports them as registered.
+This writes only the local marker so `doctor` reports them as registered. It does **not** create or update the live Zo agents.
 
 ## Updating an Agent
 
 1. Edit the spec in `manifest.json`
-2. Use `edit_agent` in Zo Chat to sync the change to the platform
+2. Use `edit_agent` in Zo Chat to sync the change to the live platform agent
 3. Commit the manifest update
 
 The manifest is not auto-deployed — it's a reference that keeps agent configs version-controlled.
