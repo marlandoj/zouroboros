@@ -343,11 +343,14 @@ Extends memory capture beyond swarm tasks to **all conversations**. Scans worksp
 # List all capturable artifacts
 bun scripts/conversation-capture.ts --list
 
-# Process all new artifacts
+# Process last 24h (safe default)
 bun scripts/conversation-capture.ts
 
 # Only last 24 hours
 bun scripts/conversation-capture.ts --since 24h
+
+# Explicit full backlog sweep
+bun scripts/conversation-capture.ts --all
 
 # Preview without storing
 bun scripts/conversation-capture.ts --dry-run
@@ -360,7 +363,8 @@ bun scripts/conversation-capture.ts --stats
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--since <duration>` | Filter by recency: 1h, 24h, 7d, 30d, 1w, 1m | all |
+| `--since <duration>` | Filter by recency: 1h, 24h, 7d, 30d, 1w, 1m | 24h |
+| `--all` | Process all uncaptured artifacts across all conversations | false |
 | `--dry-run` | Show extraction without storing | false |
 | `--list` | List capturable files with status | — |
 | `--stats` | Show conversation capture statistics | — |
@@ -372,6 +376,7 @@ bun scripts/conversation-capture.ts --stats
 - Only processes `.md`, `.txt`, `.json` files
 - Hash-based dedup via `capture_log` table (never re-processes same content)
 - Creates episodes for each capture session
+- Bare invocation is intentionally bounded to the last 24 hours; use `--all` only for an explicit backlog sweep
 
 ### Scheduled Agent
 

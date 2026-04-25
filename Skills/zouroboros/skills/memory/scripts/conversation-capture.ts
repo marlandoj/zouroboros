@@ -9,9 +9,10 @@
  * This extends memory capture beyond swarm tasks to ALL conversations.
  *
  * Usage:
- *   bun conversation-capture.ts                    # Process all new artifacts
+ *   bun conversation-capture.ts                    # Process last 24h (safe default)
  *   bun conversation-capture.ts --since 24h        # Only last 24 hours
  *   bun conversation-capture.ts --since 7d         # Only last 7 days
+ *   bun conversation-capture.ts --all              # Process all uncaptured artifacts
  *   bun conversation-capture.ts --dry-run           # Preview without storing
  *   bun conversation-capture.ts --stats             # Show capture statistics
  *   bun conversation-capture.ts --list              # List capturable files
@@ -583,15 +584,17 @@ async function main() {
 conversation-capture — Workspace Artifact Memory Capture
 
 Usage:
-  bun conversation-capture.ts                    # Process all new artifacts
+  bun conversation-capture.ts                    # Process last 24h (safe default)
   bun conversation-capture.ts --since 24h        # Only last 24 hours
   bun conversation-capture.ts --since 7d         # Only last 7 days
-  bun conversation-capture.ts --dry-run           # Preview without storing
-  bun conversation-capture.ts --stats             # Show capture statistics
-  bun conversation-capture.ts --list              # List capturable files
+  bun conversation-capture.ts --all              # Process all uncaptured artifacts
+  bun conversation-capture.ts --dry-run          # Preview without storing
+  bun conversation-capture.ts --stats            # Show capture statistics
+  bun conversation-capture.ts --list             # List capturable files
 
 Options:
   --since <duration>   Filter by recency: 1h, 24h, 7d, 30d, 1w, 1m
+  --all                Process all uncaptured artifacts across all conversations
   --dry-run            Show extracted facts without storing
   --stats              Show capture statistics
   --list               List capturable artifact files
@@ -605,9 +608,19 @@ Options:
   }
 
   const dryRun = args.includes("--dry-run");
+  const captureAll = args.includes("--all");
   let sinceDate: Date | undefined;
   const sinceIdx = args.indexOf("--since");
   if (sinceIdx >= 0 && args[sinceIdx + 1]) sinceDate = parseSince(args[sinceIdx + 1]);
+
+  if (captureAll && sinceDate) {
+    console.error("Use either --all or --since <duration>, not both.");
+    process.exit(1);
+  }
+
+  if (!captureAll && !sinceDate) {
+    sinceDate = parseSince("24h");
+  }
 
   if (args.includes("--list") || args[0] === "list") {
     listArtifacts(sinceDate);
@@ -633,7 +646,7 @@ Options:
     process.exit(0);
   }
 
-  console.log(`Found ${newArtifacts.length} new artifacts to capture${sinceDate ? ` (since ${sinceDate.toISOString().slice(0, 10)})` : ""}`);
+  console.log(`Found ${newArtifacts.length} new artifacts to capture${captureAll ? " (full backlog sweep)" : sinceDate ? ` (since ${sinceDate.toISOString().slice(0, 10)})` : ""}`);
   console.log(`Mode: ${dryRun ? "DRY RUN" : "LIVE"}\n`);
 
   await processArtifacts(newArtifacts, dryRun);
