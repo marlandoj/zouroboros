@@ -1,5 +1,69 @@
 # Changelog
 
+## [v2.0.0] — 2026-04-26
+
+> Third release — umbrella version aligning the monorepo with the new
+> RAG package, swarm decision gate, Hermes integration, multi-domain
+> persona-scoped memory, and Mimir synthesis layer. Memory gate is now
+> ~5× faster (inline FTS + synthesis cache, 40% p50 drop), embeddings
+> default to OpenAI `text-embedding-3-small`, and the orchestrator
+> ships v5 sentinel/event infrastructure.
+
+### Features
+- **rag**: new `zouroboros-rag` package with sage-node DAG tests (`bcfca4c`, #68)
+- **swarm**: Hermes watch patterns + SMS alerts via sentinel events (`e5beca5`, #65)
+- **swarm**: orchestrate v5 events + sentinel/alert/event-server infrastructure (`756cfa9`, #67)
+- **swarm**: `MimirTransport` for the memory-sage role (`128f5c8`, #66)
+- **swarm**: mechanical decision gate — 7-signal pre-flight scoring for swarm worthiness (`b2cdd4a`, #60)
+- **swarm**: executor retry/fallback, mandatory pipeline gates, domain context enrichment (`dc99e74`, #56)
+- **memory**: persona-scoped fact storage and retrieval (`20bbfb6`, #55)
+- **memory**: thread persona through capture pipeline (`b46a06a`, #54)
+- **memory**: multi-domain session briefings for cross-domain personas (`b392c9e`, #52)
+- **memory**: deep retrieval — LLM reranker, CoT answering, multi-hop fallback (`0c39cc1`, #38)
+- **memory**: default embeddings to OpenAI `text-embedding-3-small` @ 1536d (`4c23080`, #82)
+- **bench**: add ZouroBench — custom benchmark for Zouroboros capabilities (`eae0d13`, #41)
+
+### Performance
+- **memory**: inline FTS in daemon + Mimir synthesis cache — **40% p50 latency drop** (`a48ca2e`, #77)
+
+### Bug Fixes
+- **memory**: close cp-12 transitive inheritance gap in cross-persona access (`66cd286`, #79)
+- **memory**: route gate + briefing through model-client (gpt-4o-mini migration) (`307e092`, #76)
+- **memory**: close 6 production gaps identified by ZouroBench audit (`072595c`, #42)
+- **memory**: PKA quality gates — remove persona exclusions, filter open loop noise, widen promoter reach (`6148a75`, #46)
+- **mimir**: harden capture defaults and add RAG telemetry (`056a01d`, #83)
+- **selfheal**: correct 5 collector bugs producing 19% vs actual 68% composite (`86cbc59`, #53)
+- **selfheal**: procedure-freshness metric now scores execution recency (success_count + failure_count + last-used column) instead of `created_at`; surfaces never-run procedures as Execution Coverage anomaly when no recency column exists
+- **agents**: self-enhancement agent instruction expanded with introspect → prescribe → evolve → post-flight pipeline + procedure-freshness handling guidance
+- **swarm**: calibrate decision gate thresholds based on shadow-mode validation (`46e011f`, #75)
+- **init**: produce full standalone-compatible schema + resolve Zo paths (`0913ae1`, #78)
+- **cli**: resolve memory CLI via subpath export + add `paths.ts` tests (`897b6ae`, #64)
+- sanitize hardcoded workspace paths and route CLI memory through monorepo (`e6e2271`, #63)
+
+### CI/CD
+- pin Bun to 1.3.13 with upstream issue reference (`e0e4a75` #80, `156972d` #81)
+
+### Documentation
+- refresh system architecture diagrams (`e7a26b4` #84, `55243da` #85, `11adbeb`, `012b664`)
+- add Zouroboros Health Council architecture (`a655dd4`, #61)
+- add Karpathy AutoResearch / 2nd Brain acknowledgment (`69b8589`, #59)
+
+### Package Versions at Release
+| Package | Version |
+|---|---|
+| `zouroboros-core` | 2.0.0 |
+| `zouroboros-memory` | 3.0.0 |
+| `zouroboros-swarm` | 5.0.0 |
+| `zouroboros-rag` | 1.0.0 (new) |
+| `zouroboros-workflow` | 2.0.0 |
+| `zouroboros-selfheal` | 2.0.0 |
+| `zouroboros-personas` | 2.0.0 |
+
+> Individual packages retain their independent semver via changesets;
+> `v2.0.0` is the umbrella release tag for the monorepo.
+
+---
+
 ## [v1.1.0] — 2026-04-08
 
 > Second release: CortexDB memory migration, Swarm Phase 2 wiring,

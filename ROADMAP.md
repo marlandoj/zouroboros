@@ -270,22 +270,23 @@ docker/
 
 ## Final Status
 
-**✅ PHASES COMPLETE — v1.0.0 Hardening In Progress**
+**✅ PHASES COMPLETE — v2.0.0 Released (2026-04-26)**
 
-**Overall Progress:** 8/8 phases implemented
+**Overall Progress:** 8/8 original phases + RAG package (added in v2.0.0)
 **Repository:** https://github.com/marlandoj/zouroboros
-**Status:** Private — v1.0.0 release pending (loop guard, memory throttling, CI expansion)
+**Latest Release:** v2.0.0 — umbrella release covering RAG package, swarm decision gate, Hermes integration, persona-scoped memory, Mimir synthesis, 40% p50 latency drop. See CHANGELOG.md for full notes.
 
-> **Note:** Phases 4 and 5 each have deferred items (`Token optimization`, `Stagnation detection`, `SkillsMP API client`) that are explicitly scoped to future work. These do not block v1.0.0. See BACKLOG.md (ECC-009, ECC-010) for active hardening work.
+> **Note:** Phases 4 and 5 each have deferred items (`Token optimization`, `Stagnation detection`, `SkillsMP API client`) that are explicitly scoped to future work. See BACKLOG.md for active follow-ups.
 
-### Completed Packages (8)
+### Completed Packages (9)
 | Package | Status | Description |
 |---------|--------|-------------|
 | zouroboros-core | ✅ | Types, config, utilities |
-| zouroboros-memory | ✅ | SQLite + vector memory |
+| zouroboros-memory | ✅ | SQLite + vector memory, persona-scoped facts, Mimir synthesis |
+| zouroboros-rag | ✅ | RAG enrichment + sage-node DAG (added v2.0.0) |
 | zouroboros-workflow | ✅ | Interview, eval, unstuck, autoloop |
 | zouroboros-personas | ✅ | Persona creation framework |
-| zouroboros-swarm | ✅ | Multi-agent orchestration |
+| zouroboros-swarm | ✅ | Multi-agent orchestration + decision gate + Hermes alerts |
 | zouroboros-selfheal | ✅ | Introspection & evolution |
 | zouroboros-cli | ✅ | Unified CLI |
 | zouroboros-tui | ✅ | Terminal UI |
