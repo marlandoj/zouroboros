@@ -33,6 +33,8 @@
 - **memory**: PKA quality gates — remove persona exclusions, filter open loop noise, widen promoter reach (`6148a75`, #46)
 - **mimir**: harden capture defaults and add RAG telemetry (`056a01d`, #83)
 - **selfheal**: correct 5 collector bugs producing 19% vs actual 68% composite (`86cbc59`, #53)
+- **selfheal**: procedure-freshness metric now scores execution recency (success_count + failure_count + last-used column) instead of `created_at`; surfaces never-run procedures as Execution Coverage anomaly when no recency column exists
+- **agents**: self-enhancement agent instruction expanded with introspect → prescribe → evolve → post-flight pipeline + procedure-freshness handling guidance
 - **swarm**: calibrate decision gate thresholds based on shadow-mode validation (`46e011f`, #75)
 - **init**: produce full standalone-compatible schema + resolve Zo paths (`0913ae1`, #78)
 - **cli**: resolve memory CLI via subpath export + add `paths.ts` tests (`897b6ae`, #64)

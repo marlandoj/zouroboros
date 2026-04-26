@@ -345,15 +345,24 @@ async function measureProcedureFreshness(): Promise<MetricResult> {
       "Run: bun memory.ts migrate", true);
   }
 
-  const query = `
+  const columnInfo = run(`sqlite3 "${MEMORY_DB}" "PRAGMA table_info(procedures);" 2>&1`);
+  const columns = new Set(
+    columnInfo.stdout
+      .split("\n")
+      .map(line => line.split("|")[1]?.trim())
+      .filter(Boolean)
+  );
+
+  const statsQuery = `
     SELECT
       COUNT(*) as total,
-      SUM(CASE WHEN created_at < strftime('%s', 'now', '-14 days') THEN 1 ELSE 0 END) as stale
+      SUM(CASE WHEN (success_count + failure_count) > 0 THEN 1 ELSE 0 END) as executed,
+      SUM(CASE WHEN (success_count + failure_count) = 0 THEN 1 ELSE 0 END) as never_run
     FROM procedures;
   `;
 
-  const result = run(`sqlite3 "${MEMORY_DB}" "${query.replace(/\n/g, " ")}" 2>&1`);
-  const [total, stale] = (result.stdout || "0|0").split("|").map(n => parseInt(n) || 0);
+  const statsResult = run(`sqlite3 "${MEMORY_DB}" "${statsQuery.replace(/\n/g, " ")}" 2>&1`);
+  const [total, executed, neverRun] = (statsResult.stdout || "0|0|0").split("|").map(n => parseInt(n) || 0);
 
   if (total === 0) {
     return buildMetric("Procedure Freshness", -1, 0.30, 0.60, 0.14,
@@ -361,12 +370,72 @@ async function measureProcedureFreshness(): Promise<MetricResult> {
       "Create procedures from successful swarm runs: bun memory.ts procedures --auto <pattern>", true);
   }
 
-  const staleRate = stale / total;
+  const neverRunNamesQuery = `
+    SELECT GROUP_CONCAT(name, ', ')
+    FROM (
+      SELECT name
+      FROM procedures
+      WHERE (success_count + failure_count) = 0
+      ORDER BY name
+      LIMIT 5
+    );
+  `;
+  const neverRunNames = run(`sqlite3 "${MEMORY_DB}" "${neverRunNamesQuery.replace(/\n/g, " ")}" 2>&1`).stdout.trim();
+
+  const recencyColumn = columns.has("last_used_at")
+    ? "last_used_at"
+    : columns.has("updated_at")
+      ? "updated_at"
+      : null;
+
+  if (!recencyColumn) {
+    const detail = executed > 0
+      ? `${executed}/${total} procedures show execution history; ${neverRun}/${total} never run. Freshness not scored because the DB does not track last execution time.`
+      : `0/${total} procedures show execution history. Freshness not scored because the DB does not track last execution time.`;
+
+    const recommendation = neverRun > 0
+      ? `Execution coverage anomaly, not freshness: inspect never-run procedures${neverRunNames ? ` (${neverRunNames})` : ""}`
+      : "Add last execution timestamps before scoring procedure freshness";
+
+    return buildMetric("Procedure Freshness", -1, 0.30, 0.60, 0.14, detail, recommendation, true);
+  }
+
+  if (executed === 0) {
+    return buildMetric("Procedure Freshness", -1, 0.30, 0.60, 0.14,
+      `0/${total} procedures show execution history. Freshness is undefined until procedures actually run.`,
+      neverRun > 0
+        ? `Inspect why procedures are not running${neverRunNames ? ` (${neverRunNames})` : ""}`
+        : "Inspect why procedures are not running",
+      true);
+  }
+
+  const freshnessQuery = `
+    SELECT
+      COUNT(*) as executed_total,
+      SUM(CASE WHEN ${recencyColumn} < strftime('%s', 'now', '-14 days') THEN 1 ELSE 0 END) as stale
+    FROM procedures
+    WHERE (success_count + failure_count) > 0;
+  `;
+
+  const freshnessResult = run(`sqlite3 "${MEMORY_DB}" "${freshnessQuery.replace(/\n/g, " ")}" 2>&1`);
+  const [executedTotal, stale] = (freshnessResult.stdout || "0|0").split("|").map(n => parseInt(n) || 0);
+
+  if (executedTotal === 0) {
+    return buildMetric("Procedure Freshness", -1, 0.30, 0.60, 0.14,
+      `No executed procedures had usable ${recencyColumn} values for freshness scoring.`,
+      "Backfill execution timestamps before scoring procedure freshness",
+      true);
+  }
+
+  const staleRate = stale / executedTotal;
+  const coverageSuffix = neverRun > 0
+    ? ` ${neverRun}/${total} procedures still have no execution history${neverRunNames ? ` (${neverRunNames})` : ""}.`
+    : "";
 
   return buildMetric("Procedure Freshness", staleRate, 0.30, 0.60, 0.14,
-    `${stale}/${total} procedures stale >14d (${(staleRate * 100).toFixed(1)}%)`,
+    `${stale}/${executedTotal} executed procedures stale >14d by ${recencyColumn} (${(staleRate * 100).toFixed(1)}%).${coverageSuffix}`,
     staleRate > 0.30
-      ? `Evolve ${stale} stale procedures: bun memory.ts procedures --evolve <id>`
+      ? `Evolve ${stale} stale executed procedures; inspect never-run procedures separately`
       : "Procedure freshness is healthy",
     true);
 }
