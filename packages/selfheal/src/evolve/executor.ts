@@ -4,7 +4,8 @@
 
 import { execFileSync, execSync } from 'child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { dirname, join, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { getWorkspaceRoot } from 'zouroboros-core';
 import type { Prescription, EvolutionResult, ScorecardSnapshot, TrajectoryStep } from '../types.js';
 import {
@@ -84,9 +85,37 @@ function measureMetric(cmd: string): number | null {
   return isNaN(num) ? null : num;
 }
 
+function resolveConstitutionGate(): { path: string; rootArgs: string[] } {
+  const explicit = process.env.ZOUROBOROS_CONSTITUTION_GATE;
+  if (explicit) return { path: explicit, rootArgs: [] };
+
+  const workspace = getWorkspace();
+  const repository = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
+  const candidates = [
+    { path: join(workspace, 'Skills/zouroboros-governance/scripts/constitution-gate.ts'), root: workspace },
+    { path: join(repository, 'Skills/zouroboros-governance/scripts/constitution-gate.ts'), root: repository },
+  ];
+  const local = candidates.find((candidate) => existsSync(candidate.path));
+  if (!local) {
+    return {
+      path: '/home/workspace/Skills/zouroboros-governance/scripts/constitution-gate.ts',
+      rootArgs: [],
+    };
+  }
+
+  const nestedCanonical = join(local.root, 'zouroboros');
+  const canonicalRoot = existsSync(join(nestedCanonical, 'ZOUROBOROS.md'))
+    && existsSync(join(nestedCanonical, 'CONSTITUTION.md'))
+    ? nestedCanonical
+    : local.root;
+  return {
+    path: local.path,
+    rootArgs: ['--canonical-root', canonicalRoot, '--mirror-root', local.root],
+  };
+}
+
 function constitutionalPreflight(prescription: Prescription, humanApproved: boolean): string | null {
-  const gatePath = process.env.ZOUROBOROS_CONSTITUTION_GATE
-    || '/home/workspace/Skills/zouroboros-governance/scripts/constitution-gate.ts';
+  const gate = resolveConstitutionGate();
   const commandSurface = [
     prescription.playbook.description,
     prescription.program || '',
@@ -117,8 +146,9 @@ function constitutionalPreflight(prescription: Prescription, humanApproved: bool
 
   try {
     const output = execFileSync('bun', [
-      gatePath,
+      gate.path,
       'check',
+      ...gate.rootArgs,
       '--phase',
       'preflight',
       '--input',
