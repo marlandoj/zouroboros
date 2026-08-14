@@ -23,7 +23,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/zouroboros-ai/zouroboros.git",
+    "url": "https://github.com/marlandoj/zouroboros.git",
     "directory": "packages/memory"
   },
   "bin": {

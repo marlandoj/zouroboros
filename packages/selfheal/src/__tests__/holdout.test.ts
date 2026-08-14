@@ -43,8 +43,9 @@ describe('holdout — anti-Goodhart held-out eval bank (E1)', () => {
 
   describe('AC-E1.1 — rotating partition differs across epochs', () => {
     test('held-out set differs for at least two epoch keys', () => {
-      const a = selectHeldout('2026-W10');
-      const b = selectHeldout('2026-W11');
+      const fixtures = loadHoldoutFixtures();
+      const a = selectHeldout('2026-W10', fixtures);
+      const b = selectHeldout('2026-W11', fixtures);
       expect(a.heldoutCaseIds).not.toEqual(b.heldoutCaseIds);
       // both are non-empty subsets of the bank
       const all = loadHoldoutFixtures().cases.map((c) => c.id);
@@ -54,8 +55,9 @@ describe('holdout — anti-Goodhart held-out eval bank (E1)', () => {
     });
 
     test('selection is deterministic for a given epoch', () => {
-      expect(selectHeldout('2026-W22').heldoutCaseIds).toEqual(
-        selectHeldout('2026-W22').heldoutCaseIds
+      const fixtures = loadHoldoutFixtures();
+      expect(selectHeldout('2026-W22', fixtures).heldoutCaseIds).toEqual(
+        selectHeldout('2026-W22', fixtures).heldoutCaseIds
       );
     });
   });

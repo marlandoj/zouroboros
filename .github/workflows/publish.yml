@@ -19,7 +19,7 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     permissions:
       contents: write
       id-token: write
@@ -33,7 +33,7 @@ jobs:
       # oven-sh/setup-bun@v2
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
-          bun-version: latest
+          bun-version: 1.3.12
 
       # pnpm/action-setup@v4
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
@@ -53,29 +53,30 @@ jobs:
       - name: Build core
         run: pnpm --filter zouroboros-core build
 
-      - name: Build memory
-        run: pnpm --filter zouroboros-memory build
-
-      - name: Build selfheal
-        run: pnpm --filter zouroboros-selfheal build
-
-      - name: Build swarm
-        run: pnpm --filter zouroboros-swarm build
-
       - name: Build workflow
         run: pnpm --filter zouroboros-workflow build
 
-      - name: Build personas
-        run: pnpm --filter zouroboros-personas build
+      - name: Build memory
+        run: pnpm --filter zouroboros-memory build
 
       - name: Build rag
         run: pnpm --filter zouroboros-rag build
 
-      - name: Build cli
-        run: pnpm --filter zouroboros-cli build
+      - name: Build selfheal
+        run: pnpm --filter zouroboros-selfheal build
+
+      - name: Build personas
+        run: pnpm --filter zouroboros-personas build
+
 
       - name: Build mcp-memory
         run: pnpm --filter zouroboros-mcp-memory build
+
+      - name: Build swarm
+        run: pnpm --filter zouroboros-swarm build
+
+      - name: Build cli
+        run: pnpm --filter zouroboros-cli build
 
       # ── Typecheck ──────────────────────────────────────────────────────
 
@@ -92,15 +93,19 @@ jobs:
         run: |
           pnpm --filter zouroboros-core test
           pnpm --filter zouroboros-memory test
-          pnpm --filter zouroboros-swarm test
+          pnpm --filter zouroboros-workflow test
+          pnpm --filter zouroboros-rag test
+          pnpm --filter zouroboros-personas test
           pnpm --filter zouroboros-selfheal test
+          pnpm --filter zouroboros-swarm test
+          pnpm --filter zouroboros-cli test
 
       # ── Dry run — validate tarballs ────────────────────────────────────
 
       - name: Pack dry run (validate tarballs)
         run: |
           echo "=== Validating package tarballs ==="
-          for pkg in packages/core packages/memory packages/swarm packages/workflow packages/selfheal packages/personas packages/rag cli; do
+          for pkg in packages/core packages/memory packages/swarm packages/workflow packages/selfheal packages/personas packages/rag packages/mcp-memory cli; do
             echo "--- $pkg ---"
             cd $pkg
             npm pack --dry-run 2>&1
@@ -124,7 +129,7 @@ jobs:
         if: inputs.dry_run == 'true'
         run: |
           echo "=== DRY RUN — would publish these packages ==="
-          for pkg in packages/core packages/memory packages/swarm packages/workflow packages/selfheal packages/personas packages/rag cli; do
+          for pkg in packages/core packages/memory packages/swarm packages/workflow packages/selfheal packages/personas packages/rag packages/mcp-memory cli; do
             name=$(cd $pkg && node -p "require('./package.json').name")
             version=$(cd $pkg && node -p "require('./package.json').version")
             private=$(cd $pkg && node -p "require('./package.json').private || false")

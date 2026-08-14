@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 interface PersonaEntry {
@@ -112,7 +112,8 @@ describe("swarm persona registry", () => {
     expect(manifest.files).toContain("assets/");
   });
 
-  test("registers every GameDev persona selected by the game template", () => {
+  const workspaceIntegrationTest = existsSync(templateAssociationPath) ? test : test.skip;
+  workspaceIntegrationTest("registers every GameDev persona selected by the game template", () => {
     const registryNames = new Set(readRegistry(assetPath).personas.map((entry) => entry.name));
     const associations = JSON.parse(readFileSync(templateAssociationPath, "utf8")) as {
       associations: Array<{

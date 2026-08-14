@@ -53,7 +53,7 @@ jobs:
 
   build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     steps:
       # actions/checkout@v4
@@ -86,17 +86,29 @@ jobs:
       - name: Build core
         run: pnpm --filter zouroboros-core build
 
+      - name: Build workflow
+        run: pnpm --filter zouroboros-workflow build
+
       - name: Build memory
         run: pnpm --filter zouroboros-memory build
 
-      - name: Build workflow
-        run: pnpm --filter zouroboros-workflow build
+      - name: Build rag
+        run: pnpm --filter zouroboros-rag build
 
       - name: Build selfheal
         run: pnpm --filter zouroboros-selfheal build
 
+      - name: Build personas
+        run: pnpm --filter zouroboros-personas build
+
+      - name: Build MCP memory server
+        run: pnpm --filter zouroboros-mcp-memory build
+
       - name: Build swarm
         run: pnpm --filter zouroboros-swarm build
+
+      - name: Build CLI
+        run: pnpm --filter zouroboros-cli build
 
       # ── Typecheck ─────────────────────────────────────────────────────────────
 
@@ -128,11 +140,23 @@ jobs:
       - name: Test memory
         run: pnpm --filter zouroboros-memory test
 
+      - name: Test workflow
+        run: pnpm --filter zouroboros-workflow test
+
+      - name: Test rag
+        run: pnpm --filter zouroboros-rag test
+
+      - name: Test personas
+        run: pnpm --filter zouroboros-personas test
+
       - name: Test swarm
         run: pnpm --filter zouroboros-swarm test
 
       - name: Test selfheal
         run: pnpm --filter zouroboros-selfheal test
+
+      - name: Test CLI
+        run: pnpm --filter zouroboros-cli test
 
       # ── Artifacts ────────────────────────────────────────────────────────────
 
