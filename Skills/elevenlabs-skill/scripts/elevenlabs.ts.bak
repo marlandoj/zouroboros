@@ -1,0 +1,362 @@
+#!/usr/bin/env bun
+/**
+ * ElevenLabs Skill - Voice Synthesis CLI
+ * 
+ * Generate lifelike speech for AI characters using ElevenLabs API.
+ * 
+ * Usage:
+ *   bun elevenlabs.ts voices                    # List all voices
+ *   bun elevenlabs.ts speak "Hello world"       # Generate speech
+ *   bun elevenlabs.ts character identity.json   # Use character profile
+ */
+
+import { readFile, writeFile, mkdir } from "fs/promises";
+import { existsSync } from "fs";
+import { dirname, basename, join } from "path";
+
+const API_BASE = "https://api.elevenlabs.io/v1";
+const API_KEY = process.env.ELEVENLABS_API_KEY;
+
+// Default voice settings optimized for character content
+const DEFAULT_SETTINGS = {
+  stability: 0.7,
+  similarity_boost: 0.75,
+  style: 0.4,
+  speed: 1.0
+};
+
+// Recommended voices for AI characters
+const RECOMMENDED_VOICES: Record<string, { id: string; description: string; gender: string }> = {
+  "Rachel": { id: "21m00Tcm4TlvDq8ikWAM", description: "Calm, professional, versatile", gender: "female" },
+  "Domi": { id: "AZnzlk1XvdvUeBnXmlld", description: "Strong, expressive, intense", gender: "female" },
+  "Bella": { id: "EXAVITQu4vr4xnSDxMaL", description: "Warm, engaging, natural", gender: "female" },
+  "Antoni": { id: "ErXwobaYiN019PkySvjV", description: "Well-rounded, natural", gender: "male" },
+  "Elli": { id: "MF3mGyEYCl7XYWbV9V6O", description: "Friendly, approachable, casual", gender: "female" },
+  "Josh": { id: "TxGEqnHWrfWFTfGW9XjX", description: "Warm, trustworthy, deep", gender: "male" },
+  "Arnold": { id: "VR6AewLTigWG4xSOukaG", description: "Strong, authoritative", gender: "male" },
+  "Adam": { id: "pNInz6obpgDQGcFmaJgB", description: "Deep, natural, mature", gender: "male" },
+  "Sam": { id: "yoZ06aMxZJJ28mfd3POQ", description: "Young, energetic, bright", gender: "male" },
+  "Grace": { id: "Yko7PKHZNXotIFUBG7I9", description: "Natural, conversational", gender: "female" }
+};
+
+// Voice Design (free tier alternative)
+const VOICE_DESIGN_VOICES = [
+  { name: "Female Warm", description: "a warm, friendly female voice" },
+  { name: "Female Professional", description: "a professional, calm female voice" },
+  { name: "Male Casual", description: "a casual, approachable male voice" },
+  { name: "Male Professional", description: "a professional, authoritative male voice" },
+];
+
+interface VoiceSettings {
+  stability: number;
+  similarity_boost: number;
+  style: number;
+  speed: number;
+}
+
+interface CharacterIdentity {
+  name: string;
+  personality?: {
+    tone?: string;
+    formality?: string;
+  };
+  visual?: {
+    gender?: string;
+    age_range?: string;
+  };
+  voice?: {
+    provider?: string;
+    voice_id?: string;
+    voice_name?: string;
+  };
+}
+
+function showHelp() {
+  console.log(`
+🎙️  ElevenLabs Voice Synthesis Skill
+
+Usage:
+  bun elevenlabs.ts <command> [options]
+
+Commands:
+  voices                              List all available voices
+  speak <text>                        Generate speech from text
+    --voice <name|id>                 Voice to use (default: Rachel)
+    --output <path>                   Output file path
+    --stability <0-1>                 Voice stability
+    --similarity <0-1>                Similarity boost
+    --style <0-1>                     Style exaggeration
+    --speed <0.5-2>                   Playback speed
+
+  character <identity.json>           Generate using character profile
+    --text <text>                     Text to speak
+    --script <file>                   Read text from file
+    --output <path>                   Output file path
+    --output-dir <dir>                Output directory
+
+Environment:
+  ELEVENLABS_API_KEY                  Required. Set in Settings > Advanced
+
+⚠️  Free Tier Limitations:
+   - Cannot use library voices via API (requires paid plan)
+   - Use web UI at https://elevenlabs.io/app for free generation
+   - Or upgrade at https://elevenlabs.io/subscription
+
+Examples:
+  bun elevenlabs.ts voices
+  bun elevenlabs.ts speak "Hello world" --voice Rachel --output hello.mp3
+  bun elevenlabs.ts character elara.json --text "Welcome!" --output welcome.mp3
+`);
+}
+
+async function checkApiKey(): Promise<boolean> {
+  if (!API_KEY) {
+    console.error("❌ ELEVENLABS_API_KEY not found!");
+    console.error("   Add your API key in Settings > Advanced > Secrets");
+    console.error("   Get a key at: https://elevenlabs.io/subscription");
+    return false;
+  }
+  return true;
+}
+
+async function listVoices() {
+  if (!await checkApiKey()) return;
+
+  try {
+    const response = await fetch(`${API_BASE}/voices`, {
+      headers: { "xi-api-key": API_KEY! }
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    console.log("\n🎙️  Available Voices\n");
+    console.log("Recommended for AI Characters:");
+    console.log("─".repeat(70));
+    
+    for (const [name, info] of Object.entries(RECOMMENDED_VOICES)) {
+      console.log(`  ${name.padEnd(12)} ${info.id}  ${info.description}`);
+    }
+    
+    console.log("\nAll Voices:");
+    console.log("─".repeat(70));
+    
+    for (const voice of data.voices) {
+      const isRecommended = Object.values(RECOMMENDED_VOICES).some(v => v.id === voice.voice_id);
+      const marker = isRecommended ? "★" : " ";
+      console.log(` ${marker} ${voice.name.padEnd(20)} ${voice.voice_id}`);
+    }
+    
+    console.log("\n★ = Recommended for AI characters");
+    
+  } catch (error) {
+    console.error("❌ Failed to list voices:", error);
+  }
+}
+
+async function generateSpeech(
+  text: string,
+  voiceId: string,
+  outputPath: string,
+  settings: Partial<VoiceSettings> = {}
+) {
+  if (!await checkApiKey()) return;
+
+  const voiceSettings = {
+    ...DEFAULT_SETTINGS,
+    ...settings
+  };
+
+  try {
+    console.log(`🎙️  Generating speech...`);
+    console.log(`   Voice: ${voiceId}`);
+    console.log(`   Text: ${text.substring(0, 60)}${text.length > 60 ? "..." : ""}`);
+
+    const response = await fetch(`${API_BASE}/text-to-speech/${voiceId}`, {
+      method: "POST",
+      headers: {
+        "xi-api-key": API_KEY!,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        text,
+        model_id: "eleven_flash_v2_5", // Latest fast model, supports free tier
+        voice_settings: voiceSettings
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`API error: ${response.status} - ${error}`);
+    }
+
+    // Ensure output directory exists
+    const outputDir = dirname(outputPath);
+    if (!existsSync(outputDir)) {
+      await mkdir(outputDir, { recursive: true });
+    }
+
+    const audioBuffer = await response.arrayBuffer();
+    await writeFile(outputPath, Buffer.from(audioBuffer));
+
+    const fileSize = (audioBuffer.byteLength / 1024).toFixed(1);
+    console.log(`✅ Saved: ${outputPath} (${fileSize} KB)`);
+
+  } catch (error) {
+    console.error("❌ Generation failed:", error);
+  }
+}
+
+function resolveVoiceId(voice: string): string {
+  // Check if it's already an ID (contains no spaces and is long)
+  if (voice.length > 20 && !voice.includes(" ")) {
+    return voice;
+  }
+  
+  // Check recommended voices
+  const normalizedName = voice.charAt(0).toUpperCase() + voice.slice(1).toLowerCase();
+  const recommended = RECOMMENDED_VOICES[normalizedName];
+  if (recommended) {
+    return recommended.id;
+  }
+  
+  // Default to Rachel
+  console.warn(`⚠️  Voice "${voice}" not found, using Rachel`);
+  return RECOMMENDED_VOICES["Rachel"].id;
+}
+
+async function handleSpeak(args: string[]) {
+  const textIndex = args.indexOf("speak") + 1;
+  if (textIndex >= args.length) {
+    console.error("❌ No text provided");
+    return;
+  }
+
+  let text = args[textIndex];
+  
+  // Handle multi-word text (everything until --flag)
+  let i = textIndex + 1;
+  while (i < args.length && !args[i].startsWith("--")) {
+    text += " " + args[i];
+    i++;
+  }
+
+  const voiceArg = args.indexOf("--voice");
+  const voice = voiceArg !== -1 ? args[voiceArg + 1] : "Rachel";
+  
+  const outputArg = args.indexOf("--output");
+  const output = outputArg !== -1 
+    ? args[outputArg + 1] 
+    : `/home/workspace/Audio/elevenlabs-${Date.now()}.mp3`;
+
+  const stabilityArg = args.indexOf("--stability");
+  const similarityArg = args.indexOf("--similarity");
+  const styleArg = args.indexOf("--style");
+  const speedArg = args.indexOf("--speed");
+
+  const settings: Partial<VoiceSettings> = {};
+  if (stabilityArg !== -1) settings.stability = parseFloat(args[stabilityArg + 1]);
+  if (similarityArg !== -1) settings.similarity_boost = parseFloat(args[similarityArg + 1]);
+  if (styleArg !== -1) settings.style = parseFloat(args[styleArg + 1]);
+  if (speedArg !== -1) settings.speed = parseFloat(args[speedArg + 1]);
+
+  const voiceId = resolveVoiceId(voice);
+  await generateSpeech(text, voiceId, output, settings);
+}
+
+async function handleCharacter(args: string[]) {
+  const identityIndex = args.indexOf("character") + 1;
+  if (identityIndex >= args.length) {
+    console.error("❌ No identity file provided");
+    return;
+  }
+
+  const identityPath = args[identityIndex];
+  
+  try {
+    const identity: CharacterIdentity = JSON.parse(await readFile(identityPath, "utf-8"));
+    
+    // Get text to speak
+    const textArg = args.indexOf("--text");
+    const scriptArg = args.indexOf("--script");
+    
+    let text: string;
+    if (scriptArg !== -1) {
+      text = await readFile(args[scriptArg + 1], "utf-8");
+    } else if (textArg !== -1) {
+      text = args[textArg + 1];
+    } else {
+      text = `Hi, I'm ${identity.name}. Welcome to my content!`;
+    }
+
+    // Determine voice
+    let voiceId = identity.voice?.voice_id;
+    if (!voiceId && identity.voice?.voice_name) {
+      voiceId = resolveVoiceId(identity.voice.voice_name);
+    }
+    if (!voiceId) {
+      // Match gender if specified
+      const gender = identity.visual?.gender?.toLowerCase();
+      if (gender === "female") {
+        voiceId = RECOMMENDED_VOICES["Rachel"].id;
+      } else if (gender === "male") {
+        voiceId = RECOMMENDED_VOICES["Antoni"].id;
+      } else {
+        voiceId = RECOMMENDED_VOICES["Rachel"].id;
+      }
+    }
+
+    // Determine output path
+    const outputArg = args.indexOf("--output");
+    const outputDirArg = args.indexOf("--output-dir");
+    
+    let outputPath: string;
+    if (outputArg !== -1) {
+      outputPath = args[outputArg + 1];
+    } else if (outputDirArg !== -1) {
+      const dir = args[outputDirArg + 1];
+      const safeName = identity.name.replace(/\s+/g, "-").toLowerCase();
+      outputPath = join(dir, `${safeName}-${Date.now()}.mp3`);
+    } else {
+      const safeName = identity.name.replace(/\s+/g, "-").toLowerCase();
+      outputPath = `/home/workspace/Audio/${safeName}-${Date.now()}.mp3`;
+    }
+
+    console.log(`🎭 Character: ${identity.name}`);
+    await generateSpeech(text, voiceId, outputPath);
+
+  } catch (error) {
+    console.error("❌ Failed to load character identity:", error);
+  }
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  
+  if (args.length === 0 || args[0] === "--help" || args[0] === "help") {
+    showHelp();
+    return;
+  }
+
+  const command = args[0];
+
+  switch (command) {
+    case "voices":
+      await listVoices();
+      break;
+    case "speak":
+      await handleSpeak(args);
+      break;
+    case "character":
+      await handleCharacter(args);
+      break;
+    default:
+      console.error(`❌ Unknown command: ${command}`);
+      showHelp();
+  }
+}
+
+main();

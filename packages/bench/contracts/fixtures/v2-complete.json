@@ -1,0 +1,125 @@
+{
+  "schema_version": 2,
+  "run": {
+    "run_id": "zb-2026-07-24-r01",
+    "benchmark": "ZouroBench",
+    "timestamp": "2026-07-24T12:00:00.000Z",
+    "dataset": "data/zourobench/seed.json"
+  },
+  "cohort": {
+    "cohort_id": "cohort-2026-07-24",
+    "replicate_index": 1,
+    "replicate_seed": 1084216302,
+    "minimum_n": 3,
+    "timeout_ms": 60000
+  },
+  "provenance": {
+    "produced_by": "zourobench-adapter",
+    "adapter_version": "2.0.0",
+    "git_commit": "d5cac30c0000000000000000000000000000abcd",
+    "host": "zo-workspace",
+    "invocation": "bun adapters/zourobench-adapter.ts --dataset data/zourobench/seed.json --output data/runs/ --judge",
+    "config_fingerprint": "sha256:3f1b9c0d7e5a",
+    "recorded_at": "2026-07-24T12:00:03.000Z"
+  },
+  "execution": {
+    "answer_model": "gpt-4o-mini",
+    "judge_model": { "value": "gpt-4o", "availability_reason": null },
+    "embedding_model": { "value": "text-embedding-3-small", "availability_reason": null },
+    "truncation_guard_enabled": true,
+    "generation_timeout_ms": { "value": 60000, "availability_reason": null }
+  },
+  "totals": { "total_questions": 2, "answered": 2 },
+  "scores": {
+    "overall_accuracy": 50,
+    "by_category": {
+      "procedural-recall": { "correct": 1, "total": 2, "accuracy": 50 }
+    },
+    "by_type": {
+      "procedural-recall:step-recall": { "correct": 1, "total": 1, "accuracy": 100 },
+      "procedural-recall:precise-count": { "correct": 0, "total": 1, "accuracy": 0 }
+    }
+  },
+  "latency": { "avg_retrieval_ms": 210, "avg_answer_ms": 1900, "p95_retrieval_ms": 300 },
+  "usage": {
+    "value": { "prompt_tokens": 18000, "completion_tokens": 2400, "total_tokens": 20400 },
+    "availability_reason": null
+  },
+  "pricing": {
+    "value": {
+      "currency": "USD",
+      "input_cost": 0.0027,
+      "output_cost": 0.00144,
+      "total_cost": 0.00414,
+      "source": "openai-published-2026-07"
+    },
+    "availability_reason": null
+  },
+  "consensus": {
+    "enabled": true,
+    "threshold": { "value": 0.7, "availability_reason": null },
+    "invocations": { "value": 1, "availability_reason": null },
+    "splits": { "value": 0, "availability_reason": null }
+  },
+  "parity": {
+    "value": {
+      "baseline_run_id": "zb-2026-07-03",
+      "baseline_overall_accuracy": 98.1,
+      "delta_overall_accuracy": -48.1,
+      "paired_questions": 2
+    },
+    "availability_reason": null
+  },
+  "errors": [
+    {
+      "question_id": "pr-02",
+      "stage": "generation",
+      "message": "generation aborted by BENCH_GEN_TIMEOUT_MS deadline"
+    }
+  ],
+  "questions": [
+    {
+      "question_id": "pr-01",
+      "question_type": "step-recall",
+      "category": "procedural-recall",
+      "question": "What are the steps in the deploy-production procedure?",
+      "ground_truth": "v2 has 7 steps ending with a 10 minute production log watch",
+      "hypothesis": "The deploy-production v2 procedure has 7 steps ending with monitoring production logs for 10 minutes.",
+      "retrieved_context": ["procedure deploy-production v2: Step 1 ..."],
+      "retrieval_ms": 200,
+      "answer_ms": 1800,
+      "correct": true,
+      "judge_label": "correct",
+      "judge_confidence": 0.94,
+      "consensus_invoked": true,
+      "consensus_verdict": "passed",
+      "consensus_confidence": 0.88,
+      "truncated": false,
+      "timed_out": false,
+      "usage": {
+        "value": { "prompt_tokens": 9000, "completion_tokens": 1300, "total_tokens": 10300 },
+        "availability_reason": null
+      }
+    },
+    {
+      "question_id": "pr-02",
+      "question_type": "precise-count",
+      "category": "procedural-recall",
+      "question": "How many failures does deploy-production have across all versions?",
+      "ground_truth": "4 failures across v1 and v2",
+      "hypothesis": "",
+      "retrieved_context": [],
+      "retrieval_ms": 220,
+      "answer_ms": 2000,
+      "correct": false,
+      "judge_label": "incorrect",
+      "judge_confidence": 0.9,
+      "truncated": true,
+      "timed_out": true,
+      "usage": {
+        "value": { "prompt_tokens": 9000, "completion_tokens": 1100, "total_tokens": 10100 },
+        "availability_reason": null
+      }
+    }
+  ]
+}

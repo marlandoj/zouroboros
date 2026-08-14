@@ -1,0 +1,8 @@
+{
+  "name": "zourobench-code-task",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "bun test"
+  }
+}

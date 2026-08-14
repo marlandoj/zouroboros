@@ -1,0 +1,502 @@
+{
+  "schema_version": 1,
+  "run": {
+    "run_id": "zbc-synthetic-new-hf-zai-org-glm-5-2-f3-msfklhsm",
+    "benchmark": "ZouroBench-Code",
+    "timestamp": "2026-08-05T04:11:43.314Z",
+    "shadow_only": true
+  },
+  "cohort": {
+    "cohort_id": "zbc-v1-synthetic-new-hf-zai-org-glm-5-2",
+    "fold_index": 3,
+    "fold_seed": 1301,
+    "minimum_folds": 5
+  },
+  "provenance": {
+    "produced_by": "zourobench-code",
+    "harness_version": "1.0.0",
+    "corpus_version": "2026.08.04-v1",
+    "manifest_sha256": "sha256:4faf95982f986a169cfe7e0e23b3018099208c8de6c25e39a128e5fa28cf775b",
+    "git_commit": "unavailable",
+    "git_dirty": null
+  },
+  "execution": {
+    "model": "synthetic-new/hf:zai-org/GLM-5.2",
+    "executor": "opencode",
+    "sandbox": "bubblewrap",
+    "timeout_ms": 300000,
+    "started_at": "2026-08-05T04:04:43.382Z",
+    "completed_at": "2026-08-05T04:11:43.314Z",
+    "duration_ms": 419938
+  },
+  "totals": {
+    "tasks": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "scores": {
+    "correctness": 60,
+    "regressionSafety": 20,
+    "patchScope": 10,
+    "testQuality": 5,
+    "efficiency": 5,
+    "overall": 100
+  },
+  "tasks": [
+    {
+      "taskId": "safe-path-join",
+      "category": "bug-fix",
+      "status": "pass",
+      "executorSuccess": true,
+      "executorOutputSha256": "sha256:e087a5871a7b7b2dda83dd37cd36608e234c65b460bd6b2fc06ccc50db333894",
+      "durationMs": 194244,
+      "checks": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "command": [
+            "tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 792,
+          "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "required-2",
+          "kind": "required",
+          "command": [
+            "bun",
+            "test",
+            "test"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 20,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:83a441f7f67bc8c2fa57554f1d277c20c1e2b04845fe78055a6749729a6ed032"
+        },
+        {
+          "id": "hidden-1",
+          "kind": "hidden",
+          "command": [
+            "bun",
+            "test",
+            "./.zbc-hidden/check-1.test.ts"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 21,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:b2b13800e2b469406e6befe937714a9ed52dca8cdab519a733006a8d6b10b861"
+        },
+        {
+          "id": "hidden-2",
+          "kind": "hidden",
+          "command": [
+            "bun",
+            "test",
+            "./.zbc-hidden/check-2.test.ts"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 18,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:7aef1b201d55858e8a9a2426104ce7f520840d63053ab826f896c97fa14820df"
+        },
+        {
+          "id": "hidden-3",
+          "kind": "hidden",
+          "command": [
+            "bun",
+            "test",
+            "./.zbc-hidden/check-3.test.ts"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 20,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:23a5e5cdfb2573e3c069d54859262b7f88c9a071642d6ce3dce563d866e0fe89"
+        },
+        {
+          "id": "candidate-tests-reject-mutation",
+          "kind": "mutation",
+          "command": [
+            "bun",
+            "test",
+            "test"
+          ],
+          "exitCode": 1,
+          "passed": true,
+          "durationMs": 21,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:94d36b7abc80d452e267ecd34695dd69a48f7b56402feade3023c8609ae414c4"
+        }
+      ],
+      "patch": {
+        "filesChanged": [
+          "src/index.ts",
+          "test/index.test.ts"
+        ],
+        "linesAdded": 88,
+        "linesDeleted": 3,
+        "diffSha256": "sha256:88d246676de0055cea8e51bbdc03726c7d0e83513f4df550385a83d07dfe1786",
+        "forbiddenFiles": []
+      },
+      "scores": {
+        "correctness": 60,
+        "regressionSafety": 20,
+        "patchScope": 10,
+        "testQuality": 5,
+        "efficiency": 5,
+        "overall": 100
+      },
+      "error": null
+    },
+    {
+      "taskId": "topological-layers",
+      "category": "feature",
+      "status": "pass",
+      "executorSuccess": true,
+      "executorOutputSha256": "sha256:b7ac607ae921323ff22c779faddfe476d873938614d3f66ce6eb634a0d0d9acb",
+      "durationMs": 101708,
+      "checks": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "command": [
+            "tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 810,
+          "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "required-2",
+          "kind": "required",
+          "command": [
+            "bun",
+            "test",
+            "test"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 19,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:1c72729211902ab47a8125929380a17fb3be3ca9eb39b8f04b9f0ceff28ad038"
+        },
+        {
+          "id": "hidden-1",
+          "kind": "hidden",
+          "command": [
+            "bun",
+            "test",
+            "./.zbc-hidden/check-1.test.ts"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 15,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:8f544ddfa257999d86c39e07faaec107e0552774357e4813909ab0bf70f4143d"
+        },
+        {
+          "id": "hidden-2",
+          "kind": "hidden",
+          "command": [
+            "bun",
+            "test",
+            "./.zbc-hidden/check-2.test.ts"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 15,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:efad4dca6602a26a09454704763e8c07dd45330aa60db7233c7ea0638c593b0f"
+        },
+        {
+          "id": "hidden-3",
+          "kind": "hidden",
+          "command": [
+            "bun",
+            "test",
+            "./.zbc-hidden/check-3.test.ts"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 16,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:bb5332ee90de8010fa3630fdfcd085c285390c30a84282d7795ea328b1ea124e"
+        },
+        {
+          "id": "candidate-tests-reject-mutation",
+          "kind": "mutation",
+          "command": [
+            "bun",
+            "test",
+            "test"
+          ],
+          "exitCode": 1,
+          "passed": true,
+          "durationMs": 17,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:4ce99382ddd1052cea7b9990da7a085272aeb1459b78af999d69fa9fc8743685"
+        }
+      ],
+      "patch": {
+        "filesChanged": [
+          "src/index.ts",
+          "test/index.test.ts"
+        ],
+        "linesAdded": 177,
+        "linesDeleted": 4,
+        "diffSha256": "sha256:95a0e141550828e89797fb4a316078abd89aa3ad451722690120caeeddb450c9",
+        "forbiddenFiles": []
+      },
+      "scores": {
+        "correctness": 60,
+        "regressionSafety": 20,
+        "patchScope": 10,
+        "testQuality": 5,
+        "efficiency": 5,
+        "overall": 100
+      },
+      "error": null
+    },
+    {
+      "taskId": "deterministic-sort",
+      "category": "refactor",
+      "status": "pass",
+      "executorSuccess": true,
+      "executorOutputSha256": "sha256:ec9e405ee81faa75af9da6a79db80920a571b1efdf0389e81d4c011ad7e68a1f",
+      "durationMs": 62440,
+      "checks": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "command": [
+            "tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 971,
+          "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "required-2",
+          "kind": "required",
+          "command": [
+            "bun",
+            "test",
+            "test"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 17,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:50ce304c4ff2da08a8c5427b6f921e8c19e460c23a164ee21ee4741ef88021d3"
+        },
+        {
+          "id": "hidden-1",
+          "kind": "hidden",
+          "command": [
+            "bun",
+            "test",
+            "./.zbc-hidden/check-1.test.ts"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 16,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:0bdae818677128c78808e6cb3008c50cd82ff8b4377ee23eb49274da2f2c9cbf"
+        },
+        {
+          "id": "hidden-2",
+          "kind": "hidden",
+          "command": [
+            "bun",
+            "test",
+            "./.zbc-hidden/check-2.test.ts"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 18,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:04e02544688edf583321b817c65d9b954f88d1fe21c34f34b196ea0378e69b4b"
+        },
+        {
+          "id": "hidden-3",
+          "kind": "hidden",
+          "command": [
+            "bun",
+            "test",
+            "./.zbc-hidden/check-3.test.ts"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 18,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:6a13b82e565a5299f8d484139e892855ec805d7014e75b5988402fddd88232d1"
+        },
+        {
+          "id": "candidate-tests-reject-mutation",
+          "kind": "mutation",
+          "command": [
+            "bun",
+            "test",
+            "test"
+          ],
+          "exitCode": 1,
+          "passed": true,
+          "durationMs": 19,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:db2be5664f4af4e55d7973769c845ae359507d50f9172f1c48ef1ed215629d22"
+        }
+      ],
+      "patch": {
+        "filesChanged": [
+          "src/index.ts",
+          "test/index.test.ts"
+        ],
+        "linesAdded": 101,
+        "linesDeleted": 2,
+        "diffSha256": "sha256:0c576a34ab7ef8902da8a9703d10fd1893be9996a4b9f8eebdd3ec3540b6da85",
+        "forbiddenFiles": []
+      },
+      "scores": {
+        "correctness": 60,
+        "regressionSafety": 20,
+        "patchScope": 10,
+        "testQuality": 5,
+        "efficiency": 5,
+        "overall": 100
+      },
+      "error": null
+    },
+    {
+      "taskId": "cost-rounding-tests",
+      "category": "test-creation",
+      "status": "pass",
+      "executorSuccess": true,
+      "executorOutputSha256": "sha256:5a4581a1719e8c4010bab9de469392f336caa446e73f6eb0956d67d3c0e7b7a9",
+      "durationMs": 57688,
+      "checks": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "command": [
+            "tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 791,
+          "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": "required-2",
+          "kind": "required",
+          "command": [
+            "bun",
+            "test",
+            "test"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 19,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:deb00c325b48290531ce16f2aa783314b6b69c7784324e8f647c0b82c8204b65"
+        },
+        {
+          "id": "hidden-1",
+          "kind": "hidden",
+          "command": [
+            "bun",
+            "test",
+            "./.zbc-hidden/check-1.test.ts"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 18,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:934eaf3297af5c12c2fdc65186eba49537424096340ec7e20c5b5e3908207bb3"
+        },
+        {
+          "id": "hidden-2",
+          "kind": "hidden",
+          "command": [
+            "bun",
+            "test",
+            "./.zbc-hidden/check-2.test.ts"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 19,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:c581253434279749d7489ea81b2de062df81cc90c8839e913f9690ec5a6ed4fe"
+        },
+        {
+          "id": "hidden-3",
+          "kind": "hidden",
+          "command": [
+            "bun",
+            "test",
+            "./.zbc-hidden/check-3.test.ts"
+          ],
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 18,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:a1ee0d7f080f8c5ec0b11b68260d3782d5a764188c942c10f70fcee69b1fe2c1"
+        },
+        {
+          "id": "candidate-tests-reject-mutation",
+          "kind": "mutation",
+          "command": [
+            "bun",
+            "test",
+            "test"
+          ],
+          "exitCode": 1,
+          "passed": true,
+          "durationMs": 19,
+          "stdoutSha256": "sha256:d6684989b8dd63b37d2f1954270826fbe1bd89a8debd12bcacf03ed1c6140ef6",
+          "stderrSha256": "sha256:1a2e149404fba12b918f5d895eac22a6cb132fa2797ce6a9cabcfed2a9545cac"
+        }
+      ],
+      "patch": {
+        "filesChanged": [
+          "test/index.test.ts"
+        ],
+        "linesAdded": 28,
+        "linesDeleted": 2,
+        "diffSha256": "sha256:4520b412bc78dfea9b58babd083164804dcc2e9dbae6a2bf26539e4abfbf7436",
+        "forbiddenFiles": []
+      },
+      "scores": {
+        "correctness": 60,
+        "regressionSafety": 20,
+        "patchScope": 10,
+        "testQuality": 5,
+        "efficiency": 5,
+        "overall": 100
+      },
+      "error": null
+    }
+  ]
+}

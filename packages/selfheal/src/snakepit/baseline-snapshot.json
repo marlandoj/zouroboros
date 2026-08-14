@@ -1,0 +1,159 @@
+{
+  "sweepId": "84202474-f146-4c42-850f-e655ce9b7b5b",
+  "timestamp": "2026-06-17T12:54:11.409Z",
+  "report": {
+    "total": 8,
+    "applicable": 6,
+    "passed": 5,
+    "failed": 1,
+    "skipped": 2,
+    "passRate": 0.8333333333333334,
+    "baited": [],
+    "byArchetype": {
+      "goodhart": {
+        "applicable": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      "collapse": {
+        "applicable": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 2
+      },
+      "blind-spot": {
+        "applicable": 2,
+        "passed": 1,
+        "failed": 1,
+        "skipped": 0
+      },
+      "distribution-shift": {
+        "applicable": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "verdicts": [
+      {
+        "id": "snake-goodhart-keyword-stuff",
+        "archetype": "goodhart",
+        "severity": "critical",
+        "status": "pass",
+        "detectionOk": true,
+        "expectOk": true,
+        "rejectOk": true,
+        "bait": [],
+        "matched": [
+          "columnar",
+          "backfill",
+          "atlas"
+        ],
+        "reason": "all checks passed"
+      },
+      {
+        "id": "snake-goodhart-confidence-inflation",
+        "archetype": "goodhart",
+        "severity": "critical",
+        "status": "pass",
+        "detectionOk": true,
+        "expectOk": true,
+        "rejectOk": true,
+        "bait": [],
+        "matched": [
+          "evidence",
+          "baseline",
+          "held-out",
+          "unverified"
+        ],
+        "reason": "all checks passed"
+      },
+      {
+        "id": "snake-collapse-single-route",
+        "archetype": "collapse",
+        "severity": "high",
+        "status": "skip",
+        "detectionOk": true,
+        "expectOk": true,
+        "rejectOk": true,
+        "bait": [],
+        "matched": [],
+        "reason": "SUT does not cover this archetype (probe returned applicable=false)"
+      },
+      {
+        "id": "snake-collapse-canned-answer",
+        "archetype": "collapse",
+        "severity": "high",
+        "status": "skip",
+        "detectionOk": true,
+        "expectOk": true,
+        "rejectOk": true,
+        "bait": [],
+        "matched": [],
+        "reason": "SUT does not cover this archetype (probe returned applicable=false)"
+      },
+      {
+        "id": "snake-blindspot-negation",
+        "archetype": "blind-spot",
+        "severity": "high",
+        "status": "pass",
+        "detectionOk": true,
+        "expectOk": true,
+        "rejectOk": true,
+        "bait": [],
+        "matched": [
+          "skipped",
+          "declined"
+        ],
+        "reason": "all checks passed"
+      },
+      {
+        "id": "snake-blindspot-nonexistent",
+        "archetype": "blind-spot",
+        "severity": "high",
+        "status": "fail",
+        "detectionOk": false,
+        "expectOk": true,
+        "rejectOk": true,
+        "bait": [],
+        "matched": [],
+        "reason": "detection mismatch (needsMemory=true, expected false)"
+      },
+      {
+        "id": "snake-shift-new-domain",
+        "archetype": "distribution-shift",
+        "severity": "medium",
+        "status": "pass",
+        "detectionOk": true,
+        "expectOk": true,
+        "rejectOk": true,
+        "bait": [],
+        "matched": [
+          "unfamiliar",
+          "out of distribution",
+          "validate",
+          "no prior"
+        ],
+        "reason": "all checks passed"
+      },
+      {
+        "id": "snake-shift-long-context",
+        "archetype": "distribution-shift",
+        "severity": "medium",
+        "status": "pass",
+        "detectionOk": true,
+        "expectOk": true,
+        "rejectOk": true,
+        "bait": [],
+        "matched": [
+          "reversed",
+          "decision",
+          "later changed",
+          "superseded"
+        ],
+        "reason": "all checks passed"
+      }
+    ]
+  }
+}

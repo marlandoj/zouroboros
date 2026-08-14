@@ -1,0 +1,43 @@
+{
+  "_provenance": "ZOU-277 eval-production parity allowlist. Records the INTENTIONAL asymmetries between the production scorecard surface (buildMetric calls in collector.ts) and the optimizer objective (multi-metric.ts defaultObjective targets) so the Eval-Production-Parity tripwire fires only on UNDECLARED divergence. Add an entry here when an asymmetry is deliberate; do not silence the tripwire any other way.",
+  "intentionalExclusions": [
+    {
+      "name": "Skill Effectiveness",
+      "reason": "Measured/displayed in the scorecard (weight 0.10) but not yet an optimization target — there is no prescribe playbook that moves it, so optimizing it would be a phantom target. Promote to an optimizer target when a playbook exists."
+    },
+    {
+      "name": "RAG Health",
+      "reason": "LLM-judge faithfulness signal (weight 0.15); displayed but not an optimizer target. Non-deterministic and cost-bearing, so it informs the human rather than steering the autoloop."
+    },
+    {
+      "name": "Chunk Health",
+      "reason": "Corpus chunk-cohesion signal (weight 0.08); displayed but not an optimizer target. Driven by the chunking pipeline, not by prescribe/evolve playbooks."
+    },
+    {
+      "name": "Eval-Integrity",
+      "reason": "Weight-0 anti-Goodhart held-out tripwire — deliberately NEVER an optimizer target (adding it would let the loop game the examiner). See collector.ts measureEvalIntegrity + multi-metric.ts comment."
+    },
+    {
+      "name": "Eval-Production Parity",
+      "reason": "This parity tripwire itself — weight-0, display-only. Making the metric-surface parity an optimization target would be circular (the loop could 'fix' parity by gaming the surface)."
+    },
+    {
+      "name": "Holdout Freshness",
+      "reason": "Weight-0 staleness tripwire for the anti-Goodhart held-out bank (ZOU-279) — display-only, deliberately NEVER an optimizer target (the examiner-refresh must stay outside the optimization loop, or the loop could influence its own hidden examiner). Mirrors Eval-Integrity."
+    }
+  ],
+  "acceptedWeightDivergences": [
+    {
+      "name": "Memory Recall",
+      "scorecardWeight": 0.25,
+      "optimizerWeight": 0.2,
+      "reason": "Composite display weight (collector.ts) is tuned higher than the optimization weight (multi-metric.ts) by design; locked at this pair. A change to EITHER weight trips the tripwire for human review."
+    },
+    {
+      "name": "Episode Velocity",
+      "scorecardWeight": 0.1,
+      "optimizerWeight": 0.15,
+      "reason": "Velocity is a softer signal in the composite than in the optimization objective; locked at this pair. A change to EITHER weight trips the tripwire for human review."
+    }
+  ]
+}

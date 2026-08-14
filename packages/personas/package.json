@@ -1,0 +1,48 @@
+{
+  "name": "zouroboros-personas",
+  "version": "2.1.1",
+  "description": "Persona creation and management with SOUL/IDENTITY architecture",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marlandoj/zouroboros.git",
+    "directory": "packages/personas"
+  },
+  "bin": {
+    "zouroboros-personas": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "bun test src/__tests__"
+  },
+  "dependencies": {
+    "zouroboros-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "personas",
+    "identity",
+    "ai",
+    "agents",
+    "zouroboros"
+  ],
+  "license": "MIT",
+  "author": "marlandoj.zo.computer"
+}

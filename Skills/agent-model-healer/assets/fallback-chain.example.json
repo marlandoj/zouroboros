@@ -1,0 +1,104 @@
+{
+  "version": 7,
+  "lastUpdated": "2026-05-17",
+  "description": "Model fallback chains for Zouroboros agent self-healing. v7 (2026-05-17): Multi-vendor staggered failback. Haiku (Anthropic/OpenRouter) → Sonnet (Anthropic) → GPT-5 (OpenAI/OpenRouter) → Kimi (synthetic.new). Sonnet → Gemini 3.1 Pro (Google/OpenRouter) → Kimi. Opus → Gemini → Kimi. GPT-5 → Kimi. Gemini → Kimi. Kimi is terminal — no cascade beyond open-weight.",
+
+  "_policy": {
+    "terminalRung": "open-weight-or-zo-native",
+    "cascadeOnExhaustion": false,
+    "alertOnExhaustion": true,
+    "note": "Validator accepts a terminal rung that is open-weight OR zo-native. Chains whose primary is itself open-weight or zo-native may have empty fallbacks — in that case, exhaustion triggers an alert email rather than a cascade."
+  },
+
+  "healerConfig": {
+    "model": "zo:fast",
+    "label": "Zo Fast (built-in, no external dependency)",
+    "rule": "The healer agent MUST run on a Zo-native model (zo:fast or zo:smart) that has no external provider dependency. Never add zo:fast or zo:smart to a fallback chain. This prevents the watchmen-failure cascade."
+  },
+
+  "probeConfig": {
+    "prompt": "You are a health check responder. List the numbers 1 through 10, each on its own line. After the list, write exactly: HEALTH_CHECK_PASS",
+    "expectedSubstring": "HEALTH_CHECK_PASS",
+    "timeoutMs": 30000,
+    "retries": 1,
+    "latencyThresholds": {
+      "degradedMs": 25000,
+      "slowMs": 45000
+    }
+  },
+
+  "fallbackChains": {
+    "byok:00000000-0000-4000-8000-000000000001": {
+      "label": "Claude Code Haiku 4.5",
+      "fallbacks": [
+        "byok:00000000-0000-4000-8000-000000000002",
+        "byok:00000000-0000-4000-8000-000000000005",
+        "byok:00000000-0000-4000-8000-000000000004"
+      ]
+    },
+    "byok:00000000-0000-4000-8000-000000000002": {
+      "label": "Claude Code Sonnet 4.6",
+      "fallbacks": [
+        "byok:00000000-0000-4000-8000-000000000006",
+        "byok:00000000-0000-4000-8000-000000000004"
+      ]
+    },
+    "byok:00000000-0000-4000-8000-000000000003": {
+      "label": "Claude Code Opus 4.7",
+      "fallbacks": [
+        "byok:00000000-0000-4000-8000-000000000006",
+        "byok:00000000-0000-4000-8000-000000000004"
+      ]
+    },
+    "byok:00000000-0000-4000-8000-000000000005": {
+      "label": "GPT-5 (OpenRouter)",
+      "fallbacks": [
+        "byok:00000000-0000-4000-8000-000000000004"
+      ]
+    },
+    "byok:00000000-0000-4000-8000-000000000006": {
+      "label": "Gemini 3.1 Pro (OpenRouter)",
+      "fallbacks": [
+        "byok:00000000-0000-4000-8000-000000000004"
+      ]
+    },
+    "byok:00000000-0000-4000-8000-000000000004": {
+      "label": "BYOK Kimi K2.6 (synthetic.new)",
+      "fallbacks": []
+    }
+  },
+
+  "modelLabels": {
+    "byok:00000000-0000-4000-8000-000000000002": "Claude Code Sonnet 4.6",
+    "byok:00000000-0000-4000-8000-000000000001": "Claude Code Haiku 4.5",
+    "byok:00000000-0000-4000-8000-000000000003": "Claude Code Opus 4.7",
+    "byok:00000000-0000-4000-8000-000000000004": "BYOK Kimi K2.6 (synthetic.new)",
+    "byok:00000000-0000-4000-8000-000000000007": "Synthetic K2 Thinking",
+    "byok:00000000-0000-4000-8000-000000000005": "GPT-5 (OpenRouter)",
+    "byok:00000000-0000-4000-8000-000000000006": "Gemini 3.1 Pro (OpenRouter)",
+    "zo:smart": "Zo Smart",
+    "zo:fast": "Zo Fast"
+  },
+
+  "_removed_v5": {
+    "note": "Removed 2026-05-11 per user directive — these are no longer valid fallback destinations or chain heads. If an agent is still wired to one of these directly, the healer will not find a chain and will alert.",
+    "models": [
+      "vercel:moonshotai/kimi-k2.5",
+      "vercel:minimax/minimax-m2.7",
+      "vercel:minimax/minimax-m2.5",
+      "byok:00000000-0000-4000-8000-00000000000d",
+      "byok:00000000-0000-4000-8000-00000000000b",
+      "byok:00000000-0000-4000-8000-00000000000c",
+      "byok:00000000-0000-4000-8000-000000000009"
+    ]
+  },
+
+  "_removed_v6": {
+    "note": "v6 chains superseded 2026-05-17 by multi-vendor staggered failback. v6 only had Anthropic → Kimi linear chains. v7 adds cross-vendor failover via OpenRouter (GPT-5, Gemini 3.1 Pro) as intermediate rungs before terminal Kimi.",
+    "chains": {
+      "byok:461d...": "Haiku → Sonnet → Kimi",
+      "byok:63a7...": "Sonnet → Kimi",
+      "byok:4633...": "Kimi (terminal)"
+    }
+  }
+}

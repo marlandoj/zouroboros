@@ -1,0 +1,45 @@
+{
+  "_comment": "Wiring Sentinel allowlist + declared prerequisites (seed-antigoodhart-wiring-2026-06-01, E2). dynamicEntrypoints suppress un-called-export false positives for capabilities invoked across boundaries the packages/selfheal/src reference graph cannot see (sibling packages, maintenance scripts under packages/selfheal/scripts/, the runtime skill copy, MCP/agent dispatch, and the test suite). This is a CURATED list: every entry was confirmed to have at least one real consumer outside src/. Genuinely zero-consumer exports are intentionally NOT listed so the sentinel reports them (report-and-escalate, never auto-delete).",
+  "dynamicEntrypoints": [
+    "getValidationStats",
+    "storeValidation",
+    "validateToolFit",
+    "deriveDefaultInputs",
+    "storeToolReflection",
+    "storeSwarmTaskEval",
+    "classifyFailure",
+    "formatReflectionsForSeed",
+    "evaluateReplayWithFallback",
+    "isSecretEnvName",
+    "readDailySpend",
+    "recordTrace",
+    "writeTraceFixture",
+    "findUnreachableExports"
+  ],
+  "dataPrerequisites": [
+    {
+      "capability": "procedure-freshness-collector",
+      "store": ".zo/memory/shared-facts.db",
+      "query": "SELECT COUNT(*) FROM procedures"
+    },
+    {
+      "capability": "fact-graph-introspection",
+      "store": ".zo/memory/shared-facts.db",
+      "query": "SELECT COUNT(*) FROM facts"
+    }
+  ],
+  "triggerBindings": [
+    {
+      "capability": "daily-agent-introspect-cli",
+      "expectedCaller": "Skills/zouroboros/skills/selfheal/scripts/introspect.ts"
+    },
+    {
+      "capability": "daily-agent-evolve-cli",
+      "expectedCaller": "Skills/zouroboros/skills/selfheal/scripts/evolve.ts"
+    }
+  ],
+  "_crossProcessExports_comment": "Env var names SET in src/ (process.env.X = …) that are deliberately consumed by an out-of-process reader the reference graph cannot see (a spawned child / sibling process). The cross-process analogue of dynamicEntrypoints: a write with no in-source read is normally the 'env vars die at process boundaries' defect (unread_env) — list a name here ONLY when an external consumer genuinely exists. Empty today: the one src/ env write (CRYSTALLIZE_APPROVAL_SECRET in cli/crystallize.ts) is read in-process, so it is not flagged and needs no allowlisting.",
+  "crossProcessExports": [],
+  "_sentinelHandoffs_comment": "Declared file-sentinel handoffs (cross-process state passed via a file). Each must have BOTH a writer (writeFileSync/appendFileSync/…) and a reader (readFileSync/existsSync/…) in src/, matched by pathFragment against fs-call string literals (robust to join()/computed paths). A one-ended handoff is half_wired_sentinel. Declaration-driven like dataPrerequisites/triggerBindings, so it never produces inferred false positives. Empty today: selfheal/src has no in-package file-sentinel handoffs.",
+  "sentinelHandoffs": []
+}

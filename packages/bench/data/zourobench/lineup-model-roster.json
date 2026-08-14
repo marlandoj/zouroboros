@@ -1,0 +1,680 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-06T18:57:28.198Z",
+  "policy": "active-and-promotion-candidates-v1",
+  "benchmarkPolicy": {
+    "minimumReplicates": 5,
+    "maxAgeDays": 30,
+    "supportedRoles": [
+      "proposer",
+      "aggregator"
+    ],
+    "unsupportedRoles": [
+      "coder"
+    ]
+  },
+  "catalogSnapshot": [
+    {
+      "provider": "zo-byok",
+      "count": 11
+    },
+    {
+      "provider": "synthetic",
+      "count": 10
+    },
+    {
+      "provider": "opencode",
+      "count": 40
+    },
+    {
+      "provider": "openrouter",
+      "count": 317
+    },
+    {
+      "provider": "kimi",
+      "count": 5
+    }
+  ],
+  "models": [
+    {
+      "canonicalModel": "claude-haiku-4.5",
+      "family": "claude",
+      "benchmarkRoute": "byok:461d8d6f-9616-4391-960e-3caea2a27829",
+      "routes": [
+        "byok:461d8d6f-9616-4391-960e-3caea2a27829"
+      ],
+      "providers": [
+        "zo-byok"
+      ],
+      "profiles": [
+        "fast"
+      ],
+      "roles": [
+        "proposer"
+      ],
+      "sources": [
+        "persisted-lineup"
+      ],
+      "priority": 1,
+      "lifecycleStatus": "unknown",
+      "routeHealth": "unknown",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": false,
+      "benchmarkStatus": "held-route",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "claude-sonnet-4.6",
+      "family": "claude",
+      "benchmarkRoute": "byok:63a73cf2-224a-4641-8dcb-c3313270d08a",
+      "routes": [
+        "byok:63a73cf2-224a-4641-8dcb-c3313270d08a"
+      ],
+      "providers": [
+        "zo-byok"
+      ],
+      "profiles": [
+        "flagship",
+        "judge"
+      ],
+      "roles": [
+        "aggregator",
+        "proposer"
+      ],
+      "sources": [
+        "persisted-lineup"
+      ],
+      "priority": 1,
+      "lifecycleStatus": "unknown",
+      "routeHealth": "healthy",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": true,
+      "benchmarkStatus": "missing",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "glm-5.2",
+      "family": "glm",
+      "benchmarkRoute": "hf:zai-org/GLM-5.2",
+      "routes": [
+        "hf:zai-org/GLM-5.2",
+        "or:z-ai/glm-5.2",
+        "oc:glm-5.2"
+      ],
+      "providers": [
+        "synthetic",
+        "openrouter",
+        "opencode"
+      ],
+      "profiles": [
+        "fast",
+        "flagship",
+        "judge",
+        "open-weights"
+      ],
+      "roles": [
+        "aggregator",
+        "proposer"
+      ],
+      "sources": [
+        "persisted-lineup",
+        "promotion-target"
+      ],
+      "priority": 1,
+      "lifecycleStatus": "promoted",
+      "routeHealth": "healthy",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": true,
+      "benchmarkStatus": "missing",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "gpt-5-codex",
+      "family": "gpt",
+      "benchmarkRoute": "oc:gpt-5-codex",
+      "routes": [
+        "oc:gpt-5-codex"
+      ],
+      "providers": [
+        "opencode"
+      ],
+      "profiles": [
+        "coder"
+      ],
+      "roles": [
+        "aggregator"
+      ],
+      "sources": [
+        "persisted-lineup"
+      ],
+      "priority": 1,
+      "lifecycleStatus": "provisional",
+      "routeHealth": "unknown",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": false,
+      "benchmarkStatus": "held-route",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "gpt-5.3-codex",
+      "family": "gpt",
+      "benchmarkRoute": "oc:gpt-5.3-codex",
+      "routes": [
+        "oc:gpt-5.3-codex"
+      ],
+      "providers": [
+        "opencode"
+      ],
+      "profiles": [
+        "coder"
+      ],
+      "roles": [
+        "aggregator",
+        "coder"
+      ],
+      "sources": [
+        "persisted-lineup",
+        "promotion-target"
+      ],
+      "priority": 1,
+      "lifecycleStatus": "shadow",
+      "routeHealth": "unknown",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": false,
+      "benchmarkStatus": "held-route",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "gpt-5.4-mini",
+      "family": "gpt",
+      "benchmarkRoute": "byok:2d297290-05e1-4f64-848c-0356e74f7187",
+      "routes": [
+        "byok:2d297290-05e1-4f64-848c-0356e74f7187"
+      ],
+      "providers": [
+        "zo-byok"
+      ],
+      "profiles": [
+        "fast"
+      ],
+      "roles": [
+        "proposer"
+      ],
+      "sources": [
+        "persisted-lineup"
+      ],
+      "priority": 1,
+      "lifecycleStatus": "unknown",
+      "routeHealth": "unknown",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": false,
+      "benchmarkStatus": "held-route",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "kimi-k2.7-code",
+      "family": "kimi",
+      "benchmarkRoute": "byok:463350ac-4a49-4ceb-8653-042ecffa513f",
+      "routes": [
+        "byok:463350ac-4a49-4ceb-8653-042ecffa513f",
+        "oc:kimi-k2.7-code",
+        "or:moonshotai/kimi-k2.7-code"
+      ],
+      "providers": [
+        "zo-byok",
+        "opencode",
+        "openrouter"
+      ],
+      "profiles": [
+        "coder",
+        "open-weights"
+      ],
+      "roles": [
+        "aggregator",
+        "coder",
+        "proposer"
+      ],
+      "sources": [
+        "persisted-lineup",
+        "promotion-target"
+      ],
+      "priority": 1,
+      "lifecycleStatus": "unknown",
+      "routeHealth": "unknown",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": false,
+      "benchmarkStatus": "held-route",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "minimax-m3",
+      "family": "minimax",
+      "benchmarkRoute": "oc:minimax-m3",
+      "routes": [
+        "oc:minimax-m3",
+        "or:minimax/minimax-m3"
+      ],
+      "providers": [
+        "opencode",
+        "openrouter"
+      ],
+      "profiles": [
+        "fast",
+        "open-weights"
+      ],
+      "roles": [
+        "aggregator",
+        "proposer"
+      ],
+      "sources": [
+        "persisted-lineup",
+        "promotion-target"
+      ],
+      "priority": 1,
+      "lifecycleStatus": "promoted",
+      "routeHealth": "unknown",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": false,
+      "benchmarkStatus": "held-route",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "north-mini-code-free",
+      "family": "north-mini-code-free",
+      "benchmarkRoute": "oc:north-mini-code-free",
+      "routes": [
+        "oc:north-mini-code-free"
+      ],
+      "providers": [
+        "opencode"
+      ],
+      "profiles": [
+        "coder"
+      ],
+      "roles": [
+        "coder"
+      ],
+      "sources": [
+        "persisted-lineup"
+      ],
+      "priority": 1,
+      "lifecycleStatus": "provisional",
+      "routeHealth": "unknown",
+      "benchmarkEligible": false,
+      "benchmarkRunnable": false,
+      "benchmarkStatus": "unsupported-role",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "qwen3.6-27b",
+      "family": "qwen",
+      "benchmarkRoute": "hf:Qwen/Qwen3.6-27B",
+      "routes": [
+        "hf:Qwen/Qwen3.6-27B"
+      ],
+      "providers": [
+        "synthetic"
+      ],
+      "profiles": [
+        "flagship",
+        "judge",
+        "open-weights"
+      ],
+      "roles": [
+        "aggregator",
+        "proposer"
+      ],
+      "sources": [
+        "persisted-lineup",
+        "promotion-target"
+      ],
+      "priority": 1,
+      "lifecycleStatus": "shadow",
+      "routeHealth": "unknown",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": false,
+      "benchmarkStatus": "held-route",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "gpt-5.6-sol",
+      "family": "gpt",
+      "benchmarkRoute": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "routes": [
+        "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f"
+      ],
+      "providers": [
+        "zo-byok"
+      ],
+      "profiles": [
+        "flagship",
+        "judge"
+      ],
+      "roles": [
+        "aggregator",
+        "proposer"
+      ],
+      "sources": [
+        "persisted-lineup",
+        "promotion-target"
+      ],
+      "priority": 1,
+      "lifecycleStatus": "unknown",
+      "routeHealth": "failing",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": false,
+      "benchmarkStatus": "qualified",
+      "benchmarkEvidence": {
+        "benchmark": "ZouroBench",
+        "canonicalModel": "gpt-5.6-sol",
+        "family": "gpt",
+        "cohortId": "co-20260731-gpt-5-6-sol",
+        "replicates": 5,
+        "requiredReplicates": 5,
+        "observedAt": "2026-07-31T19:50:34.903Z",
+        "contextFingerprint": "3b5afd0a2e7aeef31f69218ca864ab1e11fb541e573690ca4f55fdcab75bea3e",
+        "sourceModelIds": [
+          "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f"
+        ],
+        "overall": {
+          "mean": 91.84,
+          "selectionFloor": 89.9986,
+          "standardDeviation": 2.1007
+        },
+        "roles": {
+          "proposer": {
+            "mean": 91.8333,
+            "selectionFloor": 89.9819,
+            "standardDeviation": 2.1123
+          },
+          "aggregator": {
+            "mean": 95.54,
+            "selectionFloor": 93.3668,
+            "standardDeviation": 2.4793
+          }
+        }
+      }
+    },
+    {
+      "canonicalModel": "kimi-k3",
+      "family": "kimi",
+      "benchmarkRoute": "or:moonshotai/kimi-k3",
+      "routes": [
+        "or:moonshotai/kimi-k3",
+        "hf:moonshotai/Kimi-K3"
+      ],
+      "providers": [
+        "openrouter",
+        "synthetic"
+      ],
+      "profiles": [
+        "flagship",
+        "judge",
+        "open-weights"
+      ],
+      "roles": [
+        "aggregator",
+        "proposer"
+      ],
+      "sources": [
+        "persisted-lineup",
+        "promotion-target"
+      ],
+      "priority": 1,
+      "lifecycleStatus": "promoted",
+      "routeHealth": "healthy",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": true,
+      "benchmarkStatus": "qualified",
+      "benchmarkEvidence": {
+        "benchmark": "ZouroBench",
+        "canonicalModel": "kimi-k3",
+        "family": "kimi",
+        "cohortId": "co-20260730-kimi-k3",
+        "replicates": 5,
+        "requiredReplicates": 5,
+        "observedAt": "2026-07-31T12:24:39.673Z",
+        "contextFingerprint": "3b5afd0a2e7aeef31f69218ca864ab1e11fb541e573690ca4f55fdcab75bea3e",
+        "sourceModelIds": [
+          "kimi:kimi-k3"
+        ],
+        "overall": {
+          "mean": 97.74,
+          "selectionFloor": 97.0344,
+          "standardDeviation": 0.805
+        },
+        "roles": {
+          "proposer": {
+            "mean": 97.7667,
+            "selectionFloor": 97.048,
+            "standardDeviation": 0.8199
+          },
+          "aggregator": {
+            "mean": 99.44,
+            "selectionFloor": 98.3424,
+            "standardDeviation": 1.2522
+          }
+        }
+      }
+    },
+    {
+      "canonicalModel": "codestral-2508",
+      "family": "mistralai",
+      "benchmarkRoute": "or:mistralai/codestral-2508",
+      "routes": [
+        "or:mistralai/codestral-2508"
+      ],
+      "providers": [
+        "openrouter"
+      ],
+      "profiles": [
+        "coder"
+      ],
+      "roles": [
+        "aggregator",
+        "coder"
+      ],
+      "sources": [
+        "promotion-target"
+      ],
+      "priority": 2,
+      "lifecycleStatus": "shadow",
+      "routeHealth": "unknown",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": false,
+      "benchmarkStatus": "held-route",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "deepseek-r1-0528",
+      "family": "deepseek",
+      "benchmarkRoute": "or:deepseek/deepseek-r1-0528",
+      "routes": [
+        "or:deepseek/deepseek-r1-0528"
+      ],
+      "providers": [
+        "openrouter"
+      ],
+      "profiles": [
+        "flagship",
+        "judge",
+        "open-weights"
+      ],
+      "roles": [
+        "aggregator",
+        "proposer"
+      ],
+      "sources": [
+        "promotion-target"
+      ],
+      "priority": 2,
+      "lifecycleStatus": "shadow",
+      "routeHealth": "unknown",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": false,
+      "benchmarkStatus": "held-route",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "glm-4.7-flash",
+      "family": "glm",
+      "benchmarkRoute": "hf:zai-org/GLM-4.7-Flash",
+      "routes": [
+        "hf:zai-org/GLM-4.7-Flash"
+      ],
+      "providers": [
+        "synthetic"
+      ],
+      "profiles": [
+        "fast"
+      ],
+      "roles": [
+        "aggregator",
+        "proposer"
+      ],
+      "sources": [
+        "promotion-target"
+      ],
+      "priority": 2,
+      "lifecycleStatus": "shadow",
+      "routeHealth": "unknown",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": false,
+      "benchmarkStatus": "held-route",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "gpt-oss-120b",
+      "family": "gpt",
+      "benchmarkRoute": "hf:openai/gpt-oss-120b",
+      "routes": [
+        "hf:openai/gpt-oss-120b"
+      ],
+      "providers": [
+        "synthetic"
+      ],
+      "profiles": [
+        "fast"
+      ],
+      "roles": [
+        "aggregator",
+        "proposer"
+      ],
+      "sources": [
+        "promotion-target"
+      ],
+      "priority": 2,
+      "lifecycleStatus": "shadow",
+      "routeHealth": "unknown",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": false,
+      "benchmarkStatus": "held-route",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "nemotron-3-ultra-550b-a55b",
+      "family": "nvidia",
+      "benchmarkRoute": "or:nvidia/nemotron-3-ultra-550b-a55b",
+      "routes": [
+        "or:nvidia/nemotron-3-ultra-550b-a55b"
+      ],
+      "providers": [
+        "openrouter"
+      ],
+      "profiles": [
+        "flagship",
+        "judge",
+        "open-weights"
+      ],
+      "roles": [
+        "aggregator",
+        "proposer"
+      ],
+      "sources": [
+        "promotion-target"
+      ],
+      "priority": 2,
+      "lifecycleStatus": "shadow",
+      "routeHealth": "unknown",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": false,
+      "benchmarkStatus": "held-route",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "nemotron-nvidia-nemotron-3-super-120b-a12b-nvfp4",
+      "family": "nvidia",
+      "benchmarkRoute": "hf:nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4",
+      "routes": [
+        "hf:nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4"
+      ],
+      "providers": [
+        "synthetic"
+      ],
+      "profiles": [
+        "flagship",
+        "judge",
+        "open-weights"
+      ],
+      "roles": [
+        "aggregator",
+        "proposer"
+      ],
+      "sources": [
+        "promotion-target"
+      ],
+      "priority": 2,
+      "lifecycleStatus": "shadow",
+      "routeHealth": "healthy",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": true,
+      "benchmarkStatus": "missing",
+      "benchmarkEvidence": null
+    },
+    {
+      "canonicalModel": "qwen3-coder-next",
+      "family": "qwen",
+      "benchmarkRoute": "or:qwen/qwen3-coder-next",
+      "routes": [
+        "or:qwen/qwen3-coder-next"
+      ],
+      "providers": [
+        "openrouter"
+      ],
+      "profiles": [
+        "coder"
+      ],
+      "roles": [
+        "aggregator",
+        "coder"
+      ],
+      "sources": [
+        "promotion-target"
+      ],
+      "priority": 2,
+      "lifecycleStatus": "shadow",
+      "routeHealth": "unknown",
+      "benchmarkEligible": true,
+      "benchmarkRunnable": false,
+      "benchmarkStatus": "held-route",
+      "benchmarkEvidence": null
+    }
+  ],
+  "unresolvedTargets": [
+    "byok:1c67d8d3-9111-5841-b7b9-9012ba01b3ca",
+    "byok:306bfc22-aa5e-572e-9f4b-a3cb43b3c0f9",
+    "byok:4199702e-d6d4-5e6a-887d-2bada37c9771",
+    "byok:73ae74c2-26d1-561e-91af-2cf47a33f4dd",
+    "byok:76aef0ac-9f7e-50fc-9f13-c8332a118662",
+    "byok:d1f6a676-f46f-5f70-8991-baeec4df3bc6",
+    "byok:f165ae55-70dd-5f29-9244-66764ea04d28"
+  ],
+  "summary": {
+    "models": 19,
+    "qualified": 2,
+    "queued": 3,
+    "unsupportedRoleOnly": 1,
+    "heldRoute": 13,
+    "unresolvedTargets": 7
+  }
+}

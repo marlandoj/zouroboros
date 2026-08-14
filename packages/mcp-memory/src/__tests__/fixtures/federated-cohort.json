@@ -1,0 +1,41 @@
+{
+  "version": "2026-07-11",
+  "cases": [
+    {
+      "id": "decision-code-parity",
+      "query": "What is the latest deployment decision and where is it implemented in code?",
+      "expected_ids": ["mem-decision", "code-handler"],
+      "vector": [
+        { "id": "mem-decision", "source": "memory", "title": "deployment.decision", "content": "Use the evidence manifest", "score": 0.94 },
+        { "id": "code-old", "source": "code", "title": "legacyDispatch", "content": "Legacy dispatcher", "score": 0.91, "temporal": { "superseded_by": "code-handler" } }
+      ],
+      "graph": [
+        { "id": "code-handler", "source": "code", "title": "dispatchWithEvidence", "content": "Current factory dispatcher", "score": 0.92 }
+      ]
+    },
+    {
+      "id": "relationship-trace",
+      "query": "Trace callers and related memory for the promotion gate",
+      "expected_ids": ["code-caller", "memory-link"],
+      "vector": [
+        { "id": "memory-noise", "source": "memory", "title": "promotion.note", "content": "General promotion note", "score": 0.72 }
+      ],
+      "graph": [
+        { "id": "code-caller", "source": "code", "title": "promoteCandidate", "content": "Calls the promotion gate", "score": 0.95 },
+        { "id": "memory-link", "source": "memory", "title": "promotion.gate", "content": "Gate relation evidence", "score": 0.9 }
+      ]
+    },
+    {
+      "id": "semantic-recall",
+      "query": "Recall the preferred retrieval policy",
+      "expected_ids": ["memory-policy", "code-policy"],
+      "vector": [
+        { "id": "memory-policy", "source": "memory", "title": "retrieval.preference", "content": "Prefer bounded federation", "score": 0.96 },
+        { "id": "code-policy", "source": "code", "title": "RetrievalPolicy", "content": "Typed retrieval policy", "score": 0.88 }
+      ],
+      "graph": [
+        { "id": "graph-noise", "source": "code", "title": "unrelatedCaller", "content": "Unrelated graph node", "score": 0.6 }
+      ]
+    }
+  ]
+}

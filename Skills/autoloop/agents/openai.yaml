@@ -1,0 +1,4 @@
+interface:
+  display_name: "Autoloop"
+  short_description: "Optimize one file against a numeric metric"
+  default_prompt: "Use $autoloop to design and validate a bounded optimization campaign for this target."

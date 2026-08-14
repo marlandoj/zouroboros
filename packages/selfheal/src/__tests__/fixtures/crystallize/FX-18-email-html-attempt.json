@@ -1,0 +1,24 @@
+{
+  "id": "FX-18",
+  "name": "email-html-attempt",
+  "asserts": "composeApprovalEmail throws EmailValidationError(forbidden_body_pattern:html_tag) if any HTML tag would be present in the body — verified by stuffing a tag into the slug input",
+  "phase": "PR3",
+  "scope": "email",
+  "input": {
+    "id": "00000000-0000-0000-0000-000000000018",
+    "slug": "skill<b>injected</b>",
+    "candidate_path": "/tmp/Skills/_candidates/skill",
+    "source_ids": ["proc-1"],
+    "source_kind": "procedure",
+    "weighted_score": 3.0,
+    "eval_status": "mechanical_pass",
+    "created_at": 1700000000,
+    "ttl_days": 14,
+    "token": "deadbeefcafebabe1122334455667788990011223344556677889900aabbccdd"
+  },
+  "expected": {
+    "throws": true,
+    "errorName": "EmailValidationError",
+    "reason_substring": "html_tag"
+  }
+}

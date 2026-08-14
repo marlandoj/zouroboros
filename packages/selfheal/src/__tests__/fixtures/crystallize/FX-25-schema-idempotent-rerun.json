@@ -1,0 +1,20 @@
+{
+  "id": "FX-25",
+  "name": "schema-idempotent-rerun",
+  "asserts": "running migrations twice produces no error and no schema drift",
+  "phase": "PR1",
+  "scope": "schema",
+  "input": {
+    "migrationsToRun": [
+      "001_ensure_facts_persona_column",
+      "002_backfill_facts_persona_shared",
+      "003_create_crystallizations",
+      "004_create_crystallization_events"
+    ]
+  },
+  "expected": {
+    "tablesPresent": ["crystallizations", "crystallization_events", "_migrations"],
+    "rerunSucceeds": true,
+    "appliedRowCountAfterDouble": 4
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "broll-injector plan",
+  "type": "object",
+  "required": ["moments"],
+  "properties": {
+    "base_video": {
+      "type": "string",
+      "description": "Path to the talking-head spine mp4. Filled in by the conductor if omitted."
+    },
+    "fps": {
+      "type": "integer",
+      "default": 25,
+      "description": "Output frame rate. The compositor forces 25 for concat-compatibility."
+    },
+    "moments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "start", "prompt"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^m[0-9]+$",
+            "description": "Moment id (m1, m2, ...); also the clip filename <id>.mp4."
+          },
+          "start": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Seconds into the spine to begin the cutaway."
+          },
+          "hold": {
+            "type": "number",
+            "minimum": 0,
+            "default": 4.0,
+            "description": "Cutaway duration in seconds; clamped to the generated clip's real length at compose."
+          },
+          "source": {
+            "type": "string",
+            "enum": ["t2v", "still"],
+            "default": "t2v",
+            "description": "t2v = motion clip (veo3.1-fast); still = image (nano-banana-2) turned into a Ken Burns clip."
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["fullframe", "pip"],
+            "description": "Per-moment override of the global --mode. fullframe = cover the frame; pip = corner picture-in-picture."
+          },
+          "model": {
+            "type": "string",
+            "description": "fal model id. Defaults by source (veo3.1-fast for t2v, nano-banana-2 for still)."
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Cinematic single-shot description fed to the fal model. No on-screen text, captions, talking people, or logos."
+          },
+          "trigger_phrase": {
+            "type": "string",
+            "description": "The short quote from the transcript the cutaway illustrates (used for labels/debug only)."
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

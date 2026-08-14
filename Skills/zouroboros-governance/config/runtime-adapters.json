@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-11T00:00:00.000Z",
+  "adapters": [
+    {
+      "id": "claude-pretooluse",
+      "runtime": "claude",
+      "supported": true,
+      "modes": ["shadow", "hermetic-canary"],
+      "entrypoint": "Skills/zouroboros-governance/scripts/autonomy-pretool-adapter.ts",
+      "evidence": "Skills/zouroboros-governance/scripts/zou488-focused.test.ts"
+    },
+    {
+      "id": "codex-pretooluse",
+      "runtime": "codex",
+      "supported": false,
+      "reason": "No Codex pre-tool hook is deployed; calls remain outside this adapter and must not be treated as governed evidence."
+    },
+    {
+      "id": "zo-native-pretooluse",
+      "runtime": "zo-native",
+      "supported": false,
+      "reason": "No Zo-native pre-tool adapter is deployed."
+    },
+    {
+      "id": "mcp-pretooluse",
+      "runtime": "mcp",
+      "supported": false,
+      "reason": "MCP calls have no canonical pre-tool adapter in this release."
+    },
+    {
+      "id": "unknown-pretooluse",
+      "runtime": "unknown",
+      "supported": false,
+      "reason": "Unidentified runtimes fail closed and cannot contribute governed execution evidence."
+    }
+  ]
+}

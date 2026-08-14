@@ -1,0 +1,22 @@
+name: Lineup documentation
+
+on:
+  pull_request:
+    paths:
+      - "consensus-gate/**"
+      - ".github/workflows/lineup-docs.yml"
+  push:
+    paths:
+      - "consensus-gate/**"
+      - ".github/workflows/lineup-docs.yml"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Test lineup resolution and rendering
+        run: bun test consensus-gate/scripts/consensus-lineup.test.ts consensus-gate/scripts/lineup-docs.test.ts consensus-gate/scripts/lineup-picker.test.ts consensus-gate/scripts/moa-runtime.test.ts
+      - name: Reject stale generated lineup documentation
+        run: bun consensus-gate/scripts/lineup-docs.ts --check

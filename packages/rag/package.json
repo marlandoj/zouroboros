@@ -1,0 +1,52 @@
+{
+  "name": "zouroboros-rag",
+  "version": "1.1.1",
+  "description": "Retrieval-Augmented Generation for the Zouroboros ecosystem — swarm, vault, autoloop, eval, and persona context injection",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marlandoj/zouroboros.git",
+    "directory": "packages/rag"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "bun test src/",
+    "test:coverage": "bun test --coverage src/",
+    "seed": "bun ./scripts/seed-rag-config.ts",
+    "maintenance": "bun ./scripts/daily-rag-maintenance.ts run",
+    "maintenance:status": "bun ./scripts/daily-rag-maintenance.ts status"
+  },
+  "dependencies": {
+    "zouroboros-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.4.0"
+  },
+  "keywords": [
+    "zouroboros",
+    "rag",
+    "retrieval-augmented-generation",
+    "vector-search",
+    "embeddings",
+    "swarm",
+    "vault",
+    "autoloop",
+    "eval",
+    "persona"
+  ],
+  "license": "MIT"
+}

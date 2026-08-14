@@ -1,0 +1,54 @@
+{
+  "name": "zouroboros-selfheal",
+  "version": "2.1.1",
+  "description": "Self-diagnostic and evolution system for Zouroboros",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "bin": {
+    "zouroboros-introspect": "./dist/cli/introspect.js",
+    "zouroboros-prescribe": "./dist/cli/prescribe.js",
+    "zouroboros-evolve": "./dist/cli/evolve.js",
+    "zouroboros-replay": "./dist/cli/replay.js"
+  },
+  "scripts": {
+    "build": "tsc && cp src/introspect/holdout-fixtures.json dist/introspect/holdout-fixtures.json",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "test": "bun test src/__tests__ && bun test src/__hooks-tests__",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "typescript": "^5.3.3",
+    "zouroboros-core": "workspace:*",
+    "zouroboros-memory": "workspace:*",
+    "zouroboros-workflow": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0"
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "REPLAY.md"
+  ],
+  "keywords": [
+    "zouroboros",
+    "self-healing",
+    "introspection",
+    "evolution"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marlandoj/zouroboros.git",
+    "directory": "packages/selfheal"
+  }
+}

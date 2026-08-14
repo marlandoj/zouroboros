@@ -1,0 +1,24 @@
+{
+  "id": "FX-19",
+  "name": "email-clickable-url",
+  "asserts": "composeApprovalEmail throws when an http(s):// URL appears outside an approve/reject CLI line — e.g. injected into source_ids",
+  "phase": "PR3",
+  "scope": "email",
+  "input": {
+    "id": "00000000-0000-0000-0000-000000000019",
+    "slug": "url-leak",
+    "candidate_path": "/tmp/Skills/_candidates/url-leak",
+    "source_ids": ["see https://attacker.example.com/x"],
+    "source_kind": "procedure",
+    "weighted_score": 3.0,
+    "eval_status": "mechanical_pass",
+    "created_at": 1700000000,
+    "ttl_days": 14,
+    "token": "deadbeefcafebabe1122334455667788990011223344556677889900aabbccdd"
+  },
+  "expected": {
+    "throws": true,
+    "errorName": "EmailValidationError",
+    "reason_substring": "clickable_url_outside_cli"
+  }
+}

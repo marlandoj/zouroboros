@@ -1,0 +1,1 @@
+export function estimateCostMicros(inputTokens:number,outputTokens:number,inputUsdPerMillion:number,outputUsdPerMillion:number):number{for(const value of [inputTokens,outputTokens,inputUsdPerMillion,outputUsdPerMillion])if(!Number.isFinite(value)||value<0)throw new Error("invalid cost input");return Math.round(inputTokens*inputUsdPerMillion+outputTokens*outputUsdPerMillion)}

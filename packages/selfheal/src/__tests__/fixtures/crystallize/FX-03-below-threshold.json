@@ -1,0 +1,21 @@
+{
+  "id": "FX-03",
+  "name": "below-threshold",
+  "asserts": "weighted score 2.5 (below 3.0 normal threshold) → no candidate produced",
+  "phase": "PR1",
+  "scope": "scoring",
+  "input": {
+    "coldStart": false,
+    "procedures": [
+      { "kind": "procedure", "id": "proc-a", "name": "warm-cache", "steps": [], "success_count": 1, "failure_count": 0 },
+      { "kind": "procedure", "id": "proc-b", "name": "warm-cache", "steps": [], "success_count": 1, "failure_count": 0 }
+    ],
+    "episodes": [
+      { "kind": "episode", "id": "ep-a", "summary": "warm-cache success", "outcome": "success", "happened_at": 1750000000 }
+    ],
+    "skillExecutions": []
+  },
+  "expected": {
+    "candidateCount": 0
+  }
+}

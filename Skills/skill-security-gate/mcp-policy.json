@@ -1,0 +1,11 @@
+{
+  "_comment": "MCP server policy for the supply-chain gate. Verdicts: allow | restrict | approve | block. A server not listed here falls back to `default` (approve = needs an explicit operator decision, surfaced as info). block => critical, restrict => warning, approve => info, allow => no finding.",
+  "default": "approve",
+  "policies": {
+    "codebase-memory": "allow",
+    "qdrant-rag": "allow",
+    "zo-memory": "allow",
+    "semantic-scholar": "restrict",
+    "heygen": "restrict"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "policy_version": "2026-08-11.1",
+  "mode": "shadow",
+  "supported_runtimes": [
+    "claude"
+  ],
+  "t0_actions": [
+    "workspace.read",
+    "workspace.search",
+    "workspace.edit",
+    "workspace.test"
+  ],
+  "t1_actions": [
+    "github.create_draft_pull_request"
+  ],
+  "deny_unknown": true,
+  "enforcement_enabled": false,
+  "receipt_shadow": {
+    "schema_version": 1,
+    "mode": "shadow",
+    "enabled": true,
+    "allowed_runtimes": [
+      "zo-native"
+    ],
+    "automation_ids": [
+      "7760679f-6ac8-461c-a567-43fae21c3eee"
+    ],
+    "scopes": [
+      "operation.reserve",
+      "observe:workspace",
+      "observe:github"
+    ],
+    "deny_unknown": true
+  }
+}

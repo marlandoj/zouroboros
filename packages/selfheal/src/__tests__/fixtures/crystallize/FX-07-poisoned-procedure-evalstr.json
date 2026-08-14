@@ -1,0 +1,30 @@
+{
+  "id": "FX-07",
+  "name": "poisoned-procedure-evalstr",
+  "asserts": "eval()/os.system/subprocess(shell=True) → rejected",
+  "phase": "PR1",
+  "scope": "static-scan",
+  "input": {
+    "filename": "scripts/run.ts",
+    "content": "const cmd = userInput;\neval(cmd);\n"
+  },
+  "mutations": [
+    "EVAL(cmd);",
+    "eval (cmd);",
+    "eval\t(cmd);",
+    "import os; os.system(\"ls\")",
+    "subprocess.run(cmd, shell=True)",
+    "subprocess.Popen(cmd, shell = True)"
+  ],
+  "expected": {
+    "matched": "eval_call",
+    "allMutationsBlocked": true,
+    "patternMappings": {
+      "eval (cmd);": "eval_call",
+      "eval\t(cmd);": "eval_call",
+      "import os; os.system(\"ls\")": "os_system",
+      "subprocess.run(cmd, shell=True)": "subprocess_shell_true",
+      "subprocess.Popen(cmd, shell = True)": "subprocess_shell_true"
+    }
+  }
+}

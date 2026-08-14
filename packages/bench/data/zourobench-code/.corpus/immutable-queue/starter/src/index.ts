@@ -1,0 +1,1 @@
+export interface Item{id:string;priority:number;createdAt:string;state:"ready"|"held";attempt:number} export function claimNext(items:Item[]){const selected=items.sort((a,b)=>b.priority-a.priority).find(x=>x.state==="ready")??null;if(selected)selected.attempt++;return{selected,remaining:items}}

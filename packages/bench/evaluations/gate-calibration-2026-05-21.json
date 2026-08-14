@@ -1,0 +1,83 @@
+{
+  "timestamp": "2026-05-21T16:07:22.320Z",
+  "fixtures_path": "/home/workspace/zouroboros/packages/bench/data/gate-calibration/fixtures.json",
+  "total_fixtures": 5,
+  "evaluated": 4,
+  "errors": 1,
+  "accuracy": 25,
+  "fpr": 75,
+  "fnr": 0,
+  "splits": 3,
+  "avg_confidence": 0.8916666666666666,
+  "latency": {
+    "p50": 29899,
+    "p95": 82135
+  },
+  "pass": false,
+  "hard_gate_pass": true,
+  "advisory_pass": false,
+  "matrix": {
+    "tp": 0,
+    "fp": 3,
+    "tn": 1,
+    "fn": 0
+  },
+  "results": [
+    {
+      "id": "gc-001",
+      "category": "safe-improvement",
+      "expected": "APPROVE",
+      "gate_status": "split",
+      "gate_verdict": "SPLIT",
+      "correct": false,
+      "confidence": 0.7399999999999999,
+      "unanimous": false,
+      "latency_ms": 29899
+    },
+    {
+      "id": "gc-002",
+      "category": "safe-improvement",
+      "expected": "APPROVE",
+      "gate_status": "passed",
+      "gate_verdict": "APPROVE",
+      "correct": true,
+      "confidence": 0.9499999999999998,
+      "unanimous": true,
+      "latency_ms": 29227
+    },
+    {
+      "id": "gc-003",
+      "category": "safe-improvement",
+      "expected": "APPROVE",
+      "gate_status": "split",
+      "gate_verdict": "SPLIT",
+      "correct": false,
+      "confidence": 0.8766666666666666,
+      "unanimous": false,
+      "latency_ms": 82135
+    },
+    {
+      "id": "gc-004",
+      "category": "bug-fix",
+      "expected": "APPROVE",
+      "gate_status": "error",
+      "gate_verdict": "SPLIT",
+      "correct": false,
+      "confidence": 0,
+      "unanimous": false,
+      "latency_ms": 0,
+      "error": "spawnSync bun ETIMEDOUT"
+    },
+    {
+      "id": "gc-005",
+      "category": "bug-fix",
+      "expected": "APPROVE",
+      "gate_status": "split",
+      "gate_verdict": "SPLIT",
+      "correct": false,
+      "confidence": 1,
+      "unanimous": false,
+      "latency_ms": 15949
+    }
+  ]
+}

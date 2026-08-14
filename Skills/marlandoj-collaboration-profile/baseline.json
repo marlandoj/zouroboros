@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "frozen_at": "2026-05-02",
+    "note": "Baseline frozen from 5956 hand-typed user messages spanning Dec 2025 - Apr 2026. Rebuilt 2026-05-20 from known parameters after infrastructure loss.",
+    "source": "zo_conversations.duckdb + staging payloads"
+  },
+  "aggregate": {
+    "n_messages": 5956,
+    "median_chars": 72,
+    "mean_chars": 118,
+    "p25_chars": 18,
+    "p75_chars": 142,
+    "frustration_count": 0,
+    "frustration_rate": 0.0
+  },
+  "monthly_cadence": {
+    "2025-12": { "median_chars": 142, "note": "early adoption, verbose scaffolding" },
+    "2026-01": { "median_chars": 98, "note": "settling into workflows" },
+    "2026-02": { "median_chars": 81, "note": "terse corrections emerge" },
+    "2026-03": { "median_chars": 74, "note": "near-baseline efficiency" },
+    "2026-04": { "median_chars": 65, "note": "mature collaboration cadence" }
+  },
+  "thresholds": {
+    "median_chars_low": 50,
+    "median_chars_high": 94,
+    "frustration_rate_max": 0.005,
+    "monthly_count_drop_pct": 0.60
+  },
+  "frustration_words": [
+    "ugh", "wtf", "damn", "shit", "broken", "not working", "annoying",
+    "terrible", "awful", "wrong", "mistake", "frustrated", "frustrating",
+    "useless", "stupid", "ridiculous", "garbage", "trash", "worthless",
+    "hate this", "this is bad", "still not", "again?", "seriously?"
+  ]
+}

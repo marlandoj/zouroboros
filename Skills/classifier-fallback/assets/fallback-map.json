@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-07-08",
+  "description": "Per-domain classifier fallback routing. When a soft block is detected, the map determines the action: route to an alternative model, escalate to human, or refuse by design.",
+  "defaults": {
+    "action": "fallback",
+    "fallback_model": "byok:bb3d131d-749f-423b-a285-9f9efd103926",
+    "fallback_label": "GLM-5.2 (default fallback for classifier-blocked tasks)"
+  },
+  "domains": {
+    "security": {
+      "label": "Security research / vulnerability analysis",
+      "action": "fallback",
+      "fallback_model": "byok:bb3d131d-749f-423b-a285-9f9efd103926",
+      "fallback_label": "GLM-5.2 (broader classifier tolerance for security research)",
+      "escalate_after_fallback_fail": true
+    },
+    "bio": {
+      "label": "Biological sciences (dual-use concern)",
+      "action": "human_review",
+      "reason": "Bio classifier blocks are safety-critical; do not auto-route around them. Flag for human review.",
+      "escalate_after_fallback_fail": false
+    },
+    "chem": {
+      "label": "Chemical sciences (dual-use concern)",
+      "action": "human_review",
+      "reason": "Chem classifier blocks are safety-critical; do not auto-route around them. Flag for human review.",
+      "escalate_after_fallback_fail": false
+    },
+    "distillation": {
+      "label": "Model distillation / weight extraction",
+      "action": "refuse_by_design",
+      "reason": "Distillation classifier blocks are intentional provider guardrails. Do NOT route around them. This is the article's key safety boundary.",
+      "escalate_after_fallback_fail": false
+    },
+    "general": {
+      "label": "General tasks (uncategorized)",
+      "action": "fallback",
+      "fallback_model": "byok:bb3d131d-749f-423b-a285-9f9efd103926",
+      "fallback_label": "GLM-5.2 (default fallback)",
+      "escalate_after_fallback_fail": false
+    }
+  },
+  "safety_rules": [
+    "distillation blocks are NEVER routed around — refuse_by_design is enforced",
+    "bio/chem blocks escalate to human review, never auto-fallback",
+    "security blocks auto-fallback to the configured model, then escalate if the fallback also blocks",
+    "a block + fallback is ALWAYS logged to the audit ledger"
+  ]
+}

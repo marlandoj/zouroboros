@@ -1,0 +1,145 @@
+{
+  "metadata": {
+    "name": "Injected Failure Recovery Scenarios",
+    "version": "2.0.0",
+    "description": "Mocked probe-state scenarios for healer v7 chain selection. Each scenario asserts which current fallback is selected and whether it remains within the configured rung budget.",
+    "purpose": "Q2 #5 §3.9 Cycle C — verify healer detection and switch logic across 429, 402, timeout, cascade, and total-exhaustion modes without live provider calls.",
+    "fallbackChainPath": "/home/workspace/Skills/agent-model-healer/assets/fallback-chain.example.json"
+  },
+  "defaults": {
+    "rungBudget": "open-weight",
+    "terminalModel": "zo:smart",
+    "switchBudgetCycles": 1,
+    "failureBudget": 0
+  },
+  "scenarios": [
+    {
+      "id": "sonnet-429",
+      "description": "Sonnet is rate-limited; expect the first healthy Gemini proprietary fallback.",
+      "primary": "byok:00000000-0000-4000-8000-000000000002",
+      "probeResults": {
+        "byok:00000000-0000-4000-8000-000000000002": { "healthy": false, "error": "429 rate_limit" },
+        "byok:00000000-0000-4000-8000-000000000006": { "healthy": true },
+        "byok:00000000-0000-4000-8000-000000000004": { "healthy": true }
+      },
+      "expected": {
+        "target": "byok:00000000-0000-4000-8000-000000000006",
+        "rung": "proprietary",
+        "withinRungBudget": true,
+        "firstHealthyIndex": 0
+      }
+    },
+    {
+      "id": "sonnet-402-gemini-also-down",
+      "description": "Sonnet is credit-exhausted and Gemini is unavailable; expect terminal open-weight Kimi.",
+      "primary": "byok:00000000-0000-4000-8000-000000000002",
+      "probeResults": {
+        "byok:00000000-0000-4000-8000-000000000002": { "healthy": false, "error": "402 insufficient_credits" },
+        "byok:00000000-0000-4000-8000-000000000006": { "healthy": false, "error": "503 service_unavailable" },
+        "byok:00000000-0000-4000-8000-000000000004": { "healthy": true }
+      },
+      "expected": {
+        "target": "byok:00000000-0000-4000-8000-000000000004",
+        "rung": "open-weight",
+        "withinRungBudget": true,
+        "firstHealthyIndex": 1
+      }
+    },
+    {
+      "id": "sonnet-timeout-proprietary-tier-down",
+      "description": "Sonnet and Gemini both time out; expect terminal open-weight Kimi.",
+      "primary": "byok:00000000-0000-4000-8000-000000000002",
+      "probeResults": {
+        "byok:00000000-0000-4000-8000-000000000002": { "healthy": false, "error": "timeout after 30000ms" },
+        "byok:00000000-0000-4000-8000-000000000006": { "healthy": false, "error": "timeout after 30000ms" },
+        "byok:00000000-0000-4000-8000-000000000004": { "healthy": true }
+      },
+      "expected": {
+        "target": "byok:00000000-0000-4000-8000-000000000004",
+        "rung": "open-weight",
+        "withinRungBudget": true,
+        "firstHealthyIndex": 1
+      }
+    },
+    {
+      "id": "haiku-proprietary-rungs-down-kimi-up",
+      "description": "Haiku, Sonnet, and GPT-5 are unavailable; expect open-weight Kimi at the final configured rung.",
+      "primary": "byok:00000000-0000-4000-8000-000000000001",
+      "probeResults": {
+        "byok:00000000-0000-4000-8000-000000000001": { "healthy": false, "error": "503 service_unavailable" },
+        "byok:00000000-0000-4000-8000-000000000002": { "healthy": false, "error": "503 service_unavailable" },
+        "byok:00000000-0000-4000-8000-000000000005": { "healthy": false, "error": "502 bad_gateway" },
+        "byok:00000000-0000-4000-8000-000000000004": { "healthy": true }
+      },
+      "expected": {
+        "target": "byok:00000000-0000-4000-8000-000000000004",
+        "rung": "open-weight",
+        "withinRungBudget": true,
+        "firstHealthyIndex": 2
+      }
+    },
+    {
+      "id": "all-fallbacks-down",
+      "description": "Every external Sonnet fallback is unavailable; expect terminal zo:smart outside the open-weight budget.",
+      "primary": "byok:00000000-0000-4000-8000-000000000002",
+      "probeResults": {
+        "byok:00000000-0000-4000-8000-000000000002": { "healthy": false, "error": "503 service_unavailable" },
+        "byok:00000000-0000-4000-8000-000000000006": { "healthy": false, "error": "503 service_unavailable" },
+        "byok:00000000-0000-4000-8000-000000000004": { "healthy": false, "error": "502 bad_gateway" }
+      },
+      "expected": {
+        "target": "zo:smart",
+        "rung": "zo-native",
+        "withinRungBudget": false,
+        "firstHealthyIndex": -1
+      }
+    },
+    {
+      "id": "haiku-primary-degraded",
+      "description": "Haiku is degraded; expect its first healthy Sonnet proprietary fallback.",
+      "primary": "byok:00000000-0000-4000-8000-000000000001",
+      "probeResults": {
+        "byok:00000000-0000-4000-8000-000000000001": { "healthy": false, "error": "429 rate_limit" },
+        "byok:00000000-0000-4000-8000-000000000002": { "healthy": true },
+        "byok:00000000-0000-4000-8000-000000000005": { "healthy": true },
+        "byok:00000000-0000-4000-8000-000000000004": { "healthy": true }
+      },
+      "expected": {
+        "target": "byok:00000000-0000-4000-8000-000000000002",
+        "rung": "proprietary",
+        "withinRungBudget": true,
+        "firstHealthyIndex": 0
+      }
+    },
+    {
+      "id": "gpt-primary-degraded",
+      "description": "GPT-5 is degraded; expect its terminal open-weight Kimi fallback.",
+      "primary": "byok:00000000-0000-4000-8000-000000000005",
+      "probeResults": {
+        "byok:00000000-0000-4000-8000-000000000005": { "healthy": false, "error": "429 rate_limit" },
+        "byok:00000000-0000-4000-8000-000000000004": { "healthy": true }
+      },
+      "expected": {
+        "target": "byok:00000000-0000-4000-8000-000000000004",
+        "rung": "open-weight",
+        "withinRungBudget": true,
+        "firstHealthyIndex": 0
+      }
+    },
+    {
+      "id": "haiku-only-gpt-up",
+      "description": "Only GPT-5 is probed healthy; skip the unknown Sonnet state and select the second configured rung.",
+      "primary": "byok:00000000-0000-4000-8000-000000000001",
+      "probeResults": {
+        "byok:00000000-0000-4000-8000-000000000001": { "healthy": false, "error": "429 rate_limit" },
+        "byok:00000000-0000-4000-8000-000000000005": { "healthy": true }
+      },
+      "expected": {
+        "target": "byok:00000000-0000-4000-8000-000000000005",
+        "rung": "proprietary",
+        "withinRungBudget": true,
+        "firstHealthyIndex": 1
+      }
+    }
+  ]
+}

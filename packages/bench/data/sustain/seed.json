@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "name": "sustain",
+    "version": "1.0.0",
+    "description": "24h sustain benchmark for the Zouroboros healer fallback chain. Hybrid runner: --mode=synthetic compresses 24h into seconds via mocked clock for CI; --mode=wall-clock issues real /zo/ask calls at the configured cadence for the configured duration. Tracks drift (last-hour vs first-hour pass rate) and rolling p95 latency per tier. Run fails if total failure rate exceeds the budget.",
+    "purpose": "Q2 #5 \u00a73.9 family (b) Cycle B \u2014 verifies that fallback-rung fidelity holds across time, not just per-call. Catches accumulating-state bugs (the demo trading stale-bundle / World Monitor incident class), provider rate-limit windows, midnight quota rollovers, and slow degradation invisible to per-call benchmarks."
+  },
+  "defaults": {
+    "mode": "synthetic",
+    "cadenceSeconds": 300,
+    "durationSeconds": 86400,
+    "failureBudget": 0.05,
+    "driftThreshold": 0.15,
+    "syntheticTickMs": 1
+  },
+  "chain": {
+    "primary": "byok:00000000-0000-4000-8000-000000000002",
+    "primaryLabel": "Claude Code Sonnet",
+    "rungs": [
+      { "model": "byok:00000000-0000-4000-8000-000000000002", "label": "Sonnet", "tier": "proprietary" },
+      { "model": "byok:00000000-0000-4000-8000-000000000001", "label": "Haiku", "tier": "proprietary" },
+      { "model": "vercel:moonshotai/kimi-k2.5", "label": "Kimi-K2.5", "tier": "open-weight" },
+      { "model": "vercel:minimax/minimax-m2.7", "label": "MiniMax-M2.7", "tier": "open-weight" },
+      { "model": "zo:smart", "label": "Zo Smart", "tier": "zo-native" }
+    ]
+  },
+  "tasks": [
+    {
+      "id": "summarize-changelog",
+      "prompt": "Summarize the following changelog in two sentences:\n- added user authentication\n- fixed memory leak in session handler\n- migrated database from Postgres 14 to 16\n- removed deprecated /api/v1/users endpoint\n- added rate limiting at 100 req/min per IP",
+      "expectedKeywords": ["auth", "memory", "database", "rate"],
+      "minLength": 80
+    },
+    {
+      "id": "explain-pattern",
+      "prompt": "In two sentences, explain when the circuit breaker pattern is appropriate and what failure mode it prevents.",
+      "expectedKeywords": ["circuit", "fail", "open"],
+      "minLength": 60
+    },
+    {
+      "id": "extract-fields",
+      "prompt": "From the sentence \"Order #4421 shipped from Phoenix on 2026-04-29 via FedEx, tracking 7740 1234 5678\", extract the order id, origin city, ship date, carrier, and tracking number as a list.",
+      "expectedKeywords": ["4421", "phoenix", "fedex", "7740"],
+      "minLength": 60
+    }
+  ]
+}

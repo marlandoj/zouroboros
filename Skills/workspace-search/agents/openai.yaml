@@ -1,0 +1,4 @@
+interface:
+  display_name: "Workspace Search"
+  short_description: "Run bounded workspace searches"
+  default_prompt: "Search a project safely with explicit scope and bounded execution."

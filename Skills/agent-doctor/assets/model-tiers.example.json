@@ -1,0 +1,61 @@
+{
+  "description": "Model cost tiers and per-token pricing for agent fitness scoring",
+  "tiers": {
+    "budget": {
+      "maxCostPer1kInput": 0.20,
+      "models": ["byok:00000000-0000-4000-8000-000000000008", "byok:00000000-0000-4000-8000-000000000009", "zo:fast"],
+      "labels": ["Synthetic Kimi K2.5", "OpenRouter Free", "Zo Fast"],
+      "_note": "Codex GPT 5.1 Mini removed — returns empty output via /zo/ask, silently fails all scheduled agent runs"
+    },
+    "standard": {
+      "maxCostPer1kInput": 0.50,
+      "models": ["byok:00000000-0000-4000-8000-000000000001", "byok:00000000-0000-4000-8000-00000000000a", "zo:smart"],
+      "labels": ["Claude Code Haiku", "GPT-OSS-120B", "Zo Smart"]
+    },
+    "premium": {
+      "maxCostPer1kInput": 5.00,
+      "models": ["byok:00000000-0000-4000-8000-000000000002", "byok:00000000-0000-4000-8000-00000000000b"],
+      "labels": ["Claude Code Sonnet", "Codex GPT 5.3"]
+    },
+    "expensive": {
+      "maxCostPer1kInput": 20.00,
+      "models": ["byok:00000000-0000-4000-8000-000000000003", "byok:00000000-0000-4000-8000-00000000000c"],
+      "labels": ["Claude Code Opus", "Codex GPT 5.4"]
+    }
+  },
+  "downgradeDefaults": {
+    "_note": "Operator byok model-routing IDs consumed by doctor.ts. Externalized per ZOU-465 (D8 IP boundary) — this file is gitignored; committed template is model-tiers.example.json.",
+    "bannedModelFallback": "byok:00000000-0000-4000-8000-000000000001",
+    "byTier": {
+      "budget": "byok:00000000-0000-4000-8000-000000000001",
+      "standard": "byok:00000000-0000-4000-8000-000000000001",
+      "premium": "byok:00000000-0000-4000-8000-000000000002",
+      "expensive": "byok:00000000-0000-4000-8000-000000000003"
+    }
+  },
+  "bannedAgentModels": {
+    "byok:00000000-0000-4000-8000-00000000000d": "Codex GPT 5.1 Mini returns empty output via /zo/ask — switch to Haiku"
+  },
+  "taskComplexity": {
+    "script_executor": {
+      "description": "Runs bash/bun commands and reports output",
+      "recommendedTier": "budget",
+      "signals": ["run this command", "execute this", "bun ", "curl ", "apt-get", "git status", "Log all output"]
+    },
+    "status_reporter": {
+      "description": "Reads files/state and composes an email or SMS",
+      "recommendedTier": "budget",
+      "signals": ["send email", "send_email", "status update", "check-in", "reminder", "send.*SMS", "progress report"]
+    },
+    "content_generator": {
+      "description": "Generates creative content, social posts, or marketing copy",
+      "recommendedTier": "standard",
+      "signals": ["content calendar", "social media", "generate.*post", "draft.*copy", "creative", "video producer"]
+    },
+    "analyst": {
+      "description": "Performs analysis, synthesis, or security assessment",
+      "recommendedTier": "standard",
+      "signals": ["analyze", "synthesize", "assess", "audit", "security.*assessment", "comprehensive", "evaluate"]
+    }
+  }
+}

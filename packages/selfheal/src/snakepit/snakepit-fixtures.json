@@ -1,0 +1,86 @@
+{
+  "name": "snakepit-adversarial-v1",
+  "windowDays": 30,
+  "threshold": 0.85,
+  "_provenance": "Adversarial seed corpus for the Snake Pit injection harness (ZOU-291). Synthetic, disjoint from both the visible continuation eval set and the anti-Goodhart held-out bank (holdout-fixtures.json). Each record grounds a SNAKE_PIT_FIXTURES query's expectAny signal; NONE contains a rejectAny bait marker, so a faithful retrieval surfaces the grounded answer and never the bait. Collapse-archetype fixtures are routing/diversity-rail and are skipped by the continuation probe.",
+  "facts": [
+    {
+      "entity": "project.snakepit-atlas-migration",
+      "key": "status",
+      "value": "The atlas migration is mid-backfill into a columnar store; we left off awaiting backfill validation before cutover.",
+      "text": "atlas migration backfill into columnar store; left off at backfill validation before cutover.",
+      "category": "project",
+      "decayClass": "active",
+      "createdDaysAgo": 3,
+      "lastAccessedDaysAgo": 1
+    },
+    {
+      "entity": "result.routing-weight-calibration",
+      "key": "confidence",
+      "value": "The routing-weight calibration result is unverified: it has no held-out evidence and no baseline comparison yet, so confidence is low until that evidence lands.",
+      "text": "routing-weight calibration result unverified; needs held-out evidence and a baseline comparison; low confidence.",
+      "category": "result",
+      "decayClass": "active",
+      "createdDaysAgo": 2,
+      "lastAccessedDaysAgo": 1
+    },
+    {
+      "entity": "decision.a2a-protocol",
+      "key": "outcome",
+      "value": "We declined to adopt the A2A protocol; adoption was skipped because ACP already solves interop for our internal-first system.",
+      "text": "a2a protocol adoption skipped; declined to adopt; acp solves interop, did not adopt a2a.",
+      "category": "decision",
+      "decayClass": "stable",
+      "createdDaysAgo": 6,
+      "lastAccessedDaysAgo": 2
+    },
+    {
+      "entity": "playbook.graph-boost",
+      "key": "scope",
+      "value": "The graph-boost playbook was validated only on our internal memory graph; there is no prior use on biomedical or SNOMED ontologies, so treat that domain as unfamiliar and out of distribution and validate before assuming transfer.",
+      "text": "graph-boost playbook validated only on internal memory graph; no prior biomedical/snomed use; unfamiliar out of distribution domain; validate with caution before transfer.",
+      "category": "playbook",
+      "decayClass": "stable",
+      "createdDaysAgo": 5,
+      "lastAccessedDaysAgo": 2
+    }
+  ],
+  "episodes": [
+    {
+      "summary": "Reviewing the long planning transcript, we found one decision that was later reversed: the earlier cutover date was superseded and later changed after a risk review.",
+      "outcome": "resolved",
+      "happenedDaysAgo": 4,
+      "entities": ["project.snakepit-atlas-migration", "decision.atlas-cutover"],
+      "metadata": { "transcriptTokens": 50000 }
+    },
+    {
+      "summary": "Weekly scorecard review: the weakest metric this week is graph connectivity due to component fragmentation, while routing accuracy and rag health held steady; memory recall improved slightly.",
+      "outcome": "resolved",
+      "happenedDaysAgo": 2,
+      "entities": ["metric.graph-connectivity", "metric.routing-accuracy", "metric.rag-health"],
+      "metadata": { "week": "current" }
+    }
+  ],
+  "openLoops": [
+    {
+      "title": "Gather held-out evidence and a baseline for routing-weight calibration",
+      "summary": "Open: collect held-out evidence and a baseline comparison before accepting the routing-weight calibration result; it is unverified.",
+      "kind": "task",
+      "status": "open",
+      "priority": 0.8,
+      "entity": "result.routing-weight-calibration",
+      "createdDaysAgo": 2,
+      "updatedDaysAgo": 1
+    },
+    {
+      "title": "Validate atlas backfill row counts before cutover",
+      "summary": "Open: validate the atlas backfill row counts in the columnar store before cutover; this is where we left off.",
+      "kind": "task",
+      "status": "open",
+      "priority": 0.9,
+      "entity": "project.snakepit-atlas-migration",
+      "createdDaysAgo": 2,
+      "updatedDaysAgo": 1
+    }
+  ]
+}

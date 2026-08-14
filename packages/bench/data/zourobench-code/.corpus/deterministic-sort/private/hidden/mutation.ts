@@ -1,0 +1,1 @@
+export interface Candidate{id:string;floor:number|null;providerRank:number;cost:number} export function rankCandidates(items:Candidate[]):Candidate[]{return items.sort((a,b)=>(b.floor??0)-(a.floor??0))}

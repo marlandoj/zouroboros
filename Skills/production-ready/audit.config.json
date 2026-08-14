@@ -1,0 +1,11 @@
+{
+  "appName": "production-ready",
+  "appPurpose": "Static + runtime production-readiness audit tool (audits OTHER apps).",
+  "riskProfile": "standard",
+  "ignore": {
+    "filePatterns": [
+      "scripts/checks/**",
+      "scripts/__tests__/**"
+    ]
+  }
+}

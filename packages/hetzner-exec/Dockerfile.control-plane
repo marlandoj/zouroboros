@@ -1,0 +1,20 @@
+# syntax=docker/dockerfile:1
+FROM oven/bun:1.2-debian
+
+WORKDIR /app
+COPY package.json tsconfig.json ./
+COPY src ./src
+COPY scripts ./scripts
+
+ENV HETZNER_CONTROL_PLANE_MODE=shadow
+ENV HETZNER_CONTROL_PLANE_HOST=0.0.0.0
+ENV HETZNER_CONTROL_PLANE_PORT=6670
+ENV HETZNER_CONTROL_PLANE_STATE_DIR=/state
+
+VOLUME ["/state"]
+EXPOSE 6670
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD bun -e "fetch('http://127.0.0.1:'+(process.env.HETZNER_CONTROL_PLANE_PORT||'6670')+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+CMD ["bun", "scripts/control-plane.ts"]

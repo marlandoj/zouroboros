@@ -1,0 +1,1 @@
+export interface Route{canonical:string;route:string;qualified:boolean;runnable:boolean;supported:boolean} export function summarizeModels(_routes:Route[]){return{models:[],qualified:0,queued:0,held:0,unsupported:0}}

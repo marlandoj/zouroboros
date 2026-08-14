@@ -1,0 +1,4 @@
+interface:
+  display_name: "Three.js Game Production"
+  short_description: "Build, upgrade, debug, and release Three.js games"
+  default_prompt: "Use $threejs-game-production to inspect and improve this Three.js game while preserving gameplay contracts and verifying real browser output."

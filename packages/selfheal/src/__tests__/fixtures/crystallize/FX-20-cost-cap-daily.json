@@ -1,0 +1,18 @@
+{
+  "id": "FX-20",
+  "name": "cost-cap-daily",
+  "asserts": "tryReserve denies when amount + spent_today_before > cap; admits when within cap; recordSpend trues up the running total monotonically",
+  "phase": "PR3",
+  "scope": "cost-counter",
+  "input": {
+    "cap_usd": 1.0,
+    "reservations": [0.4, 0.4, 0.3]
+  },
+  "expected": {
+    "results": [
+      { "ok": true,  "spent_today_before": 0.0, "spent_today_after": 0.4 },
+      { "ok": true,  "spent_today_before": 0.4, "spent_today_after": 0.8 },
+      { "ok": false, "spent_today_before": 0.8, "spent_today_after": 0.8, "reason": "cap_exceeded" }
+    ]
+  }
+}

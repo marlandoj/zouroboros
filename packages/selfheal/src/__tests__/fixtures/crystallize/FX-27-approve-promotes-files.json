@@ -1,0 +1,20 @@
+{
+  "id": "FX-27",
+  "name": "approve-promotes-files",
+  "asserts": "approveCandidate moves Skills/_candidates/<slug>/ → Skills/<slug>/ atomically; row updates to approval_status='approved' with promoted_path set; 'approved' + 'promoted' events are appended in that order.",
+  "phase": "PR3",
+  "scope": "approve + promote",
+  "input": {
+    "id": "00000000-0000-0000-0000-000000000027",
+    "slug": "promote-target",
+    "files": [
+      { "path": "SKILL.md", "content": "---\nname: promote-target\ndescription: A test crystallization candidate.\n---\n\n# promote-target\n\n## When to invoke\n- Test fixture\n" }
+    ]
+  },
+  "expected": {
+    "approval_status": "approved",
+    "events": ["created", "approved", "promoted"],
+    "candidate_path_exists_after": false,
+    "promoted_path_exists_after": true
+  }
+}

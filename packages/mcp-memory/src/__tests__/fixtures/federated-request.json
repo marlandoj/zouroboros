@@ -1,0 +1,8 @@
+{
+  "arguments": {
+    "query": "latest Zouroboros retrieval decision and where it is implemented in code",
+    "mode": "federated",
+    "limit": 6,
+    "expand": true
+  }
+}

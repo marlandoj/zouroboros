@@ -1,0 +1,8 @@
+{
+  "_comment": "Manifest for `worker bootstrap` — files/skills/dirs to sync from marlandoj to faunaflora. Edit then run: bun Skills/operator-worker/scripts/worker.ts bootstrap",
+  "files": [],
+  "skills": [
+    "operator-worker"
+  ],
+  "dirs": []
+}

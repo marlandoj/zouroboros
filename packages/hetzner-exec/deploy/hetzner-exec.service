@@ -1,0 +1,47 @@
+# hetzner-exec MCP server — systemd unit (container deployment, recommended).
+#
+# Requires Docker (provisioned by ZOU-414 cloud-init, which also creates the
+# `docker` group) and a built image tagged `hetzner-exec:0.1.0`. The `mcp`
+# service user is created by the deploy script (scripts/remote-deploy.sh), which
+# adds it to the `docker` group. The docker socket mount lets `sandbox=true`
+# (docker provider) spawn sibling sandbox containers on the host.
+#
+# Install:
+#   sudo cp deploy/hetzner-exec.service /etc/systemd/system/
+#   sudo cp deploy/env.example /etc/hetzner-exec/env   # then edit real values
+#   sudo docker build -t hetzner-exec:0.1.0 /opt/hetzner-exec
+#   sudo systemctl daemon-reload && sudo systemctl enable --now hetzner-exec
+#
+# Alternative host-bun deployment (no container): install bun on the box,
+# set WorkingDirectory=/opt/hetzner-exec and ExecStart=/usr/local/bin/bun src/main.ts,
+# drop the `docker run` wrapper and the socket mount. See README.md.
+
+[Unit]
+Description=Hetzner Compute Annex — hetzner-exec MCP server (container)
+Documentation=https://marlandoj.zo.space
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=mcp
+Group=docker
+ExecStartPre=-/usr/bin/docker rm -f hetzner-exec
+ExecStart=/usr/bin/docker run --name hetzner-exec --rm \
+  -p 6666:6666 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --env-file /etc/hetzner-exec/env \
+  hetzner-exec:0.1.0
+ExecStop=/usr/bin/docker stop hetzner-exec
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log
+
+[Install]
+WantedBy=multi-user.target

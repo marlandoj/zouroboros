@@ -1,0 +1,19 @@
+{
+  "id": "FX-15",
+  "name": "hmac-tampered-token",
+  "asserts": "verifyToken returns ok=false reason=mismatch when ANY byte of the token is tampered (timingSafeEqual semantics)",
+  "phase": "PR3",
+  "scope": "hmac",
+  "input": {
+    "secret_bytes": "abcdefghijklmnopqrstuvwxyz123456",
+    "id": "00000000-0000-0000-0000-000000000001",
+    "created_at": 1700000000,
+    "candidate_path": "/home/workspace/Skills/_candidates/deploy-zo-route",
+    "tamper": "flip-last-char"
+  },
+  "expected": {
+    "ok": false,
+    "reason": "mismatch",
+    "token_prefix_8_pattern": "^[0-9a-f]{8}$"
+  }
+}

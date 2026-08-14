@@ -1,0 +1,15 @@
+{
+  "id": "FX-09",
+  "name": "slug-too-short",
+  "asserts": "slug shorter than 3 chars rejected with reason=too_short",
+  "phase": "PR1",
+  "scope": "slug-validate",
+  "input": {
+    "rejectingInputs": ["", "a", "ab"],
+    "tooLongInput": "a-very-long-slug-that-exceeds-forty-eight-character-limit-x"
+  },
+  "expected": {
+    "allTooShort": true,
+    "tooLongReason": "too_long"
+  }
+}

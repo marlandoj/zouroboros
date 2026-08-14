@@ -1,0 +1,25 @@
+{
+  "id": "FX-11",
+  "name": "mechanical-pass-clean-candidate",
+  "asserts": "Clean SKILL.md + clean stub + valid slug + resolvable refs → mechanical_pass; one event row.",
+  "phase": "PR2",
+  "scope": "eval-mechanical",
+  "input": {
+    "slug": "deploy-zo-route",
+    "files": [
+      {
+        "path": "SKILL.md",
+        "content": "---\nname: deploy-zo-route\ndescription: ships a route\n---\n\n# deploy-zo-route\n\n## When to invoke\n- when shipping changes to a route\n\n## Inputs\n- route path\n\n## Outputs\n- deployed route\n"
+      },
+      {
+        "path": "scripts/bash.ts",
+        "content": "// TODO(Bash): implement step.\nexport async function run(): Promise<void> {\n  throw new Error('TODO');\n}\n"
+      }
+    ]
+  },
+  "expected": {
+    "status": "mechanical_pass",
+    "eventCount": 1,
+    "failureCount": 0
+  }
+}

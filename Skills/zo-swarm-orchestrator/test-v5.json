@@ -1,0 +1,17 @@
+[
+  {
+    "id": "task1",
+    "persona": "auto",
+    "agencyPersona": "research-analyst",
+    "task": "List 3 interesting facts about the city of Phoenix.",
+    "priority": "medium"
+  },
+  {
+    "id": "task2",
+    "persona": "auto",
+    "agencyPersona": "technical-writer",
+    "task": "Summarize the facts provided in task1 into a single sentence.",
+    "dependsOn": ["task1"],
+    "priority": "medium"
+  }
+]

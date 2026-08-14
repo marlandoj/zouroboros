@@ -1,0 +1,59 @@
+{
+  "name": "zouroboros-memory",
+  "version": "4.2.0",
+  "description": "Hybrid SQLite + Vector memory system for Zouroboros",
+  "type": "module",
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./cli": "./dist/cli.js",
+    "./gate-server": "./dist/gate-server.js"
+  },
+  "files": [
+    "dist/",
+    "hooks/",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zouroboros-ai/zouroboros.git",
+    "directory": "packages/memory"
+  },
+  "bin": {
+    "zouroboros-memory": "./dist/cli.js",
+    "zouroboros-memory-mcp": "./dist/mcp-server.js",
+    "zouroboros-memory-gate": "./dist/gate-server.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "bun test src/",
+    "test:coverage": "bun test --coverage src/",
+    "cli": "bun ./src/cli.ts",
+    "mcp": "bun ./src/mcp-server.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zouroboros-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.4.0"
+  },
+  "keywords": [
+    "zouroboros",
+    "memory",
+    "sqlite",
+    "vector-search",
+    "embeddings",
+    "episodic-memory"
+  ],
+  "license": "MIT"
+}

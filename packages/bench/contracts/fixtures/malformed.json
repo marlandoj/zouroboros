@@ -1,0 +1,28 @@
+{
+  "benchmark": "ZouroBench",
+  "timestamp": "2026-06-01T00:00:00.000Z",
+  "dataset": "data/zourobench/seed.json",
+  "total_questions": "fifty-four",
+  "answered": 54,
+  "scores": {
+    "overall_accuracy": 141.2,
+    "by_category": {
+      "procedural-recall": { "correct": 20, "total": 18, "accuracy": 111.1 }
+    },
+    "by_type": {}
+  },
+  "latency": { "avg_retrieval_ms": 269 },
+  "consensus_gate": { "enabled": "no" },
+  "questions": [
+    {
+      "question_id": "pr-01",
+      "question_type": "step-recall",
+      "category": "procedural-recall",
+      "question": "What are the steps?",
+      "ground_truth": "7 steps",
+      "retrieval_ms": "fast",
+      "answer_ms": 2400,
+      "correct": "yes"
+    }
+  ]
+}

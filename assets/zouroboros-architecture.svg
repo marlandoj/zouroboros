@@ -1,0 +1,153 @@
+<svg width="1600" height="1185" viewBox="0 0 1600 1185" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1185" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A0F1B"/>
+      <stop offset="1" stop-color="#070B14"/>
+    </linearGradient>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="lineGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style>
+      .title { font: 700 40px Inter, ui-sans-serif, system-ui, sans-serif; fill: #F8FAFC; }
+      .tagline { font: 400 16px Inter, ui-sans-serif, system-ui, sans-serif; fill: #64748B; }
+      .section { font: 600 13px Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.30em; fill: #6B7280; }
+      .cardTitle { font: 700 27px Inter, ui-sans-serif, system-ui, sans-serif; }
+      .cardSub { font: 400 15px Inter, ui-sans-serif, system-ui, sans-serif; fill: #8A97AB; }
+      .cardBody { font: 500 17px Inter, ui-sans-serif, system-ui, sans-serif; fill: #CBD5E1; }
+      .chipText { font: 500 15px Inter, ui-sans-serif, system-ui, sans-serif; fill: #B6C2D4; }
+      .tiny { font: 600 13px Inter, ui-sans-serif, system-ui, sans-serif; fill: #94A3B8; letter-spacing: 0.04em; }
+      .topTitle { font: 800 26px Inter, ui-sans-serif, system-ui, sans-serif; fill: #22D3EE; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1185" fill="url(#bg)"/>
+  <text x="56" y="64" class="title">Architecture</text>
+  <text x="1544" y="58" text-anchor="end" class="tagline">A self-improving AI system — from one request to finished, reviewed work</text>
+  <rect x="40" y="84" width="1520" height="2" rx="1" fill="#1F2937"/>
+
+  <!-- INTERFACE LAYER -->
+  <g filter="url(#softGlow)">
+    <rect x="440" y="100" width="720" height="112" rx="18" fill="#09111F" stroke="#0EA5E9" stroke-width="3"/>
+  </g>
+  <text x="800" y="141" text-anchor="middle" class="topTitle">Ways You Use It</text>
+  <g>
+    <rect x="494" y="154" width="132" height="28" rx="8" fill="#172133" stroke="#23314A"/>
+    <text x="560" y="173" text-anchor="middle" class="tiny">Command Line</text>
+    <rect x="640" y="154" width="132" height="28" rx="8" fill="#172133" stroke="#23314A"/>
+    <text x="706" y="173" text-anchor="middle" class="tiny">Web Dashboard</text>
+    <rect x="786" y="154" width="132" height="28" rx="8" fill="#172133" stroke="#23314A"/>
+    <text x="852" y="173" text-anchor="middle" class="tiny">API Access</text>
+    <rect x="932" y="154" width="174" height="28" rx="8" fill="#172133" stroke="#23314A"/>
+    <text x="1019" y="173" text-anchor="middle" class="tiny">Scheduled Tasks</text>
+  </g>
+
+  <line x1="800" y1="230" x2="800" y2="258" stroke="#0F766E" stroke-width="3" filter="url(#lineGlow)"/>
+  <text x="800" y="276" text-anchor="middle" class="section">CORE SYSTEMS</text>
+
+  <!-- CORE SYSTEMS LAYER -->
+  <g filter="url(#softGlow)">
+    <rect x="245" y="295" width="360" height="250" rx="20" fill="#09111F" stroke="#06B6D4" stroke-width="3"/>
+    <rect x="620" y="295" width="360" height="250" rx="20" fill="#0C1224" stroke="#3B82F6" stroke-width="3"/>
+    <rect x="995" y="295" width="360" height="250" rx="20" fill="#0E1120" stroke="#A855F7" stroke-width="3"/>
+  </g>
+  <text x="425" y="341" text-anchor="middle" class="cardTitle" fill="#22D3EE">Memory</text>
+  <text x="800" y="341" text-anchor="middle" class="cardTitle" fill="#60A5FA">Agent Teamwork</text>
+  <text x="1175" y="341" text-anchor="middle" class="cardTitle" fill="#C084FC">Plan &amp; Review</text>
+  <text x="425" y="368" text-anchor="middle" class="cardSub">Remembers and recalls past work</text>
+  <text x="800" y="368" text-anchor="middle" class="cardSub">Coordinates a team of AI agents</text>
+  <text x="1175" y="368" text-anchor="middle" class="cardSub">Plans the work, then checks it</text>
+
+  <g>
+    <rect x="266" y="388" width="318" height="30" rx="8" fill="#172133" stroke="#243244"/><text x="425" y="408" text-anchor="middle" class="chipText">Stores facts, skills and events</text>
+    <rect x="266" y="428" width="318" height="30" rx="8" fill="#172133" stroke="#243244"/><text x="425" y="448" text-anchor="middle" class="chipText">Finds what's relevant, on demand</text>
+    <rect x="266" y="468" width="318" height="30" rx="8" fill="#172133" stroke="#243244"/><text x="425" y="488" text-anchor="middle" class="chipText">Restores useful context for you</text>
+
+    <rect x="641" y="388" width="318" height="30" rx="8" fill="#172133" stroke="#243244"/><text x="800" y="408" text-anchor="middle" class="chipText">Splits big jobs into ordered steps</text>
+    <rect x="641" y="428" width="318" height="30" rx="8" fill="#172133" stroke="#243244"/><text x="800" y="448" text-anchor="middle" class="chipText">Specialist agents handle each part</text>
+    <rect x="641" y="468" width="318" height="30" rx="8" fill="#172133" stroke="#243244"/><text x="800" y="488" text-anchor="middle" class="chipText">Retries and recovers from errors</text>
+
+    <rect x="1016" y="388" width="318" height="30" rx="8" fill="#172133" stroke="#243244"/><text x="1175" y="408" text-anchor="middle" class="chipText">Plans each task before starting</text>
+    <rect x="1016" y="428" width="318" height="30" rx="8" fill="#172133" stroke="#243244"/><text x="1175" y="448" text-anchor="middle" class="chipText">Reviews the results in stages</text>
+    <rect x="1016" y="468" width="318" height="30" rx="8" fill="#172133" stroke="#243244"/><text x="1175" y="488" text-anchor="middle" class="chipText">Catches gaps and fixes mistakes</text>
+  </g>
+
+  <line x1="800" y1="602" x2="800" y2="630" stroke="#0F766E" stroke-width="3" filter="url(#lineGlow)"/>
+  <text x="800" y="648" text-anchor="middle" class="section">RUNNING THE WORK</text>
+
+  <!-- EXECUTION LAYER -->
+  <g filter="url(#softGlow)">
+    <rect x="190" y="668" width="455" height="160" rx="20" fill="#09111F" stroke="#14B8A6" stroke-width="3"/>
+    <rect x="650" y="668" width="300" height="160" rx="20" fill="#11131F" stroke="#F59E0B" stroke-width="3"/>
+    <rect x="955" y="668" width="455" height="160" rx="20" fill="#11131F" stroke="#F59E0B" stroke-width="3"/>
+  </g>
+  <text x="417" y="710" text-anchor="middle" class="cardTitle" fill="#2DD4BF">AI Models</text>
+  <text x="800" y="710" text-anchor="middle" class="cardTitle" fill="#FBBF24" font-size="25">Smart Routing</text>
+  <text x="1182" y="710" text-anchor="middle" class="cardTitle" fill="#FBBF24">Knowledge Lookup</text>
+
+  <g>
+    <rect x="215" y="730" width="405" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="417" y="749" text-anchor="middle" class="chipText">Works with Claude, Gemini, Codex &amp; more</text>
+    <rect x="215" y="768" width="405" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="417" y="787" text-anchor="middle" class="chipText">Picks the best model for each job</text>
+    <rect x="215" y="806" width="405" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="417" y="825" text-anchor="middle" class="chipText">Falls back to another if one fails</text>
+
+    <rect x="674" y="730" width="252" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="800" y="749" text-anchor="middle" class="chipText">Scores every task</text>
+    <rect x="674" y="768" width="252" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="800" y="787" text-anchor="middle" class="chipText">Balances skill and cost</text>
+    <rect x="674" y="806" width="252" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="800" y="825" text-anchor="middle" class="chipText">Saves money when it can</text>
+
+    <rect x="980" y="730" width="405" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1182" y="749" text-anchor="middle" class="chipText">Searches its own knowledge base</text>
+    <rect x="980" y="768" width="405" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1182" y="787" text-anchor="middle" class="chipText">Pulls in the most useful facts</text>
+    <rect x="980" y="806" width="405" height="28" rx="8" fill="#172133" stroke="#243244"/><text x="1182" y="825" text-anchor="middle" class="chipText">Keeps answers grounded in real info</text>
+  </g>
+
+  <line x1="800" y1="845" x2="800" y2="873" stroke="#0F766E" stroke-width="3" filter="url(#lineGlow)"/>
+  <text x="800" y="891" text-anchor="middle" class="section">SAFETY &amp; CONTROL</text>
+
+  <!-- RESILIENCE LAYER — 4 boxes -->
+  <g filter="url(#softGlow)">
+    <rect x="60"   y="908" width="355" height="70" rx="18" fill="#111120" stroke="#EC4899" stroke-width="3"/>
+    <rect x="435"  y="908" width="355" height="70" rx="18" fill="#111120" stroke="#EC4899" stroke-width="3"/>
+    <rect x="810"  y="908" width="355" height="70" rx="18" fill="#111120" stroke="#EAB308" stroke-width="3"/>
+    <rect x="1185" y="908" width="355" height="70" rx="18" fill="#111120" stroke="#8B5CF6" stroke-width="3"/>
+  </g>
+  <text x="237"  y="938" text-anchor="middle" class="cardTitle" fill="#F472B6" font-size="20">Quality Gates</text>
+  <text x="612"  y="938" text-anchor="middle" class="cardTitle" fill="#F472B6" font-size="20">Auto-Recovery</text>
+  <text x="987"  y="938" text-anchor="middle" class="cardTitle" fill="#FDE047" font-size="20">Budget Control</text>
+  <text x="1362" y="938" text-anchor="middle" class="cardTitle" fill="#A78BFA" font-size="20">Second Opinions</text>
+  <text x="237"  y="961" text-anchor="middle" class="cardBody" font-size="14">Validates and tests every step</text>
+  <text x="612"  y="961" text-anchor="middle" class="cardBody" font-size="14">Detects failures, recovers on its own</text>
+  <text x="987"  y="961" text-anchor="middle" class="cardBody" font-size="14">Tracks spending, enforces limits</text>
+  <text x="1362" y="961" text-anchor="middle" class="cardBody" font-size="14">Several AIs review before approving</text>
+
+  <line x1="800" y1="995" x2="800" y2="1023" stroke="#0F766E" stroke-width="3" filter="url(#lineGlow)"/>
+  <text x="800" y="1041" text-anchor="middle" class="section">FOUNDATION</text>
+
+  <!-- FOUNDATION LAYER — 4 boxes -->
+  <g filter="url(#softGlow)">
+    <rect x="60"   y="1058" width="355" height="110" rx="18" fill="#111120" stroke="#6366F1" stroke-width="3"/>
+    <rect x="435"  y="1058" width="355" height="110" rx="18" fill="#111120" stroke="#22C55E" stroke-width="3"/>
+    <rect x="810"  y="1058" width="355" height="110" rx="18" fill="#111120" stroke="#F97316" stroke-width="3"/>
+    <rect x="1185" y="1058" width="355" height="110" rx="18" fill="#111120" stroke="#06B6D4" stroke-width="3"/>
+  </g>
+  <text x="237"  y="1094" text-anchor="middle" class="cardTitle" fill="#818CF8" font-size="20">Roles &amp; Identities</text>
+  <text x="612"  y="1094" text-anchor="middle" class="cardTitle" fill="#4ADE80" font-size="20">Self-Improvement</text>
+  <text x="987"  y="1094" text-anchor="middle" class="cardTitle" fill="#FB923C" font-size="20">Health Monitors</text>
+  <text x="1362" y="1094" text-anchor="middle" class="cardTitle" fill="#22D3EE" font-size="20">Always Running</text>
+  <text x="237"  y="1120" text-anchor="middle" class="cardBody" font-size="14">Specialist agent roles, each</text>
+  <text x="237"  y="1140" text-anchor="middle" class="cardBody" font-size="14">with clear, safe permissions</text>
+  <text x="612"  y="1120" text-anchor="middle" class="cardBody" font-size="14">Reviews its own work daily</text>
+  <text x="612"  y="1140" text-anchor="middle" class="cardBody" font-size="14">and fixes problems it finds</text>
+  <text x="987"  y="1120" text-anchor="middle" class="cardBody" font-size="14">Four watchers keep the</text>
+  <text x="987"  y="1140" text-anchor="middle" class="cardBody" font-size="14">whole system healthy</text>
+  <text x="1362" y="1120" text-anchor="middle" class="cardBody" font-size="14">Wakes up over time to</text>
+  <text x="1362" y="1140" text-anchor="middle" class="cardBody" font-size="14">finish long-running work</text>
+</svg>

@@ -1,0 +1,791 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "project": "Cel-Shaded Arcade Boat Racer",
+    "version": "0.1.0-draft",
+    "date": "2026-08-02",
+    "owner": "User",
+    "releaseTier": "shippable-feeling browser game",
+    "executionMode": "swarm",
+    "source": {
+      "path": "assets/fixtures/original-vyon-26-boat-racer.prompt.md",
+      "sha256": "779c1e2e64d629047e364fd42eadd162821bf9c32d0f40a7bbe87b9a98fc09ab",
+      "label": "Original Vyon-26 boat-racer prompt"
+    }
+  },
+  "mission": {
+    "statement": "Build a finished, beautiful, playable cel-shaded arcade boat racing game in Three.js on an infinite open ocean.",
+    "firstExperience": "A clean install and development launch drops the player directly into a four-boat race.",
+    "qualities": ["anime cel-shaded", "mechanically weighty", "visually energetic", "replayable"],
+    "releaseTier": "shippable-feeling browser game",
+    "excludedTier": "demo or prototype"
+  },
+  "factory": {
+    "targetRepo": "",
+    "archetype": "feature",
+    "area": "New Three.js game repository covering rendering, ocean simulation, race systems, AI, riders, HUD, camera, audio, and performance."
+  },
+  "constraints": [
+    {
+      "id": "C-001",
+      "text": "Use Vite, Three.js r1xx, TypeScript, and ES modules, runnable with npm install and npm run dev.",
+      "origin": "source",
+      "sourceRefs": ["source:L6"]
+    },
+    {
+      "id": "C-002",
+      "text": "Use no downloaded models, textures, HDRIs, or audio; generate every mesh, texture, and sound in code.",
+      "origin": "source",
+      "sourceRefs": ["source:L7"]
+    },
+    {
+      "id": "C-003",
+      "text": "Target Chrome on a MacBook M5 Pro at retina resolution and a solid 60fps.",
+      "origin": "source",
+      "sourceRefs": ["source:L8"]
+    },
+    {
+      "id": "C-004",
+      "text": "Use instancing, frustum culling, adaptive pixel ratio, and an LOD scheme.",
+      "origin": "source",
+      "sourceRefs": ["source:L8"]
+    },
+    {
+      "id": "C-005",
+      "text": "The complete game uses a coherent high-saturation palette across water, sky, hulls, riders, and UI.",
+      "origin": "source",
+      "sourceRefs": ["source:L20"]
+    }
+  ],
+  "antiGoals": [
+    {
+      "id": "AG-001",
+      "text": "No physically based visual treatment or real cubemap environment probes.",
+      "origin": "source",
+      "sourceRefs": ["source:L11", "source:L19"]
+    },
+    {
+      "id": "AG-002",
+      "text": "No externally downloaded binary art or audio assets.",
+      "origin": "source",
+      "sourceRefs": ["source:L7"]
+    },
+    {
+      "id": "AG-003",
+      "text": "No static decal-only foam, rigid riders, default-looking HTML HUD, or glass-like boat handling.",
+      "origin": "source",
+      "sourceRefs": ["source:L28", "source:L36", "source:L40", "source:L44"]
+    },
+    {
+      "id": "AG-004",
+      "text": "Add automated checks that reject PBR materials, runtime external asset fetches, and prohibited binary source assets.",
+      "origin": "proposed",
+      "sourceRefs": []
+    }
+  ],
+  "protectedCapabilities": [
+    {
+      "id": "PC-001",
+      "text": "Water banding, foam, wakes, spray, and sparkle remain a first-class visual system.",
+      "origin": "source",
+      "sourceRefs": ["source:L21-L29"],
+      "requirementIds": ["FR-007", "FR-008", "FR-009", "FR-010", "FR-011"]
+    },
+    {
+      "id": "PC-002",
+      "text": "Cel lighting and outline consistency remain visually dominant and free of doubled edges.",
+      "origin": "source",
+      "sourceRefs": ["source:L15-L20"],
+      "requirementIds": ["FR-001", "FR-002", "FR-003", "FR-004", "FR-005", "FR-006"]
+    },
+    {
+      "id": "PC-003",
+      "text": "Riders remain lively, physics-driven characters rather than rigid props.",
+      "origin": "source",
+      "sourceRefs": ["source:L40"],
+      "requirementIds": ["FR-017"]
+    },
+    {
+      "id": "PC-004",
+      "text": "Frame pacing on target hardware remains a release requirement.",
+      "origin": "source",
+      "sourceRefs": ["source:L8"],
+      "requirementIds": ["NFR-003"]
+    }
+  ],
+  "scopeCutOrder": [],
+  "decisions": [
+    {
+      "id": "D-001",
+      "question": "What workspace-relative target repository will contain the game?",
+      "options": ["Create a new project repository", "Use an existing game repository"],
+      "requiredEvidence": "Operator-selected path and repository readback",
+      "owner": "User",
+      "status": "unresolved"
+    },
+    {
+      "id": "D-002",
+      "question": "Will the stable rendering path use WebGLRenderer or WebGPURenderer?",
+      "options": ["WebGLRenderer", "WebGPURenderer"],
+      "requiredEvidence": "Compatibility spike covering post-processing, MRT, browser support, and screenshot harness",
+      "owner": "Rendering architecture",
+      "status": "unresolved"
+    },
+    {
+      "id": "D-003",
+      "question": "Which exact Three.js r1xx version will be pinned?",
+      "options": ["Current stable r1xx after compatibility spike"],
+      "requiredEvidence": "Pinned package version and clean-install smoke",
+      "owner": "Rendering architecture",
+      "status": "unresolved"
+    },
+    {
+      "id": "D-004",
+      "question": "What bounded stopping rule replaces the unbounded critic loop?",
+      "options": ["No critical/high defects plus user-approved deferrals", "Fixed pass budget followed by user escalation"],
+      "requiredEvidence": "User-approved severity and iteration policy",
+      "owner": "User",
+      "status": "unresolved"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "SC-001",
+      "name": "Wave field",
+      "canonicalLocation": "src/ocean/waveField.ts",
+      "consumers": ["water shader", "buoyancy", "course ribbon", "foam", "AI"],
+      "owner": "water system",
+      "invariants": ["CPU and GPU use one parameter table", "world units are meters", "time is simulation seconds"]
+    },
+    {
+      "id": "SC-002",
+      "name": "Course spline",
+      "canonicalLocation": "src/course/spline.ts",
+      "consumers": ["racing line", "AI", "checkpoints", "wrong-way detection", "minimap"],
+      "owner": "race system",
+      "invariants": ["one closed CatmullRomCurve3 definition", "normalized progress is 0 through 1"]
+    },
+    {
+      "id": "SC-003",
+      "name": "Palette",
+      "canonicalLocation": "src/art/palette.ts",
+      "consumers": ["shaders", "sky", "particles", "riders", "HUD"],
+      "owner": "art pipeline",
+      "invariants": ["one canonical color set", "all display surfaces consume it"]
+    },
+    {
+      "id": "SC-004",
+      "name": "Simulation clock and seeded randomness",
+      "canonicalLocation": "src/core/simulation.ts",
+      "consumers": ["physics", "AI", "spray", "sparkle", "capture harness"],
+      "owner": "core simulation",
+      "invariants": ["fixed timestep", "seeded stochastic behavior", "render interpolation never mutates simulation state"]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "FR-001",
+      "type": "functional",
+      "text": "Render 3-4 discrete diffuse lighting bands with nearest-filtered ramp sampling.",
+      "origin": "source",
+      "sourceRefs": ["source:L15"],
+      "verificationIds": ["V-004"]
+    },
+    {
+      "id": "FR-002",
+      "type": "functional",
+      "text": "Render view-distance-scaled inverted-hull outlines on boats, riders, buoys, and gates.",
+      "origin": "source",
+      "sourceRefs": ["source:L16"],
+      "verificationIds": ["V-004"]
+    },
+    {
+      "id": "FR-003",
+      "type": "functional",
+      "text": "Render screen-space interior edges from normal and depth discontinuities without doubling hull silhouettes.",
+      "origin": "source",
+      "sourceRefs": ["source:L17"],
+      "verificationIds": ["V-004"]
+    },
+    {
+      "id": "FR-004",
+      "type": "functional",
+      "text": "Apply Fresnel rim light to every rider and boat.",
+      "origin": "source",
+      "sourceRefs": ["source:L18"],
+      "verificationIds": ["V-004"]
+    },
+    {
+      "id": "FR-005",
+      "type": "functional",
+      "text": "Render hard-edged banded specular highlights using a ramp or matcap rather than a real environment probe.",
+      "origin": "source",
+      "sourceRefs": ["source:L19"],
+      "verificationIds": ["V-004", "V-011"]
+    },
+    {
+      "id": "FR-006",
+      "type": "functional",
+      "text": "Render a gradient sky dome, hard-rimmed drifting cel clouds, and a graphic sun flare using the canonical palette.",
+      "origin": "source",
+      "sourceRefs": ["source:L20"],
+      "verificationIds": ["V-004"]
+    },
+    {
+      "id": "FR-007",
+      "type": "functional",
+      "text": "Displace the ocean with 4-6 Gerstner waves combining swell and chop with crest sharpening.",
+      "origin": "source",
+      "sourceRefs": ["source:L25"],
+      "verificationIds": ["V-006", "V-005"]
+    },
+    {
+      "id": "FR-008",
+      "type": "functional",
+      "text": "Provide an infinite recentred or projected ocean without visible seams, repetition, or LOD popping.",
+      "origin": "source",
+      "sourceRefs": ["source:L26"],
+      "verificationIds": ["V-004", "V-005"]
+    },
+    {
+      "id": "FR-009",
+      "type": "functional",
+      "text": "Band water color by height and depth into hard deep, mid, and crest tones.",
+      "origin": "source",
+      "sourceRefs": ["source:L27"],
+      "verificationIds": ["V-004"]
+    },
+    {
+      "id": "FR-010",
+      "type": "functional",
+      "text": "Render crest foam, hull foam rings, persistent spreading wakes, and spray from hard landings and turns.",
+      "origin": "source",
+      "sourceRefs": ["source:L28"],
+      "verificationIds": ["V-004", "V-005"]
+    },
+    {
+      "id": "FR-011",
+      "type": "functional",
+      "text": "Render animated quantized sparkle highlights that read as anime glitter.",
+      "origin": "source",
+      "sourceRefs": ["source:L29"],
+      "verificationIds": ["V-004", "V-005"]
+    },
+    {
+      "id": "FR-012",
+      "type": "functional",
+      "text": "Run four-boat, three-lap races with countdown, finish line, times, placement, and results screen.",
+      "origin": "source",
+      "sourceRefs": ["source:L32"],
+      "verificationIds": ["V-007"]
+    },
+    {
+      "id": "FR-013",
+      "type": "functional",
+      "text": "Provide a closed wave-following spline course with racing ribbon, checkpoint gates, wrong-way detection, corner preview, straights, hairpin, sweeper, chicane, and cross-swell airtime section.",
+      "origin": "source",
+      "sourceRefs": ["source:L34"],
+      "verificationIds": ["V-007", "V-004"]
+    },
+    {
+      "id": "FR-014",
+      "type": "functional",
+      "text": "Simulate boat buoyancy at 5-6 hull points with throttle, speed-sensitive steering, drift boost, airtime, pitch, roll, and landing impacts.",
+      "origin": "source",
+      "sourceRefs": ["source:L36"],
+      "verificationIds": ["V-006", "V-009"]
+    },
+    {
+      "id": "FR-015",
+      "type": "functional",
+      "text": "Drive three AI racers along the spline with distinct personalities, mild rubber-banding, avoidance, and occasional mistakes.",
+      "origin": "source",
+      "sourceRefs": ["source:L38"],
+      "verificationIds": ["V-008", "V-007"]
+    },
+    {
+      "id": "FR-016",
+      "type": "functional",
+      "text": "Animate a procedural rider on every boat with turn lean, acceleration weight shift, working arms, landing crouch, wave-synced idle bob, and finish celebration.",
+      "origin": "source",
+      "sourceRefs": ["source:L40"],
+      "verificationIds": ["V-004", "V-005", "V-009"]
+    },
+    {
+      "id": "FR-017",
+      "type": "functional",
+      "text": "Make rider silhouettes and poses visibly respond to boat physics rather than remain rigid.",
+      "origin": "source",
+      "sourceRefs": ["source:L40"],
+      "verificationIds": ["V-004", "V-005", "V-009"]
+    },
+    {
+      "id": "FR-018",
+      "type": "functional",
+      "text": "Provide a spring-damped chase camera, speed FOV kick, capped landing shake, and cinematic countdown/results orbit.",
+      "origin": "source",
+      "sourceRefs": ["source:L42"],
+      "verificationIds": ["V-005"]
+    },
+    {
+      "id": "FR-019",
+      "type": "functional",
+      "text": "Display a cel-styled speedometer, lap, position, split times, boost, and minimap with all racers.",
+      "origin": "source",
+      "sourceRefs": ["source:L44"],
+      "verificationIds": ["V-004", "V-007"]
+    },
+    {
+      "id": "FR-020",
+      "type": "functional",
+      "text": "Synthesize engine, water rush, impact, and start-horn audio with Web Audio.",
+      "origin": "source",
+      "sourceRefs": ["source:L46"],
+      "verificationIds": ["V-010"]
+    },
+    {
+      "id": "NFR-001",
+      "type": "nonfunctional",
+      "text": "A clean npm install followed by npm run dev launches a playable race in Chrome.",
+      "origin": "source",
+      "sourceRefs": ["source:L6", "source:L57"],
+      "verificationIds": ["V-001", "V-007"]
+    },
+    {
+      "id": "NFR-002",
+      "type": "nonfunctional",
+      "text": "The repository contains and fetches no prohibited external art or audio assets.",
+      "origin": "source",
+      "sourceRefs": ["source:L7"],
+      "verificationIds": ["V-002"]
+    },
+    {
+      "id": "NFR-003",
+      "type": "nonfunctional",
+      "text": "The target MacBook M5 Pro sustains the agreed 60fps frame-pacing budget at retina resolution in the stress scenario.",
+      "origin": "source",
+      "sourceRefs": ["source:L8"],
+      "verificationIds": ["V-003"]
+    },
+    {
+      "id": "NFR-004",
+      "type": "nonfunctional",
+      "text": "Every important visual claim is backed by deterministic Playwright captures from stable camera states.",
+      "origin": "source",
+      "sourceRefs": ["source:L50"],
+      "verificationIds": ["V-004"]
+    },
+    {
+      "id": "NFR-005",
+      "type": "nonfunctional",
+      "text": "Temporal visual systems are verified with time-separated deterministic frames or clips, not screenshots alone.",
+      "origin": "proposed",
+      "sourceRefs": [],
+      "verificationIds": ["V-005"]
+    },
+    {
+      "id": "NFR-006",
+      "type": "nonfunctional",
+      "text": "Simulation uses a fixed timestep and seeded randomness so critic evidence can be reproduced.",
+      "origin": "proposed",
+      "sourceRefs": [],
+      "verificationIds": ["V-006", "V-008"]
+    },
+    {
+      "id": "NFR-007",
+      "type": "nonfunctional",
+      "text": "Every milestone remains runnable and records honest subsystem quality and named defects.",
+      "origin": "source",
+      "sourceRefs": ["source:L53-L54"],
+      "verificationIds": ["V-007"]
+    },
+    {
+      "id": "NFR-008",
+      "type": "nonfunctional",
+      "text": "The repository includes a README, clean architecture, and readable shader code explaining tunable thresholds.",
+      "origin": "source",
+      "sourceRefs": ["source:L57"],
+      "verificationIds": ["V-001"]
+    },
+    {
+      "id": "NFR-009",
+      "type": "nonfunctional",
+      "text": "Automated checks reject PBR materials, external runtime fetches, and prohibited binary source assets.",
+      "origin": "proposed",
+      "sourceRefs": [],
+      "verificationIds": ["V-002", "V-011"]
+    }
+  ],
+  "verifications": [
+    {
+      "id": "V-001",
+      "type": "static",
+      "method": "Run dependency install, TypeScript no-emit check, production build, and README command smoke",
+      "threshold": "All commands exit zero from a clean checkout",
+      "authority": "automated"
+    },
+    {
+      "id": "V-002",
+      "type": "static",
+      "method": "Scan source and runtime requests for prohibited assets and external origins",
+      "threshold": "Zero prohibited files or requests",
+      "authority": "automated"
+    },
+    {
+      "id": "V-003",
+      "type": "performance",
+      "method": "Run the four-boat spray-active stress scene on the target MacBook M5 Pro",
+      "threshold": "User-approved 60fps frame-pacing budget with reported p95, p99, and dropped-frame rate",
+      "authority": "target-hardware"
+    },
+    {
+      "id": "V-004",
+      "type": "visual",
+      "method": "Capture the six canonical scenarios plus near/far outline variants with deterministic Playwright state",
+      "threshold": "No critical or high rubric defects; lower-severity deferrals require user approval",
+      "authority": "user"
+    },
+    {
+      "id": "V-005",
+      "type": "temporal",
+      "method": "Capture deterministic clips or time-separated frames for waves, foam, wake, spray, riders, and camera",
+      "threshold": "Motion remains continuous, non-repeating, attached, and physically legible",
+      "authority": "user"
+    },
+    {
+      "id": "V-006",
+      "type": "contract",
+      "method": "Compare CPU wave sampling and GPU displacement across seeded positions and times; replay physics inputs",
+      "threshold": "Wave agreement within stated numeric tolerance and matching simulation state hashes",
+      "authority": "automated"
+    },
+    {
+      "id": "V-007",
+      "type": "integration",
+      "method": "Run deterministic complete-race journeys covering countdown, checkpoints, laps, wrong-way, finish, restart, and HUD",
+      "threshold": "All race-state assertions pass without browser-console errors",
+      "authority": "automated"
+    },
+    {
+      "id": "V-008",
+      "type": "integration",
+      "method": "Replay identical seeds for each AI personality and inspect avoidance, mistakes, and race completion",
+      "threshold": "State hashes match and every racer completes legally without deadlock",
+      "authority": "automated"
+    },
+    {
+      "id": "V-009",
+      "type": "human",
+      "method": "Play the handling and rider scenarios on target hardware",
+      "threshold": "User confirms weight, control response, landing impact, and rider load read clearly",
+      "authority": "user"
+    },
+    {
+      "id": "V-010",
+      "type": "integration",
+      "method": "Exercise audio unlock and synthesized sound parameter changes during a race",
+      "threshold": "All required sounds trigger after user gesture and track their driving inputs",
+      "authority": "agent"
+    },
+    {
+      "id": "V-011",
+      "type": "static",
+      "method": "Scan material construction and rendering configuration",
+      "threshold": "No PBR material or real cubemap environment-probe path exists",
+      "authority": "automated"
+    }
+  ],
+  "canonicalScenarios": [
+    {
+      "id": "CS-001",
+      "name": "Boat cresting a swell",
+      "setup": "Three-quarter rear camera with sun behind at fixed seed and tick",
+      "action": "Capture near and far variants",
+      "qualities": ["outline width", "rim light", "crest foam"],
+      "evidence": "Retina screenshots"
+    },
+    {
+      "id": "CS-002",
+      "name": "Open-water temporal study",
+      "setup": "Water-level camera with no boat",
+      "action": "Capture a short clip and frames four seconds apart",
+      "qualities": ["banding", "foam", "sparkle", "repetition", "seams"],
+      "evidence": "Clip and paired frames"
+    },
+    {
+      "id": "CS-003",
+      "name": "Hairpin drift",
+      "setup": "Player at the hairpin apex with boost-ready drift",
+      "action": "Execute a hard turn and landing",
+      "qualities": ["wake attachment", "spray", "handling", "camera shake"],
+      "evidence": "Input replay and clip"
+    },
+    {
+      "id": "CS-004",
+      "name": "Four-boat starting grid",
+      "setup": "All racers packed before the start horn",
+      "action": "Capture near and far variants",
+      "qualities": ["silhouette separation", "outlines", "palette"],
+      "evidence": "Retina screenshots"
+    },
+    {
+      "id": "CS-005",
+      "name": "Rider under turning load",
+      "setup": "Close camera during a fast turn and subsequent landing",
+      "action": "Compare against straight-line pose",
+      "qualities": ["lean", "hands", "weight shift", "crouch"],
+      "evidence": "Paired frames and clip"
+    },
+    {
+      "id": "CS-006",
+      "name": "Full race HUD",
+      "setup": "All racers active during lap two",
+      "action": "Capture at speed",
+      "qualities": ["speed", "lap", "position", "splits", "boost", "minimap"],
+      "evidence": "Screenshot and DOM assertions"
+    }
+  ],
+  "acceptanceCriteria": [
+    {
+      "id": "AC-001",
+      "text": "A clean install and npm run dev launches a playable four-boat race.",
+      "origin": "source",
+      "sourceRefs": ["source:L6", "source:L32", "source:L57"],
+      "requirementIds": ["NFR-001", "FR-012"],
+      "verificationIds": ["V-001", "V-007"],
+      "authority": "automated"
+    },
+    {
+      "id": "AC-002",
+      "text": "The art and audio pipeline contains no prohibited external assets or PBR rendering path.",
+      "origin": "source",
+      "sourceRefs": ["source:L7", "source:L11", "source:L19"],
+      "requirementIds": ["NFR-002", "NFR-009", "FR-005"],
+      "verificationIds": ["V-002", "V-011"],
+      "authority": "automated"
+    },
+    {
+      "id": "AC-003",
+      "text": "Canonical visual evidence shows deliberate cel bands, consistent outlines, interior edges without doubling, rim light, banded specular, and a coherent sky palette.",
+      "origin": "source",
+      "sourceRefs": ["source:L15-L20", "source:L50-L51"],
+      "requirementIds": ["FR-001", "FR-002", "FR-003", "FR-004", "FR-005", "FR-006", "NFR-004"],
+      "verificationIds": ["V-004"],
+      "authority": "user"
+    },
+    {
+      "id": "AC-004",
+      "text": "Water evidence shows Gerstner motion, infinite coverage, hard color bands, all four foam components, and quantized sparkle without visible repetition or seams.",
+      "origin": "source",
+      "sourceRefs": ["source:L21-L29"],
+      "requirementIds": ["FR-007", "FR-008", "FR-009", "FR-010", "FR-011", "NFR-005"],
+      "verificationIds": ["V-004", "V-005", "V-006"],
+      "authority": "user"
+    },
+    {
+      "id": "AC-005",
+      "text": "The course and race lifecycle correctly enforce checkpoints, laps, wrong-way state, finish results, and HUD state for all four racers.",
+      "origin": "source",
+      "sourceRefs": ["source:L32-L34", "source:L44"],
+      "requirementIds": ["FR-012", "FR-013", "FR-019"],
+      "verificationIds": ["V-007"],
+      "authority": "automated"
+    },
+    {
+      "id": "AC-006",
+      "text": "The player boat visibly responds to the shared wave field and the user accepts its throttle, steering, drift, airtime, and landing feel.",
+      "origin": "source",
+      "sourceRefs": ["source:L36"],
+      "requirementIds": ["FR-014", "NFR-006"],
+      "verificationIds": ["V-006", "V-009"],
+      "authority": "user"
+    },
+    {
+      "id": "AC-007",
+      "text": "All AI personalities complete deterministic races with avoidance, bounded rubber-banding, and seeded mistakes.",
+      "origin": "source",
+      "sourceRefs": ["source:L38"],
+      "requirementIds": ["FR-015"],
+      "verificationIds": ["V-008", "V-007"],
+      "authority": "automated"
+    },
+    {
+      "id": "AC-008",
+      "text": "Every rider visibly leans, shifts, works controls, crouches, bobs, and celebrates in response to simulation state.",
+      "origin": "source",
+      "sourceRefs": ["source:L40"],
+      "requirementIds": ["FR-016", "FR-017"],
+      "verificationIds": ["V-004", "V-005", "V-009"],
+      "authority": "user"
+    },
+    {
+      "id": "AC-009",
+      "text": "Camera, HUD, and synthesized audio provide all named race feedback without obscuring play.",
+      "origin": "source",
+      "sourceRefs": ["source:L42-L46"],
+      "requirementIds": ["FR-018", "FR-019", "FR-020"],
+      "verificationIds": ["V-004", "V-005", "V-007", "V-010"],
+      "authority": "user"
+    },
+    {
+      "id": "AC-010",
+      "text": "Every milestone remains runnable and preserves screenshots, named defects, and honest quality status.",
+      "origin": "source",
+      "sourceRefs": ["source:L50-L54"],
+      "requirementIds": ["NFR-004", "NFR-005", "NFR-007"],
+      "verificationIds": ["V-004", "V-005", "V-007"],
+      "authority": "user"
+    },
+    {
+      "id": "AC-011",
+      "text": "The target MacBook M5 Pro passes the approved frame-pacing budget in the canonical stress scene.",
+      "origin": "source",
+      "sourceRefs": ["source:L8"],
+      "requirementIds": ["NFR-003"],
+      "verificationIds": ["V-003"],
+      "authority": "target-hardware"
+    },
+    {
+      "id": "AC-012",
+      "text": "Documentation, clean architecture, shared contracts, and deterministic validation remain green at completion.",
+      "origin": "proposed",
+      "sourceRefs": [],
+      "requirementIds": ["NFR-006", "NFR-008", "NFR-009"],
+      "verificationIds": ["V-001", "V-002", "V-006", "V-011"],
+      "authority": "automated"
+    }
+  ],
+  "milestones": [
+    {
+      "id": "M0",
+      "name": "Ocean and camera",
+      "dependencies": [],
+      "ownedPaths": ["src/ocean/", "src/camera/"],
+      "exitCriteria": ["AC-004", "AC-010"],
+      "approval": "user",
+      "owner": "water and camera"
+    },
+    {
+      "id": "M1",
+      "name": "Player boat and buoyancy",
+      "dependencies": ["M0"],
+      "ownedPaths": ["src/boat/", "src/physics/"],
+      "exitCriteria": ["AC-006", "AC-010"],
+      "approval": "user",
+      "owner": "boat physics"
+    },
+    {
+      "id": "M2",
+      "name": "Cel pipeline and outlines",
+      "dependencies": ["M1"],
+      "ownedPaths": ["src/art/", "src/rendering/"],
+      "exitCriteria": ["AC-002", "AC-003", "AC-010"],
+      "approval": "user",
+      "owner": "art pipeline"
+    },
+    {
+      "id": "M3",
+      "name": "Course, laps, and checkpoints",
+      "dependencies": ["M2"],
+      "ownedPaths": ["src/course/", "src/race/"],
+      "exitCriteria": ["AC-005", "AC-010"],
+      "approval": "user",
+      "owner": "race system"
+    },
+    {
+      "id": "M4",
+      "name": "AI racers",
+      "dependencies": ["M3"],
+      "ownedPaths": ["src/ai/"],
+      "exitCriteria": ["AC-007", "AC-010"],
+      "approval": "user",
+      "owner": "AI system"
+    },
+    {
+      "id": "M5",
+      "name": "Riders and animation",
+      "dependencies": ["M4"],
+      "ownedPaths": ["src/riders/"],
+      "exitCriteria": ["AC-008", "AC-010"],
+      "approval": "user",
+      "owner": "character animation"
+    },
+    {
+      "id": "M6",
+      "name": "HUD and audio",
+      "dependencies": ["M5"],
+      "ownedPaths": ["src/ui/", "src/audio/"],
+      "exitCriteria": ["AC-009", "AC-010"],
+      "approval": "user",
+      "owner": "presentation systems"
+    },
+    {
+      "id": "M7",
+      "name": "Performance and polish",
+      "dependencies": ["M6"],
+      "ownedPaths": ["tests/", "evaluations/"],
+      "exitCriteria": ["AC-001", "AC-011", "AC-012"],
+      "approval": "user",
+      "owner": "performance and release"
+    }
+  ],
+  "humanCriteria": [
+    {
+      "id": "HC-001",
+      "question": "Does the water read as energetic anime art rather than a tiled or smoothly shaded surface?",
+      "scenarioIds": ["CS-001", "CS-002", "CS-003"],
+      "approver": "User"
+    },
+    {
+      "id": "HC-002",
+      "question": "Does the boat feel weighty and responsive without reading as motion over glass?",
+      "scenarioIds": ["CS-003"],
+      "approver": "User"
+    },
+    {
+      "id": "HC-003",
+      "question": "Do riders visibly carry turning, acceleration, wave, and landing loads?",
+      "scenarioIds": ["CS-005"],
+      "approver": "User"
+    },
+    {
+      "id": "HC-004",
+      "question": "Do sky, water, boats, riders, particles, and HUD read as one deliberate palette?",
+      "scenarioIds": ["CS-004", "CS-006"],
+      "approver": "User"
+    }
+  ],
+  "deliverables": [
+    "Runnable Vite and Three.js repository",
+    "README with installation, controls, architecture, and verification instructions",
+    "Readable shader and simulation source",
+    "Deterministic Playwright capture harness",
+    "Milestone status artifact and retained canonical evidence"
+  ],
+  "outOfScope": [
+    "Downloaded or licensed external art and audio assets",
+    "Photorealistic or PBR visual treatment",
+    "Networked multiplayer",
+    "Native desktop or console builds"
+  ],
+  "unresolved": [
+    {
+      "id": "U-001",
+      "question": "Confirm the target repository path before factory export.",
+      "blocking": true,
+      "owner": "User"
+    },
+    {
+      "id": "U-002",
+      "question": "Resolve renderer and exact Three.js version after a compatibility spike.",
+      "blocking": true,
+      "owner": "Rendering architecture"
+    },
+    {
+      "id": "U-003",
+      "question": "Approve a bounded critic-loop stopping rule and any scope-cut order.",
+      "blocking": true,
+      "owner": "User"
+    }
+  ]
+}

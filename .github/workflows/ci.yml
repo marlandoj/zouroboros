@@ -1,0 +1,146 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  governance-docs:
+    name: governance-docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      # actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      # oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: 1.3.12
+
+      # Structural check only: exactly 10 CONSTITUTION.md articles and the
+      # ZOUROBOROS.md identity statement are present. This is the in-repo
+      # subset of Skills/zouroboros-governance/scripts/constitution-gate.ts
+      # verify-docs — that script also diffs against a workspace-local
+      # mirror at /home/workspace/ which only exists in the live Zo
+      # Computer environment, not in a CI checkout.
+      - name: Verify governance documents
+        run: bun scripts/ci/verify-governance-docs.ts
+
+  trace-rebuild-proof:
+    name: trace-rebuild-proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      # oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: 1.3.12
+
+      - name: Prove factory trace joins downstream outcome credit
+        run: bun test Skills/consensus-gate/scripts/trace-credit.integration.test.ts
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      # oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          # Pinned to avoid flakes from unvetted bun releases.
+          # 1.3.13 has a parallel module-loader race that mis-reports
+          # "Export named 'X' not found" during test parse. 1.3.12 is stable.
+          # Upstream: https://github.com/oven-sh/bun/issues/29576
+          # Bump intentionally after the upstream fix lands and we re-verify.
+          bun-version: 1.3.12
+
+      # pnpm/action-setup@v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+
+      # actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ── Build (core must come first — other packages depend on it) ─────────
+
+      - name: Build core
+        run: pnpm --filter zouroboros-core build
+
+      - name: Build memory
+        run: pnpm --filter zouroboros-memory build
+
+      - name: Build workflow
+        run: pnpm --filter zouroboros-workflow build
+
+      - name: Build selfheal
+        run: pnpm --filter zouroboros-selfheal build
+
+      - name: Build swarm
+        run: pnpm --filter zouroboros-swarm build
+
+      # ── Typecheck ─────────────────────────────────────────────────────────────
+
+      - name: Typecheck core
+        run: pnpm --filter zouroboros-core typecheck
+
+      - name: Typecheck memory
+        run: pnpm --filter zouroboros-memory typecheck
+
+      - name: Typecheck selfheal
+        run: pnpm --filter zouroboros-selfheal typecheck
+
+      - name: Typecheck swarm
+        run: pnpm --filter zouroboros-swarm typecheck
+
+      # ── Consistency checks ────────────────────────────────────────────────────
+
+      # Laid-down skills carry a bare-box guard copied from zouroboros-core/adapters
+      # (they can't import core at runtime — ZOU-466 self-containment). Fail if any
+      # stamped copy drifts from the canonical source (ZOU-480).
+      - name: Verify skill guards single-sourced from core
+        run: bun scripts/stamp-skill-guards.ts
+
+      # ── Tests ─────────────────────────────────────────────────────────────────
+
+      - name: Test core (with coverage)
+        run: pnpm --filter zouroboros-core test:coverage
+
+      - name: Test memory
+        run: pnpm --filter zouroboros-memory test
+
+      - name: Test swarm
+        run: pnpm --filter zouroboros-swarm test
+
+      - name: Test selfheal
+        run: pnpm --filter zouroboros-selfheal test
+
+      # ── Artifacts ────────────────────────────────────────────────────────────
+
+      - name: Upload core coverage
+        if: always()
+        # actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: coverage-core
+          path: packages/core/coverage/
+          retention-days: 7

@@ -1,0 +1,30 @@
+[
+  {
+    "provider": "anthropic",
+    "label": "Anthropic Usage Policy",
+    "note": "AUP is curl-reachable (200). Deterministic fetch works.",
+    "urls": [
+      "https://www.anthropic.com/legal/aup"
+    ],
+    "classifierKeywords": [
+      "content policy", "usage policy", "acceptable use",
+      "harmful content", "prohibited", "classifier",
+      "safety filter", "content filter", "refuse",
+      "biological", "chemical", "weapons", "cybersecurity"
+    ]
+  },
+  {
+    "provider": "openai",
+    "label": "OpenAI Usage Policy",
+    "note": "Cloudflare-protected: naive fetch returns 403. Script marks 'error'; the scheduled agent reads it via browsing and compares keywords manually.",
+    "urls": [
+      "https://openai.com/policies/usage-policies/"
+    ],
+    "classifierKeywords": [
+      "content policy", "usage policy", "acceptable use",
+      "prohibited", "classifier", "moderation",
+      "safety filter", "content filter", "refuse",
+      "biological", "chemical", "weapons", "cybersecurity"
+    ]
+  }
+]

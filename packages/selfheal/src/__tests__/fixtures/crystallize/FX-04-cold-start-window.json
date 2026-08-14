@@ -1,0 +1,26 @@
+{
+  "id": "FX-04",
+  "name": "cold-start-window",
+  "asserts": "weighted score 2.2 within 30-day cold-start window → 1 candidate (lowered threshold 2.0)",
+  "phase": "PR1",
+  "scope": "scoring",
+  "input": {
+    "coldStart": true,
+    "procedures": [
+      { "kind": "procedure", "id": "proc-x", "name": "tag-release", "steps": [], "success_count": 2, "failure_count": 0 },
+      { "kind": "procedure", "id": "proc-y", "name": "tag-release", "steps": [], "success_count": 1, "failure_count": 0 }
+    ],
+    "episodes": [
+      { "kind": "episode", "id": "ep-x", "summary": "tag-release success", "outcome": "success", "happened_at": 1750000000 }
+    ],
+    "skillExecutions": []
+  },
+  "expected": {
+    "candidateCount": 1,
+    "topCandidate": {
+      "score": 2.0,
+      "source_kind": "procedure",
+      "slug_suggestion": "tag-release"
+    }
+  }
+}

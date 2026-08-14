@@ -1,0 +1,13 @@
+{
+  "benchmark": "ZouroBench",
+  "timestamp": "2026-06-15T00:00:00.000Z",
+  "dataset": "data/zourobench/seed.json",
+  "total_questions": 54,
+  "scores": {
+    "overall_accuracy": 98.1,
+    "by_category": {
+      "procedural-recall": { "correct": 17, "total": 18, "accuracy": 94.4 }
+    }
+  },
+  "questions": []
+}

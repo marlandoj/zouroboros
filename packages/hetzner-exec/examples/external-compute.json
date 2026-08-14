@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "server_type": "ccx33",
+  "image": "ubuntu-24.04",
+  "location": "hel1",
+  "ttl_minutes": 60,
+  "max_cost_usd": 0.5,
+  "commands": [
+    "bun install --frozen-lockfile",
+    "bunx tsc --noEmit",
+    "bun test",
+    "bun run build"
+  ],
+  "artifacts": [
+    "dist"
+  ],
+  "excludes": [
+    ".playwright"
+  ]
+}

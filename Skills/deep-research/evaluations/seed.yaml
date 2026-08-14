@@ -1,0 +1,127 @@
+# Deep Research Pipeline — Seed Spec (v1)
+# Locked 2026-05-31. Substrate: standalone conductor (decision #4), not swarm dispatch.
+
+goal: >
+  A mechanical, file-based, resumable conductor that runs a deep-research DAG over
+  capabilities already present in the Zouroboros stack: peer-reviewed lit (Consensus),
+  open web (web_research), and the internal Qdrant corpus — fused into a single
+  provenance-tracked synthesis and emitted as a markdown report.
+
+scope_decisions:
+  "1_scope": both internal-corpus AND external (web + peer-reviewed lit) in v1
+  "2_deliverable": report.md + memory persist (NotebookLM audio deferred to v2)
+  "3_consensus_role": primary = gather source; claim-check = best-effort (free tier caps 3 results/search)
+  "4_substrate": standalone Skills/deep-research conductor; parallel gather via /zo/ask children; deterministic stages local
+  "5_trigger": CLI-first (bun research.ts "<query>"); thin natural-language shim via this chat
+
+deferred_to_v2:
+  - run-scoped Qdrant collection that compounds across runs   # SHIPPED v2 2026-05-31 (gather:corpus + compound stage)
+  - RAPTOR query-time traversal for progressive summarization # SHIPPED v2 2026-05-31 (gather:raptor, level>=1 nodes)
+  - GraphRAG community summaries (Louvain clusters exist)     # SHIPPED v2 2026-05-31 (gather:community, shared-facts.db)
+  - NotebookLM audio/video export (nlm.py generate-all)       # REDIRECTED + SHIPPED v2 2026-05-31 (--audio): Google NotebookLM dropped (dead cookie auth) → OpenAI script + ElevenLabs/OpenAI TTS + ffmpeg → report.mp3
+
+architecture:
+  conductor: /home/workspace/Skills/deep-research/scripts/research.ts  # Bun, self-contained, zero cross-skill imports
+  credentials:
+    OPENAI_API_KEY: self-heal from /root/.zo_secrets at startup (env -i landmine)
+    QDRANT_URL / QDRANT_API_KEY: from env
+    ZO_CLIENT_IDENTITY_TOKEN (agent) / ZO_API_KEY (cli): for /zo/ask gather children
+  llm: gpt-4o-mini via direct OpenAI fetch (no model-client coupling — minimize failure modes)
+  run_dir: /home/workspace/Reports/deep-research/<slug>-<YYYY-MM-DD>/
+  idempotent: each stage writes NN-*.json|md; re-run skips completed stages unless --force
+  fail_loud: hard stage failure -> non-zero exit + failing stage name; partial artifacts preserved
+
+stages:
+  - id: plan
+    out: 00-plan.json   # {query, subQuestions[3-5], domain: scientific|technical|general}
+    how: LLM decomposes query into sub-questions; flags scientific/medical domain to weight Consensus
+  - id: gather
+    depends_on: [plan]
+    parallel: true
+    out: 01-gather.json # {sources:[{id,type:consensus|web|internal,title,url,text,score,subQ}]}
+    how:
+      consensus: /zo/ask child calls mcp__consensus__search per sub-question -> papers JSON
+      web: /zo/ask child calls web_research per sub-question -> web JSON
+      internal: local Qdrant hybrid (embed query -> search configured collections) -> facts
+    dedupe: by normalized url|title
+  - id: fuse
+    depends_on: [gather]
+    out: 02-fused.json  # ranked + deduped + provenance-tagged, grouped by subQ
+  - id: synthesize
+    depends_on: [fuse]
+    out: [03-synthesis.md, 03-claims.json]  # neutral analytical tone (NOT Mimir voice); inline [S#] markers
+  - id: claim-check
+    depends_on: [synthesize]
+    out: 04-validated.json  # best-effort Consensus check on top scientific claims; free-tier 3-result cap noted
+  - id: report
+    depends_on: [claim-check]
+    out: report.md  # exec summary, findings-by-subQ w/ citations, bibliography, validation notes, gaps
+  - id: persist
+    depends_on: [report]
+    soft_fail: true  # warn-not-fail if memory CLI path drifts
+    how: store research episode + key facts via memory.ts (absolute path, guarded)
+
+acceptance_criteria:
+  AC1: 'bun research.ts "<query>"' runs end-to-end and produces report.md
+  AC2: report contains >=1 Consensus citation AND internal-corpus references when corpus has relevant hits
+  AC3: every synthesized claim cites a source id present in the bibliography (no orphan [S#] markers)
+  AC4: re-run resumes from last completed stage; --force re-runs all
+  AC5: hard stage failure exits non-zero with the failing stage name; partial artifacts preserved
+  AC6: tsc --noEmit clean on research.ts
+  AC7: live test run proves Consensus + web gather invoke real tools and return real data (reachability)
+
+exit_conditions:
+  - all 7 ACs pass on a live test query
+  - gap audit (reachability, data-prereqs, cross-boundary, eval-prod parity) clean
+
+postflight:  # 2026-05-31 — all 7 ACs PASS, gap audit clean
+  live_query: "Does creatine supplementation improve cognitive performance in healthy adults?"
+  result: 87 sources (consensus 15 + web 27 + internal 45), 5 cited claims, 0 orphan [S#], report 16.5KB
+  ac_status: {AC1: pass, AC2: pass, AC3: pass, AC4: pass (re-run cached 0.28s), AC5: pass (exit 1 names stage), AC6: pass (tsc clean), AC7: pass (real consensus.app papers + real web URLs)}
+  reachability_resolution: >
+    AC7 (the open risk) RESOLVED. /zo/ask gather children DO reach mcp__consensus__search + web
+    research, but via deferred-tool ToolSearch loading. Mechanism changed from "child returns JSON
+    inline" to file-sentinel self-dispatch: Bearer ZO_API_KEY (self, same filesystem), child writes
+    results to a file in the run dir, conductor polls + reads it. Two landmines fixed:
+    (1) sending model_name in the /zo/ask body blanks the response — never send it (BYOK Haiku
+    gather-model idea dropped); (2) long tool-using turns return empty synchronous `output`, so poll
+    for the result file rather than trusting the HTTP body.
+  gap_audit: {reachability: clean, data_prereqs: clean (45 Qdrant hits, 1536d match), cross_boundary: clean (all 4 creds self-heal under env -i), eval_prod_parity: clean (documented CLI invocation)}
+
+v2_postflight:  # 2026-05-31 — ALL 4 deferred items SHIPPED + live-verified (4th redirected off NotebookLM)
+  shipped: [compounding-corpus, raptor-traversal, graphrag-communities, audio-overview]
+  still_deferred: []  # NotebookLM audio export redirected onto a Google-independent path (see audio_overview below)
+  tsc: clean (es2022 target — downlevelIteration noise only under default target)
+  new_surfaces:  # all auto-skip when their data source is absent → v1 behavior unchanged on bare env
+    gather_raptor:    pulls level>=1 cluster/corpus summary nodes from zouroboros-research (28 such nodes); gather_internal now skips level>=1 to avoid double-count
+    gather_community: embeds + cosine-ranks community.summary rows from shared-facts.db (844 rows; threshold 0.2, top 2/subQ)
+    gather_corpus:    searches deep-research-corpus for prior-run external sources
+    stage_compound:   soft-fail; upserts this run's consensus+web sources into deep-research-corpus; idempotent UUID5 ids keyed on url|title; --no-compound to disable
+  live_proof:
+    runB_internal_only: "Zouroboros memory system…" → 41 internal sources incl. 5 RAPTOR (L1/L2) + 4 GraphRAG communities + 32 leaves
+    runA_full_external: "cognitive effects of omega-3…" → 101 sources (21 consensus + 27 web + 53 internal); compound created collection + upserted 48 external sources (corpus count=48)
+    runC_compound_read: "omega-3 + memory/attention" (--no-external, related query) → gather_corpus surfaced 9 prior-run sources (real consensus.app + web URLs from runA) under "Prior research (compounding corpus)", 0 orphans → cross-run compounding CONFIRMED
+  caveat: gather_internal default COLLECTIONS still includes zouroboros-research, so leaf chunks + RAPTOR summaries both come from it (no dup — level>=1 skip in gather_internal, gather_raptor owns summaries)
+
+audio_overview_postflight:  # 2026-05-31 — 4th deferred item REDIRECTED off Google NotebookLM and SHIPPED
+  decision: >
+    Google NotebookLM audio/video export was deferred because its cookie auth is dead (DBSC). Rather
+    than wait on a reauth path, the audio-overview deliverable is redirected onto a durable,
+    Google-independent stack already credentialed in Zo secrets — no new keys. There is no
+    open-source NotebookLM clone installed; the equivalent outcome (a two-host "deep dive" MP3) is
+    produced mechanically from the synthesis we already generate.
+  why_not_podcast_gen_py: >
+    notebooklm-skill/scripts/podcast-gen.py is Gemini-locked (hard sys.exit(1) without GEMINI_API_KEY,
+    which is ABSENT from /root/.zo_secrets) and uses voice NAMES as ElevenLabs voice_id (would 4xx).
+    So the conductor does NOT shell out to it — it reuses its own OpenAI llm() for the script and
+    canonical ElevenLabs voice IDs, staying self-contained (zero cross-skill imports).
+  stage_audio:  # opt-in via --audio; off by default (TTS costs credits + time); fail-loud; idempotent
+    script:  gpt-4o-mini (existing llm()) turns 03-synthesis.md (markers stripped) → two-host HOST/GUEST JSON → 06-podcast.json
+    voice:   ElevenLabs eleven_flash_v2_5 (stability 0.85 / style 0 — clean) per turn → _audio/seg-NNN.mp3; auto per-segment fallback to OpenAI tts-1 (nova/onyx) if EL unkeyed or fails mid-run
+    stitch:  ffmpeg concat-demuxer -c copy → report.mp3
+    flags:   --audio · --audio-minutes N (default 9) · --audio-tts auto|elevenlabs|openai · --audio-voices HOST,GUEST
+    creds:   ELEVENLABS_API_KEY via targeted secretValue() (selfHeal short-circuits when OPENAI+QDRANT already in env, so EL key isn't auto-loaded); OPENAI_API_KEY reused
+  live_proof:  # 2026-05-31, cached creatine run + --audio --audio-minutes 3
+    result: report.mp3 = valid MP3 (ID3v2.4, MPEG layer III, 128kbps 44.1kHz mono), 177.6s (~3 min, on target), 21 dialogue turns, backend=elevenlabs
+    idempotency: re-run prints "audio: cached (report.mp3 exists)" and skips (segment-level too); --force re-renders
+    tsc: clean (es2022 target)

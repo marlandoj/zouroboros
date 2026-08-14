@@ -1,0 +1,253 @@
+{
+  "benchmark": "ZouroBench",
+  "timestamp": "2026-06-21T01:30:11.151Z",
+  "dataset": "data/zourobench/seed-adversarial.json",
+  "total_questions": 7,
+  "answered": 7,
+  "scores": {
+    "overall_accuracy": 71.4,
+    "by_category": {
+      "procedural-recall": {
+        "correct": 4,
+        "total": 5,
+        "accuracy": 80
+      },
+      "swarm-context-propagation": {
+        "correct": 1,
+        "total": 2,
+        "accuracy": 50
+      }
+    },
+    "by_type": {
+      "procedural-recall:step-recall": {
+        "correct": 1,
+        "total": 1,
+        "accuracy": 100
+      },
+      "procedural-recall:step-detail": {
+        "correct": 1,
+        "total": 2,
+        "accuracy": 50
+      },
+      "procedural-recall:evolution-tracking": {
+        "correct": 1,
+        "total": 1,
+        "accuracy": 100
+      },
+      "procedural-recall:aggregate-query": {
+        "correct": 1,
+        "total": 1,
+        "accuracy": 100
+      },
+      "swarm-context-propagation:dependency-context": {
+        "correct": 1,
+        "total": 2,
+        "accuracy": 50
+      }
+    }
+  },
+  "latency": {
+    "avg_retrieval_ms": 257,
+    "avg_answer_ms": 1030,
+    "p95_retrieval_ms": 373
+  },
+  "consensus_gate": {
+    "enabled": false
+  },
+  "questions": [
+    {
+      "question_id": "adv-pr-01",
+      "question_type": "step-recall",
+      "category": "procedural-recall",
+      "question": "Which steps in deploy-production v2 do NOT use the hermes executor? List the step numbers and what each does.",
+      "ground_truth": "Steps 1, 2, 3, and 6 do NOT use hermes; they use claude-code. Step 1 is tsc --noEmit, Step 2 is the bun test suite, Step 3 is integration tests against staging DB, and Step 6 is merging staging to main via PR. Hermes is used only on steps 4, 5, and 7.",
+      "hypothesis": "In the procedure `deploy-production v2`, the steps that do NOT use the hermes executor are:\n\n- Step 1: Run tsc --noEmit to verify TypeScript compiles (120s)\n- Step 2: Run full test suite with bun test (300s)\n- Step 3: Run integration tests against staging DB (300s)\n- Step 6: Merge staging to main via PR (300s) \n- Step 7: Monitor production logs for 10 minutes post-deploy (900s)",
+      "retrieved_context": [
+        "[Episode ep-008] Incident resolved: Hermes agent model healer switched 3 agents from claude-3-opus to claude-sonnet-4-20250514 after 402 credit exhaustion [outcome: resolved] [duration: 120000ms] [4 days ago — most recent = lowest days ago]",
+        "[Episode ep-010] Blog publish failed at humanizer step — output was empty, fell back to manual editing [outcome: failure] [duration: 900000ms] [12 days ago — most recent = lowest days ago]",
+        "[Procedure: deploy-production v2] success: 12, failures: 1\nStep 1: [claude-code] Run tsc --noEmit to verify TypeScript compiles (120s)\nStep 2: [claude-code] Run full test suite with bun test (300s)\nStep 3: [claude-code] Run integration tests against staging DB (300s)\nStep 4: [hermes] Push to staging branch and verify CI passes (600s)\nStep 5: [hermes] Run smoke tests against staging URL (300s, fallback: claude-code)\nStep 6: [claude-code] Merge staging to main via PR (300s)\nStep 7: [hermes] Monitor production logs for 10 minutes post-deploy (900s)",
+        "[Procedure: deploy-production v1] success: 8, failures: 3\nStep 1: [claude-code] Run tsc --noEmit to verify TypeScript compiles (120s)\nStep 2: [claude-code] Run full test suite with bun test (300s)\nStep 3: [hermes] Push to staging branch and verify CI passes (600s)\nStep 4: [claude-code] Merge staging to main via PR (300s)\nStep 5: [hermes] Monitor production logs for 5 minutes post-deploy (600s)",
+        "[procedure:incident-response] procedure incident-response v1: Step 1: [hermes] Check service health via service_doctor (60s)\nStep 2: [hermes] Pull last 100 lines of error logs from /dev/shm/ (60s)\nStep 3: [claude-code] Analyze error patterns and identify root cause (300s)\nStep 4: [claude-code] Implement fix and run targeted tests (600s)\nStep 5: [hermes] Restart affected service and verify recovery (120s)\nStep 6: [hermes] Send incident summary email to user (60s)",
+        "[episode:ep-001] episode ep-001: Deployed zouroboros v1.1.0 to npm — all 5 packages published successfully [outcome: success] [procedure: deploy-production v2]",
+        "[procedure:backtest-optimization] procedure backtest-optimization v2: Step 1: [claude-code] Load historical OHLCV data for target symbols (120s)\nStep 2: [claude-code] Split data into train (70%) and test (30%) periods (60s)\nStep 3: [claude-code] Run strategy backtest on training data (300s)\nStep 4: [claude-code] Calculate Sharpe ratio, max drawdown, and win rate (60s)\nStep 5: [claude-code] Validate on out-of-sample test data (300s)\nStep 6: [claude-code] Compare against benchmark (SPY buy-and-hold) (60s)\nStep 7: [claude-code] Generate parameter sensitivity heatmap (180s)\nStep 8: [hermes] Email backtest results report to user (60s)",
+        "[episode:ep-011] episode ep-011: Deployed Acme Botanicals site rebuild — 47 pages, SEO score improved from 62 to 89 [outcome: success] [procedure: deploy-production v2]",
+        "[procedure:security-audit-scan] procedure security-audit-scan v1: Step 1: [claude-code] Scan dependencies for known CVEs with npm audit (120s)\nStep 2: [claude-code] Check for hardcoded secrets in codebase (180s)\nStep 3: [claude-code] Review API endpoints for authentication gaps (300s)\nStep 4: [hermes] Run OWASP ZAP baseline scan against staging (600s)\nStep 5: [claude-code] Generate security report with findings and remediations (300s)",
+        "[procedure:blog-publish-pipeline] procedure blog-publish-pipeline v1: Step 1: [claude-code] Content strategist creates outline with title options (300s)\nStep 2: [claude-code] Visual storyteller drafts from approved outline (600s)\nStep 3: [claude-code] Humanizer skill strips AI-isms and adds voice (300s)\nStep 4: [hermes] Generate hero image with fal-ai-media skill (120s)\nStep 5: [claude-code] Update zo.space blog route and index page (300s)",
+        "[episode:ep-002] episode ep-002: Production deploy failed — TypeScript compilation error in swarm/src/db/schema.ts:20 due to hardcoded DB path [outcome: failure] [procedure: deploy-production v1]",
+        "[procedure:memory-maintenance] procedure memory-maintenance v1: Step 1: [claude-code] Run decay sweep to expire stale facts (120s)\nStep 2: [claude-code] Rebuild FTS index for facts_fts (60s)\nStep 3: [claude-code] Run knowledge-promoter cycle across all pools (180s)\nStep 4: [claude-code] Generate graph connectivity report (120s)"
+      ],
+      "retrieval_ms": 373,
+      "answer_ms": 1403,
+      "correct": true,
+      "judge_label": "correct",
+      "judge_confidence": 0.95
+    },
+    {
+      "question_id": "adv-pr-02",
+      "question_type": "step-detail",
+      "category": "procedural-recall",
+      "question": "Does deploy-production v2 include a dedicated rollback step? If yes, name the step; if no, what is the recovery mechanism?",
+      "ground_truth": "No, deploy-production v2 does NOT include a dedicated rollback step. The recovery mechanism is step 7 (hermes monitors production logs for 10 minutes post-deploy); any failure detected during monitoring requires manual intervention outside the procedure.",
+      "hypothesis": "No, deploy-production v2 does not include a dedicated rollback step. The recovery mechanism is the fallback to the executor claude-code during the smoke tests against the staging URL (Step 5).",
+      "retrieved_context": [
+        "[Episode ep-010] Blog publish failed at humanizer step — output was empty, fell back to manual editing [outcome: failure] [duration: 900000ms] [12 days ago — most recent = lowest days ago]",
+        "[Procedure: deploy-production v2] success: 12, failures: 1\nStep 1: [claude-code] Run tsc --noEmit to verify TypeScript compiles (120s)\nStep 2: [claude-code] Run full test suite with bun test (300s)\nStep 3: [claude-code] Run integration tests against staging DB (300s)\nStep 4: [hermes] Push to staging branch and verify CI passes (600s)\nStep 5: [hermes] Run smoke tests against staging URL (300s, fallback: claude-code)\nStep 6: [claude-code] Merge staging to main via PR (300s)\nStep 7: [hermes] Monitor production logs for 10 minutes post-deploy (900s)",
+        "[Procedure: deploy-production v1] success: 8, failures: 3\nStep 1: [claude-code] Run tsc --noEmit to verify TypeScript compiles (120s)\nStep 2: [claude-code] Run full test suite with bun test (300s)\nStep 3: [hermes] Push to staging branch and verify CI passes (600s)\nStep 4: [claude-code] Merge staging to main via PR (300s)\nStep 5: [hermes] Monitor production logs for 5 minutes post-deploy (600s)",
+        "[episode:ep-001] episode ep-001: Deployed zouroboros v1.1.0 to npm — all 5 packages published successfully [outcome: success] [procedure: deploy-production v2]",
+        "[episode:ep-011] episode ep-011: Deployed Acme Botanicals site rebuild — 47 pages, SEO score improved from 62 to 89 [outcome: success] [procedure: deploy-production v2]",
+        "[episode:ep-002] episode ep-002: Production deploy failed — TypeScript compilation error in swarm/src/db/schema.ts:20 due to hardcoded DB path [outcome: failure] [procedure: deploy-production v1]",
+        "[procedure:incident-response] procedure incident-response v1: Step 1: [hermes] Check service health via service_doctor (60s)\nStep 2: [hermes] Pull last 100 lines of error logs from /dev/shm/ (60s)\nStep 3: [claude-code] Analyze error patterns and identify root cause (300s)\nStep 4: [claude-code] Implement fix and run targeted tests (600s)\nStep 5: [hermes] Restart affected service and verify recovery (120s)\nStep 6: [hermes] Send incident summary email to user (60s)",
+        "[procedure:backtest-optimization] procedure backtest-optimization v2: Step 1: [claude-code] Load historical OHLCV data for target symbols (120s)\nStep 2: [claude-code] Split data into train (70%) and test (30%) periods (60s)\nStep 3: [claude-code] Run strategy backtest on training data (300s)\nStep 4: [claude-code] Calculate Sharpe ratio, max drawdown, and win rate (60s)\nStep 5: [claude-code] Validate on out-of-sample test data (300s)\nStep 6: [claude-code] Compare against benchmark (SPY buy-and-hold) (60s)\nStep 7: [claude-code] Generate parameter sensitivity heatmap (180s)\nStep 8: [hermes] Email backtest results report to user (60s)",
+        "[procedure:memory-maintenance] procedure memory-maintenance v1: Step 1: [claude-code] Run decay sweep to expire stale facts (120s)\nStep 2: [claude-code] Rebuild FTS index for facts_fts (60s)\nStep 3: [claude-code] Run knowledge-promoter cycle across all pools (180s)\nStep 4: [claude-code] Generate graph connectivity report (120s)",
+        "[procedure:security-audit-scan] procedure security-audit-scan v1: Step 1: [claude-code] Scan dependencies for known CVEs with npm audit (120s)\nStep 2: [claude-code] Check for hardcoded secrets in codebase (180s)\nStep 3: [claude-code] Review API endpoints for authentication gaps (300s)\nStep 4: [hermes] Run OWASP ZAP baseline scan against staging (600s)\nStep 5: [claude-code] Generate security report with findings and remediations (300s)"
+      ],
+      "retrieval_ms": 256,
+      "answer_ms": 803,
+      "correct": false,
+      "judge_label": "incorrect",
+      "judge_confidence": 0.85
+    },
+    {
+      "question_id": "adv-pr-03",
+      "question_type": "evolution-tracking",
+      "category": "procedural-recall",
+      "question": "How many MORE steps does deploy-production v2 have than v1, and what was added between the two versions?",
+      "ground_truth": "v2 has exactly 2 more steps than v1 (7 vs 5). v2 added integration tests against staging DB (step 3) and smoke tests against staging URL with claude-code fallback (step 5). v2 also extended post-deploy monitoring from 5 to 10 minutes, but that is a modified step not an added one.",
+      "hypothesis": "The procedure deploy-production v2 has 2 more steps than v1. The steps that were added between the two versions are:\n\n1. Run integration tests against staging DB\n2. Run smoke tests against staging URL\n3. Monitor production logs for 10 minutes post-deploy (changed from monitoring for 5 minutes in v1).",
+      "retrieved_context": [
+        "[Episode ep-001] Deployed zouroboros v1.1.0 to npm — all 5 packages published successfully [outcome: success] [duration: 342000ms] [2 days ago — most recent = lowest days ago]",
+        "[Procedure: deploy-production v2] success: 12, failures: 1\nStep 1: [claude-code] Run tsc --noEmit to verify TypeScript compiles (120s)\nStep 2: [claude-code] Run full test suite with bun test (300s)\nStep 3: [claude-code] Run integration tests against staging DB (300s)\nStep 4: [hermes] Push to staging branch and verify CI passes (600s)\nStep 5: [hermes] Run smoke tests against staging URL (300s, fallback: claude-code)\nStep 6: [claude-code] Merge staging to main via PR (300s)\nStep 7: [hermes] Monitor production logs for 10 minutes post-deploy (900s)",
+        "[Procedure: deploy-production v1] success: 8, failures: 3\nStep 1: [claude-code] Run tsc --noEmit to verify TypeScript compiles (120s)\nStep 2: [claude-code] Run full test suite with bun test (300s)\nStep 3: [hermes] Push to staging branch and verify CI passes (600s)\nStep 4: [claude-code] Merge staging to main via PR (300s)\nStep 5: [hermes] Monitor production logs for 5 minutes post-deploy (600s)",
+        "[episode:ep-011] episode ep-011: Deployed Acme Botanicals site rebuild — 47 pages, SEO score improved from 62 to 89 [outcome: success] [procedure: deploy-production v2]",
+        "[episode:ep-002] episode ep-002: Production deploy failed — TypeScript compilation error in swarm/src/db/schema.ts:20 due to hardcoded DB path [outcome: failure] [procedure: deploy-production v1]",
+        "[episode:ep-010] episode ep-010: Blog publish failed at humanizer step — output was empty, fell back to manual editing [outcome: failure] [procedure: blog-publish-pipeline v1]",
+        "[episode:ep-005] episode ep-005: Published blog post 'Reducing Tool Call Failures' to zo.space — 3-persona pipeline completed in 25 minutes [outcome: success] [procedure: blog-publish-pipeline v1]",
+        "[procedure:security-audit-scan] procedure security-audit-scan v1: Step 1: [claude-code] Scan dependencies for known CVEs with npm audit (120s)\nStep 2: [claude-code] Check for hardcoded secrets in codebase (180s)\nStep 3: [claude-code] Review API endpoints for authentication gaps (300s)\nStep 4: [hermes] Run OWASP ZAP baseline scan against staging (600s)\nStep 5: [claude-code] Generate security report with findings and remediations (300s)",
+        "[episode:ep-006] episode ep-006: Security audit found 2 high-severity issues: exposed API key in client bundle, missing CSRF protection on webhook endpoint [outcome: success] [procedure: security-audit-scan v1]",
+        "[procedure:blog-publish-pipeline] procedure blog-publish-pipeline v1: Step 1: [claude-code] Content strategist creates outline with title options (300s)\nStep 2: [claude-code] Visual storyteller drafts from approved outline (600s)\nStep 3: [claude-code] Humanizer skill strips AI-isms and adds voice (300s)\nStep 4: [hermes] Generate hero image with fal-ai-media skill (120s)\nStep 5: [claude-code] Update zo.space blog route and index page (300s)",
+        "[Evolution: backtest-optimization v1→v2] Steps: 5→8. Added: \"Split data into train (70%) and test (30%) periods\", \"Run strategy backtest on training data\", \"Validate on out-of-sample test data\", \"Email backtest results report to user\". Removed: \"Run strategy backtest with current parameters\". Changed: none. Success rate: 78%→100%",
+        "[Evolution: deploy-production v1→v2] Steps: 5→7. Added: \"Run integration tests against staging DB\", \"Run smoke tests against staging URL\", \"Monitor production logs for 10 minutes post-deploy\". Removed: \"Monitor production logs for 5 minutes post-deploy\". Changed: none. Success rate: 73%→92%"
+      ],
+      "retrieval_ms": 251,
+      "answer_ms": 1732,
+      "correct": true,
+      "judge_label": "correct",
+      "judge_confidence": 0.95
+    },
+    {
+      "question_id": "adv-pr-04",
+      "question_type": "aggregate-query",
+      "category": "procedural-recall",
+      "question": "Which procedure has the LOWEST success rate, and what is the rate?",
+      "ground_truth": "incident-response v1 has the lowest success rate at approximately 71% (5 successes and 2 failures out of 7 attempts).",
+      "hypothesis": "The procedure with the LOWEST success rate is **incident-response v1** with a success rate of **71%**.",
+      "retrieved_context": [
+        "[Episode ep-012] Backtest optimization for VWAP MR strategy — Sharpe ratio 1.8, max drawdown -12%, win rate 58% [outcome: success] [duration: 450000ms] [9 days ago — most recent = lowest days ago]",
+        "[procedure:backtest-optimization] procedure backtest-optimization v1: Step 1: [claude-code] Load historical OHLCV data for target symbols (120s)\nStep 2: [claude-code] Run strategy backtest with current parameters (300s)\nStep 3: [claude-code] Calculate Sharpe ratio, max drawdown, and win rate (60s)\nStep 4: [claude-code] Compare against benchmark (SPY buy-and-hold) (60s)\nStep 5: [claude-code] Generate parameter sensitivity heatmap (180s)",
+        "[episode:ep-001] episode ep-001: Deployed zouroboros v1.1.0 to npm — all 5 packages published successfully [outcome: success] [procedure: deploy-production v2]",
+        "[episode:ep-011] episode ep-011: Deployed Acme Botanicals site rebuild — 47 pages, SEO score improved from 62 to 89 [outcome: success] [procedure: deploy-production v2]",
+        "[episode:ep-003] episode ep-003: Memory maintenance completed — decayed 47 stale facts, promoted 12 cross-persona facts, graph connectivity at 90% [outcome: success] [procedure: memory-maintenance v1]",
+        "[episode:ep-007] episode ep-007: Backtest optimization for Stochastic RSI strategy — Sharpe improved from 2.1 to 4.13 with lookbackDays=260 [outcome: success] [procedure: backtest-optimization v2]",
+        "[episode:ep-005] episode ep-005: Published blog post 'Reducing Tool Call Failures' to zo.space — 3-persona pipeline completed in 25 minutes [outcome: success] [procedure: blog-publish-pipeline v1]",
+        "[episode:ep-006] episode ep-006: Security audit found 2 high-severity issues: exposed API key in client bundle, missing CSRF protection on webhook endpoint [outcome: success] [procedure: security-audit-scan v1]",
+        "[procedure:memory-maintenance] procedure memory-maintenance v1: Step 1: [claude-code] Run decay sweep to expire stale facts (120s)\nStep 2: [claude-code] Rebuild FTS index for facts_fts (60s)\nStep 3: [claude-code] Run knowledge-promoter cycle across all pools (180s)\nStep 4: [claude-code] Generate graph connectivity report (120s)",
+        "[Procedure: backtest-optimization v1] success_count: 7, failure_count: 2, total_runs: 9, success_rate: 78%, steps: 5, max_timeout: 300s, final_step_executor: claude-code, executors: claude-code,claude-code,claude-code,claude-code,claude-code",
+        "[Procedure: deploy-production v1] success_count: 8, failure_count: 3, total_runs: 11, success_rate: 73%, steps: 5, max_timeout: 600s, final_step_executor: hermes, executors: claude-code,claude-code,hermes,claude-code,hermes",
+        "[Procedure: incident-response v1] success_count: 5, failure_count: 2, total_runs: 7, success_rate: 71%, steps: 6, max_timeout: 600s, final_step_executor: hermes, executors: hermes,hermes,claude-code,claude-code,hermes,hermes",
+        "[Aggregate: backtest-optimization] 2 version(s), total_success: 16, total_failures: 2, total_runs: 18, overall_success_rate: 89%",
+        "[Aggregate: blog-publish-pipeline] 1 version(s), total_success: 4, total_failures: 1, total_runs: 5, overall_success_rate: 80%",
+        "[Aggregate: deploy-production] 2 version(s), total_success: 20, total_failures: 4, total_runs: 24, overall_success_rate: 83%",
+        "[Aggregate: incident-response] 1 version(s), total_success: 5, total_failures: 2, total_runs: 7, overall_success_rate: 71%",
+        "[Aggregate: memory-maintenance] 1 version(s), total_success: 15, total_failures: 0, total_runs: 15, overall_success_rate: 100%",
+        "[Aggregate: security-audit-scan] 1 version(s), total_success: 3, total_failures: 0, total_runs: 3, overall_success_rate: 100%"
+      ],
+      "retrieval_ms": 180,
+      "answer_ms": 682,
+      "correct": true,
+      "judge_label": "correct",
+      "judge_confidence": 1
+    },
+    {
+      "question_id": "adv-pr-05",
+      "question_type": "step-detail",
+      "category": "procedural-recall",
+      "question": "Which procedures and which step numbers use a fallbackExecutor? Be exhaustive.",
+      "ground_truth": "Only one procedure uses a fallbackExecutor: deploy-production v2, on step 5 (smoke tests against staging URL), where claude-code is the fallback for hermes. No other procedure or version defines a fallbackExecutor on any step.",
+      "hypothesis": "The following procedures and step numbers use a fallbackExecutor:\n\n1. **Procedure: deploy-production v2**\n   - Step 5: [hermes] Run smoke tests against staging URL (300s, fallback: claude-code)",
+      "retrieved_context": [
+        "[Episode ep-010] Blog publish failed at humanizer step — output was empty, fell back to manual editing [outcome: failure] [duration: 900000ms] [12 days ago — most recent = lowest days ago]",
+        "[procedure:memory-maintenance] procedure memory-maintenance v1: Step 1: [claude-code] Run decay sweep to expire stale facts (120s)\nStep 2: [claude-code] Rebuild FTS index for facts_fts (60s)\nStep 3: [claude-code] Run knowledge-promoter cycle across all pools (180s)\nStep 4: [claude-code] Generate graph connectivity report (120s)",
+        "[procedure:backtest-optimization] procedure backtest-optimization v2: Step 1: [claude-code] Load historical OHLCV data for target symbols (120s)\nStep 2: [claude-code] Split data into train (70%) and test (30%) periods (60s)\nStep 3: [claude-code] Run strategy backtest on training data (300s)\nStep 4: [claude-code] Calculate Sharpe ratio, max drawdown, and win rate (60s)\nStep 5: [claude-code] Validate on out-of-sample test data (300s)\nStep 6: [claude-code] Compare against benchmark (SPY buy-and-hold) (60s)\nStep 7: [claude-code] Generate parameter sensitivity heatmap (180s)\nStep 8: [hermes] Email backtest results report to user (60s)",
+        "[procedure:incident-response] procedure incident-response v1: Step 1: [hermes] Check service health via service_doctor (60s)\nStep 2: [hermes] Pull last 100 lines of error logs from /dev/shm/ (60s)\nStep 3: [claude-code] Analyze error patterns and identify root cause (300s)\nStep 4: [claude-code] Implement fix and run targeted tests (600s)\nStep 5: [hermes] Restart affected service and verify recovery (120s)\nStep 6: [hermes] Send incident summary email to user (60s)",
+        "[procedure:deploy-production] procedure deploy-production v2: Step 1: [claude-code] Run tsc --noEmit to verify TypeScript compiles (120s)\nStep 2: [claude-code] Run full test suite with bun test (300s)\nStep 3: [claude-code] Run integration tests against staging DB (300s)\nStep 4: [hermes] Push to staging branch and verify CI passes (600s)\nStep 5: [hermes] Run smoke tests against staging URL (300s, fallback: claude-code)\nStep 6: [claude-code] Merge staging to main via PR (300s)\nStep 7: [hermes] Monitor production logs for 10 minutes post-deploy (900s)",
+        "[procedure:security-audit-scan] procedure security-audit-scan v1: Step 1: [claude-code] Scan dependencies for known CVEs with npm audit (120s)\nStep 2: [claude-code] Check for hardcoded secrets in codebase (180s)\nStep 3: [claude-code] Review API endpoints for authentication gaps (300s)\nStep 4: [hermes] Run OWASP ZAP baseline scan against staging (600s)\nStep 5: [claude-code] Generate security report with findings and remediations (300s)",
+        "[procedure:blog-publish-pipeline] procedure blog-publish-pipeline v1: Step 1: [claude-code] Content strategist creates outline with title options (300s)\nStep 2: [claude-code] Visual storyteller drafts from approved outline (600s)\nStep 3: [claude-code] Humanizer skill strips AI-isms and adds voice (300s)\nStep 4: [hermes] Generate hero image with fal-ai-media skill (120s)\nStep 5: [claude-code] Update zo.space blog route and index page (300s)"
+      ],
+      "retrieval_ms": 320,
+      "answer_ms": 771,
+      "correct": true,
+      "judge_label": "correct",
+      "judge_confidence": 0.95
+    },
+    {
+      "question_id": "adv-sc-01",
+      "question_type": "dependency-context",
+      "category": "swarm-context-propagation",
+      "question": "In dag-site-rebuild, which tasks did NOT depend on t2 (the security scan)? List the task IDs.",
+      "ground_truth": "The tasks that did NOT depend on t2 are t1, t3, t5, and t6. (t2 itself is excluded as it is the referenced task.) Only t4 has t2 in its dependsOn list. t1 has no dependencies; t3 depends only on t1; t5 depends on t3 and t4; t6 depends on t4 and t5.",
+      "hypothesis": "The tasks that did NOT depend on t2 are:\n\n- t1\n- t3\n- t5",
+      "retrieved_context": [
+        "[Task dag-site-rebuild:t1] [persona: backend-architect] [depends: ]\nTask: Audit existing site structure and identify broken pages\nOutput: Found 12 broken links, 3 missing meta tags, 2 pages returning 404. Recommended restructuring /products/ into category-based layout.\nArtifacts (1): audit-report.md",
+        "[Task dag-site-rebuild:t2] [persona: security-auditor] [depends: ]\nTask: Run security scan on current site deployment\nOutput: No critical vulnerabilities. 1 medium: Content-Security-Policy header missing. 2 low: outdated jQuery (3.5.1), missing X-Frame-Options.\nArtifacts (1): security-scan.json",
+        "[Task dag-site-rebuild:t3] [persona: content-strategist] [depends: t1]\nTask: Review all product descriptions for SEO optimization\nOutput: Analyzed 47 product pages. Top keywords: 'grass-fed tallow', 'botanical skincare', 'organic body butter'. Missing long-tail terms on 23 pages.\nArtifacts (1): seo-analysis.csv",
+        "[Task dag-site-rebuild:t4] [persona: backend-architect] [depends: t1,t2]\nTask: Implement new page templates based on audit findings\nOutput: Created 5 new page templates: product-detail, category-listing, about, blog-index, blog-post. Implemented responsive grid layout with Tailwind.\nArtifacts (1): templates/",
+        "[Task dag-site-rebuild:t5] [persona: content-strategist] [depends: t3,t4]\nTask: Rewrite product copy with optimized keywords from t3\nOutput: Rewrote copy for all 47 product pages with target keywords. Average keyword density improved from 0.8% to 2.1%.\nArtifacts (1): product-copy-v2/",
+        "[Task dag-site-rebuild:t6] [persona: alaric] [depends: t4,t5]\nTask: Deploy rebuilt site and run smoke tests\nOutput: Deployed to production. All 47 pages render correctly. Lighthouse score: Performance 94, SEO 89, Accessibility 96. Zero console errors.\nArtifacts (1): lighthouse-report.json",
+        "[Artifact Summary] Total artifacts in this DAG: 6 — audit-report.md, security-scan.json, seo-analysis.csv, templates/, product-copy-v2/, lighthouse-report.json",
+        "[DAG Summary: dag-memory-migration] 4 tasks, 4 succeeded, 0 failed",
+        "[DAG Summary: dag-site-rebuild] 6 tasks, 6 succeeded, 0 failed",
+        "[DAG Summary: dag-trading-hardening] 6 tasks, 6 succeeded, 0 failed",
+        "[swarm:dag-site-rebuild] swarm task dag-site-rebuild:t2 [Acme Botanicals Site Rebuild] [persona: security-auditor] [executor: claude-code] [depends: ]: Run security scan on current site deployment\nResult: No critical vulnerabilities. 1 medium: Content-Security-Policy header missing. 2 low: outdated jQuery (3.5.1), missing X-Frame-Options.\nArtifacts: security-scan.json",
+        "[procedure:security-audit-scan] procedure security-audit-scan v1: Step 1: [claude-code] Scan dependencies for known CVEs with npm audit (120s)\nStep 2: [claude-code] Check for hardcoded secrets in codebase (180s)\nStep 3: [claude-code] Review API endpoints for authentication gaps (300s)\nStep 4: [hermes] Run OWASP ZAP baseline scan against staging (600s)\nStep 5: [claude-code] Generate security report with findings and remediations (300s)",
+        "[swarm:dag-site-rebuild] swarm task dag-site-rebuild:t4 [Acme Botanicals Site Rebuild] [persona: backend-architect] [executor: claude-code] [depends: t1,t2]: Implement new page templates based on audit findings\nResult: Created 5 new page templates: product-detail, category-listing, about, blog-index, blog-post. Implemented responsive grid layout with Tailwind.\nArtifacts: templates/",
+        "[swarm:dag-site-rebuild] swarm task dag-site-rebuild:t6 [Acme Botanicals Site Rebuild] [persona: alaric] [executor: hermes] [depends: t4,t5]: Deploy rebuilt site and run smoke tests\nResult: Deployed to production. All 47 pages render correctly. Lighthouse score: Performance 94, SEO 89, Accessibility 96. Zero console errors.\nArtifacts: lighthouse-report.json",
+        "[swarm:dag-site-rebuild] swarm task dag-site-rebuild:t1 [Acme Botanicals Site Rebuild] [persona: backend-architect] [executor: claude-code] [depends: ]: Audit existing site structure and identify broken pages\nResult: Found 12 broken links, 3 missing meta tags, 2 pages returning 404. Recommended restructuring /products/ into category-based layout.\nArtifacts: audit-report.md"
+      ],
+      "retrieval_ms": 183,
+      "answer_ms": 1033,
+      "correct": false,
+      "judge_label": "incorrect",
+      "judge_confidence": 0.85
+    },
+    {
+      "question_id": "adv-sc-02",
+      "question_type": "dependency-context",
+      "category": "swarm-context-propagation",
+      "question": "Did dag-site-rebuild's t2 security scan find any CRITICAL vulnerabilities? If yes list them; if no what was the highest severity issue?",
+      "ground_truth": "No, t2 found ZERO critical vulnerabilities. The highest severity issue was a single MEDIUM finding: missing Content-Security-Policy header. The two other findings were both LOW severity: outdated jQuery 3.5.1 and missing X-Frame-Options header.",
+      "hypothesis": "No critical vulnerabilities were found in dag-site-rebuild's t2 security scan. The highest severity issue was a medium severity: \"Content-Security-Policy header missing.\"",
+      "retrieved_context": [
+        "[Task dag-site-rebuild:t1] [persona: backend-architect] [depends: ]\nTask: Audit existing site structure and identify broken pages\nOutput: Found 12 broken links, 3 missing meta tags, 2 pages returning 404. Recommended restructuring /products/ into category-based layout.\nArtifacts (1): audit-report.md",
+        "[Task dag-site-rebuild:t2] [persona: security-auditor] [depends: ]\nTask: Run security scan on current site deployment\nOutput: No critical vulnerabilities. 1 medium: Content-Security-Policy header missing. 2 low: outdated jQuery (3.5.1), missing X-Frame-Options.\nArtifacts (1): security-scan.json",
+        "[Task dag-site-rebuild:t3] [persona: content-strategist] [depends: t1]\nTask: Review all product descriptions for SEO optimization\nOutput: Analyzed 47 product pages. Top keywords: 'grass-fed tallow', 'botanical skincare', 'organic body butter'. Missing long-tail terms on 23 pages.\nArtifacts (1): seo-analysis.csv",
+        "[Task dag-site-rebuild:t4] [persona: backend-architect] [depends: t1,t2]\nTask: Implement new page templates based on audit findings\nOutput: Created 5 new page templates: product-detail, category-listing, about, blog-index, blog-post. Implemented responsive grid layout with Tailwind.\nArtifacts (1): templates/",
+        "[Task dag-site-rebuild:t5] [persona: content-strategist] [depends: t3,t4]\nTask: Rewrite product copy with optimized keywords from t3\nOutput: Rewrote copy for all 47 product pages with target keywords. Average keyword density improved from 0.8% to 2.1%.\nArtifacts (1): product-copy-v2/",
+        "[Task dag-site-rebuild:t6] [persona: alaric] [depends: t4,t5]\nTask: Deploy rebuilt site and run smoke tests\nOutput: Deployed to production. All 47 pages render correctly. Lighthouse score: Performance 94, SEO 89, Accessibility 96. Zero console errors.\nArtifacts (1): lighthouse-report.json",
+        "[Artifact Summary] Total artifacts in this DAG: 6 — audit-report.md, security-scan.json, seo-analysis.csv, templates/, product-copy-v2/, lighthouse-report.json",
+        "[DAG Summary: dag-memory-migration] 4 tasks, 4 succeeded, 0 failed",
+        "[DAG Summary: dag-site-rebuild] 6 tasks, 6 succeeded, 0 failed",
+        "[DAG Summary: dag-trading-hardening] 6 tasks, 6 succeeded, 0 failed",
+        "[swarm:dag-site-rebuild] swarm task dag-site-rebuild:t2 [Acme Botanicals Site Rebuild] [persona: security-auditor] [executor: claude-code] [depends: ]: Run security scan on current site deployment\nResult: No critical vulnerabilities. 1 medium: Content-Security-Policy header missing. 2 low: outdated jQuery (3.5.1), missing X-Frame-Options.\nArtifacts: security-scan.json",
+        "[episode:ep-006] episode ep-006: Security audit found 2 high-severity issues: exposed API key in client bundle, missing CSRF protection on webhook endpoint [outcome: success] [procedure: security-audit-scan v1]",
+        "[procedure:security-audit-scan] procedure security-audit-scan v1: Step 1: [claude-code] Scan dependencies for known CVEs with npm audit (120s)\nStep 2: [claude-code] Check for hardcoded secrets in codebase (180s)\nStep 3: [claude-code] Review API endpoints for authentication gaps (300s)\nStep 4: [hermes] Run OWASP ZAP baseline scan against staging (600s)\nStep 5: [claude-code] Generate security report with findings and remediations (300s)",
+        "[swarm:dag-trading-hardening] swarm task dag-trading-hardening:t2 [Demo Trading Bot Hardening Sprint] [persona: backend-architect] [executor: claude-code] [depends: ]: Audit bot-engine.ts for race conditions and error handling gaps\nResult: Found 4 issues: (1) unsynchronized bot_trades write, (2) missing error catch in WebSocket reconnect, (3) Sharpe calc uses arithmetic not log returns, (4) no circuit breaker on API failures.\nArtifacts: audit-findings.json",
+        "[swarm:dag-trading-hardening] swarm task dag-trading-hardening:t5 [Demo Trading Bot Hardening Sprint] [persona: security-auditor] [executor: claude-code] [depends: t2]: Verify API key rotation and secure storage for Alpaca credentials\nResult: Alpaca API keys stored in Zo Secrets (not env files). Rotation schedule: every 90 days. Added key expiry warning in health dashboard.\nArtifacts: security-config.json"
+      ],
+      "retrieval_ms": 236,
+      "answer_ms": 787,
+      "correct": true,
+      "judge_label": "correct",
+      "judge_confidence": 0.95
+    }
+  ]
+}

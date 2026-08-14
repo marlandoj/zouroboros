@@ -1,0 +1,1 @@
+export function estimateCostMicros(inputTokens:number,outputTokens:number,inputUsdPerMillion:number,outputUsdPerMillion:number):number{return Math.floor(inputTokens*inputUsdPerMillion+outputTokens*outputUsdPerMillion)}

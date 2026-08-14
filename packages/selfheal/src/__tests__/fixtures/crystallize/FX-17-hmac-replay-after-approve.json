@@ -1,0 +1,19 @@
+{
+  "id": "FX-17",
+  "name": "hmac-replay-after-approve",
+  "asserts": "approveCandidate refuses to act on a row whose approval_status is no longer 'pending' — second invocation with the same valid token returns ok=false reason=already_resolved",
+  "phase": "PR3",
+  "scope": "approve",
+  "input": {
+    "secret_bytes": "abcdefghijklmnopqrstuvwxyz123456",
+    "id": "00000000-0000-0000-0000-000000000003",
+    "slug": "replay-skill",
+    "created_at": 1700000000,
+    "draft_path_template": "{tmp}/Skills/_candidates/replay-skill",
+    "skills_root_template": "{tmp}/Skills"
+  },
+  "expected": {
+    "first_call": { "ok": true, "action": "approved" },
+    "second_call": { "ok": false, "reason": "already_resolved", "detail": "approved" }
+  }
+}

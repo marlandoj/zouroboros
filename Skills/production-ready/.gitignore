@@ -1,0 +1,21 @@
+node_modules/
+dist/
+build/
+.next/
+out/
+.DS_Store
+*.log
+
+# Audit output
+production-ready-audit/
+audit-out/
+*.audit.json
+LAUNCH_CHECKLIST.md
+
+# Bun
+bun.lockb
+
+# IDE
+.vscode/
+.idea/
+*.swp

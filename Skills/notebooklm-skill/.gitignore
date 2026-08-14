@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.pyo
+output/
+.venv/
+*.log
+storage_state.json

@@ -1,0 +1,234 @@
+#!/usr/bin/env bun
+/**
+ * Zouroboros Installer — sets up prerequisites on a fresh Zo Computer
+ *
+ * Usage: bun install.ts [--skip-deps] [--help]
+ */
+
+import { execSync } from "child_process";
+import { existsSync, mkdirSync } from "fs";
+import { join } from "path";
+import { parseArgs } from "util";
+
+const { values } = parseArgs({
+  args: Bun.argv.slice(2),
+  options: {
+    "skip-deps": { type: "boolean" },
+    help: { type: "boolean", short: "h" },
+  },
+  strict: false,
+});
+
+if (values.help) {
+  console.log(`
+zouroboros install — set up prerequisites on a fresh Zo Computer
+
+USAGE:
+  bun install.ts [options]
+
+OPTIONS:
+  --skip-deps     Skip npm dependency installation
+  --help, -h      Show this help
+
+WHAT IT DOES:
+  1. Installs npm dependencies (MCP SDK) if needed
+  2. Creates memory database with schema
+  3. Verifies OpenAI API access (embeddings + generation)
+  4. Runs health check
+`);
+  process.exit(0);
+}
+
+const WORKSPACE =
+  process.env.ZOUROBOROS_WORKSPACE ||
+  process.env.ZO_WORKSPACE ||
+  "/home/workspace";
+const SKILL_DIR = join(WORKSPACE, "Skills/zouroboros");
+// Honor ZOUROBOROS_MEMORY_DB / ZO_MEMORY_DB so the standalone installer
+// and the monorepo CLI (`zouroboros init`) converge on the same database
+// file. Without this, users end up with ~/.zouroboros/memory.db AND
+// .zo/memory/shared-facts.db diverging silently (issue #71).
+const DB_PATH =
+  process.env.ZOUROBOROS_MEMORY_DB ||
+  process.env.ZO_MEMORY_DB ||
+  join(WORKSPACE, ".zo/memory/shared-facts.db");
+const DB_DIR = join(DB_PATH, "..");
+
+function run(cmd: string, opts: { cwd?: string; timeout?: number } = {}) {
+  try {
+    return execSync(cmd, {
+      cwd: opts.cwd || WORKSPACE,
+      timeout: opts.timeout || 60000,
+      stdio: "inherit",
+    });
+  } catch {
+    return null;
+  }
+}
+
+function runQuiet(cmd: string) {
+  try {
+    return execSync(cmd, { encoding: "utf-8", stdio: "pipe" }).trim();
+  } catch {
+    return null;
+  }
+}
+
+console.log("\n🐍⭕ Zouroboros Installer");
+console.log("========================\n");
+
+// Step 1: Install npm dependencies for MCP servers
+if (!values["skip-deps"]) {
+  console.log("📦 Installing dependencies...");
+  const scriptsDir = join(SKILL_DIR, "scripts");
+  if (existsSync(join(scriptsDir, "package.json"))) {
+    run("bun install", { cwd: scriptsDir });
+    // Also install in sub-skill scripts dirs that need MCP SDK
+    for (const sub of ["skills/memory/scripts", "skills/swarm/scripts", "skills/workflow/scripts/autoloop"]) {
+      const subDir = join(SKILL_DIR, sub);
+      if (existsSync(subDir)) {
+        // Symlink node_modules from root scripts dir
+        const nmLink = join(subDir, "node_modules");
+        if (!existsSync(nmLink)) {
+          try {
+            execSync(`ln -sf "${join(scriptsDir, "node_modules")}" "${nmLink}"`, { stdio: "pipe" });
+          } catch {}
+        }
+      }
+    }
+    console.log("✅ Dependencies installed\n");
+  }
+}
+
+// Step 2: Create memory database
+console.log("💾 Setting up memory database...");
+mkdirSync(DB_DIR, { recursive: true });
+
+if (!existsSync(DB_PATH)) {
+  const schema = `
+PRAGMA journal_mode = WAL;
+CREATE TABLE IF NOT EXISTS facts (
+  id TEXT PRIMARY KEY, persona TEXT, entity TEXT NOT NULL, key TEXT,
+  value TEXT NOT NULL, text TEXT NOT NULL,
+  category TEXT DEFAULT 'fact' CHECK(category IN ('preference','fact','decision','convention','other','reference','project')),
+  decay_class TEXT DEFAULT 'medium' CHECK(decay_class IN ('permanent','long','medium','short')),
+  importance REAL DEFAULT 1.0, source TEXT,
+  created_at INTEGER DEFAULT (strftime('%s','now')),
+  expires_at INTEGER, last_accessed INTEGER DEFAULT (strftime('%s','now')),
+  confidence REAL DEFAULT 1.0, metadata TEXT
+);
+CREATE TABLE IF NOT EXISTS fact_embeddings (
+  fact_id TEXT PRIMARY KEY REFERENCES facts(id) ON DELETE CASCADE,
+  embedding BLOB NOT NULL, model TEXT DEFAULT 'text-embedding-3-small',
+  created_at INTEGER DEFAULT (strftime('%s','now'))
+);
+CREATE TABLE IF NOT EXISTS episodes (
+  id TEXT PRIMARY KEY, summary TEXT NOT NULL,
+  outcome TEXT NOT NULL CHECK(outcome IN ('success','failure','resolved','ongoing')),
+  happened_at INTEGER NOT NULL, duration_ms INTEGER, procedure_id TEXT,
+  metadata TEXT, created_at INTEGER DEFAULT (strftime('%s','now'))
+);
+CREATE TABLE IF NOT EXISTS episode_entities (
+  episode_id TEXT NOT NULL REFERENCES episodes(id) ON DELETE CASCADE,
+  entity TEXT NOT NULL, PRIMARY KEY (episode_id, entity)
+);
+CREATE TABLE IF NOT EXISTS procedures (
+  id TEXT PRIMARY KEY, name TEXT NOT NULL, version INTEGER DEFAULT 1,
+  steps TEXT NOT NULL, success_count INTEGER DEFAULT 0, failure_count INTEGER DEFAULT 0,
+  evolved_from TEXT, created_at INTEGER DEFAULT (strftime('%s','now'))
+);
+CREATE TABLE IF NOT EXISTS open_loops (
+  id TEXT PRIMARY KEY, summary TEXT NOT NULL, entity TEXT NOT NULL,
+  status TEXT DEFAULT 'open' CHECK(status IN ('open','resolved')),
+  priority INTEGER DEFAULT 1, created_at INTEGER DEFAULT (strftime('%s','now')), resolved_at INTEGER
+);
+CREATE TABLE IF NOT EXISTS continuation_context (
+  id TEXT PRIMARY KEY, conversation_id TEXT NOT NULL, last_summary TEXT NOT NULL,
+  open_loop_ids TEXT, entity_stack TEXT, last_agent TEXT,
+  updated_at INTEGER DEFAULT (strftime('%s','now'))
+);
+CREATE TABLE IF NOT EXISTS cognitive_profiles (
+  entity TEXT PRIMARY KEY, traits TEXT, preferences TEXT,
+  interaction_count INTEGER DEFAULT 0, last_interaction INTEGER,
+  created_at INTEGER DEFAULT (strftime('%s','now'))
+);
+CREATE TABLE IF NOT EXISTS fact_links (
+  source_id TEXT NOT NULL REFERENCES facts(id) ON DELETE CASCADE,
+  target_id TEXT NOT NULL REFERENCES facts(id) ON DELETE CASCADE,
+  relation TEXT NOT NULL, weight REAL DEFAULT 1.0,
+  created_at INTEGER DEFAULT (strftime('%s','now')),
+  PRIMARY KEY (source_id, target_id, relation)
+);
+CREATE TABLE IF NOT EXISTS _migrations (
+  id INTEGER PRIMARY KEY, name TEXT NOT NULL, applied_at INTEGER DEFAULT (strftime('%s','now'))
+);
+CREATE INDEX IF NOT EXISTS idx_facts_entity_key ON facts(entity, key);
+CREATE INDEX IF NOT EXISTS idx_facts_decay ON facts(decay_class, expires_at);
+CREATE INDEX IF NOT EXISTS idx_facts_category ON facts(category);
+CREATE INDEX IF NOT EXISTS idx_episodes_happened ON episodes(happened_at);
+CREATE INDEX IF NOT EXISTS idx_episodes_outcome ON episodes(outcome);
+CREATE INDEX IF NOT EXISTS idx_episode_entities ON episode_entities(entity);
+CREATE INDEX IF NOT EXISTS idx_open_loops_entity ON open_loops(entity, status);
+CREATE INDEX IF NOT EXISTS idx_fact_links_source ON fact_links(source_id);
+CREATE INDEX IF NOT EXISTS idx_fact_links_target ON fact_links(target_id);
+`;
+  try {
+    execSync(`sqlite3 "${DB_PATH}" <<'SCHEMA'\n${schema}\nSCHEMA`, { shell: "/bin/bash", stdio: "pipe" });
+    console.log(`✅ Memory database created at ${DB_PATH}\n`);
+  } catch (e) {
+    console.log("⚠️  Database creation failed — will be created on first use\n");
+  }
+} else {
+  console.log(`✅ Memory database already exists at ${DB_PATH}\n`);
+}
+
+// Step 3: Verify OpenAI API access (embeddings + generation workloads)
+console.log("🔑 Checking OpenAI API access...");
+const openaiKey = process.env.OPENAI_API_KEY || "";
+if (!openaiKey) {
+  console.log("⚠️  OPENAI_API_KEY not set — embeddings and generation workloads will fail.");
+  console.log("   Set it in Zo Secrets (or export OPENAI_API_KEY) before running memory commands.\n");
+} else {
+  try {
+    const resp = await fetch("https://api.openai.com/v1/models", {
+      headers: { Authorization: `Bearer ${openaiKey}` },
+      signal: AbortSignal.timeout(10000),
+    });
+    console.log(
+      resp.ok
+        ? "✅ OpenAI API reachable\n"
+        : `⚠️  OpenAI API check returned ${resp.status} — verify OPENAI_API_KEY\n`
+    );
+  } catch {
+    console.log("⚠️  OpenAI API unreachable — verify network / OPENAI_API_KEY\n");
+  }
+}
+
+// Step 4: Health check
+console.log("🔍 Running health check...");
+const doctorScript = join(SKILL_DIR, "scripts/doctor.ts");
+if (existsSync(doctorScript)) {
+  run(`bun "${doctorScript}"`);
+} else {
+  // Quick inline check
+  const checks = [
+    { name: "Bun", cmd: "bun --version" },
+    { name: "SQLite3", cmd: "sqlite3 --version" },
+    { name: "OpenAI key", cmd: 'test -n "$OPENAI_API_KEY"' },
+    { name: "Memory DB", cmd: `test -f "${DB_PATH}"` },
+  ];
+
+  for (const c of checks) {
+    const ok = runQuiet(c.cmd);
+    console.log(`  ${ok !== null ? "✅" : "⚠️ "} ${c.name}`);
+  }
+}
+
+console.log(`
+🎉 Zouroboros installed!
+
+Quick start:
+  bun Skills/zouroboros/skills/selfheal/scripts/introspect.ts --verbose
+  bun Skills/zouroboros/skills/memory/scripts/memory.ts search "query"
+  bun Skills/zouroboros/scripts/doctor.ts
+`);

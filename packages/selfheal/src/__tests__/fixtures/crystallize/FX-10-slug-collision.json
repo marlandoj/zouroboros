@@ -1,0 +1,21 @@
+{
+  "id": "FX-10",
+  "name": "slug-collision",
+  "asserts": "existing slug under candidates root → auto-suffix to -2",
+  "phase": "PR1",
+  "scope": "slug-collision",
+  "input": {
+    "baseSlug": "deploy-zo-route",
+    "preexistingDirs": ["deploy-zo-route"]
+  },
+  "expected": {
+    "resolvedSlug": "deploy-zo-route-2"
+  },
+  "secondCollisionInput": {
+    "baseSlug": "deploy-zo-route",
+    "preexistingDirs": ["deploy-zo-route", "deploy-zo-route-2"]
+  },
+  "secondCollisionExpected": {
+    "resolvedSlug": "deploy-zo-route-3"
+  }
+}

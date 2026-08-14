@@ -1,0 +1,18 @@
+{
+  "id": "FX-21",
+  "name": "cost-cap-per-run",
+  "asserts": "makeRealLlmDriver throws LlmCostCapExceededError BEFORE invoking the LLM when the per-run reserve would push today's total past the cap",
+  "phase": "PR3",
+  "scope": "llm-draft",
+  "input": {
+    "cap_usd": 1.0,
+    "per_run_reserve_usd": 0.1,
+    "preexisting_spend_usd": 0.95
+  },
+  "expected": {
+    "throws": true,
+    "errorName": "LlmCostCapExceededError",
+    "spent_today_before": 0.95,
+    "cap_usd": 1.0
+  }
+}

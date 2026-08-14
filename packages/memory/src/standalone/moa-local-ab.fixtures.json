@@ -1,0 +1,86 @@
+[
+  {
+    "id": "swe-001",
+    "repo": "psf/requests",
+    "base": "deepseek-v4",
+    "problem_statement": "Calling `Session.send()` with a `PreparedRequest` whose `body` is a file-like object raises `TypeError` when the body is read twice (retry). The body is consumed but never rewound to position 0 before the retry. Fix `adapters.py` so the body is seekable-rewound before each send attempt.",
+    "expected": "In HTTPAdapter.send, before each retry attempt, if isinstance(request.body, io.IOBase) and request.body.seekable: request.body.seek(0). Wrap in try/except OSError and fall back to re-reading from the original stream. Add a regression test that sends a file body twice and asserts both attempts read the full payload."
+  },
+  {
+    "id": "swe-002",
+    "repo": "pallets/flask",
+    "base": "deepseek-v4",
+    "problem_statement": "`url_for` in a blueprint with `url_prefix` set at registration time (not in the Blueprint constructor) double-prefixes the URL when the blueprint is registered twice with different prefixes. Fix the prefix resolution so the registration-time prefix wins and is not concatenated with the constructor prefix.",
+    "expected": "In BlueprintRegisterOptions / register, capture the effective url_prefix at registration time and store it on the registered blueprint state. When building urls, use the registered-state prefix, not the constructor prefix. Add a test registering one Blueprint under two prefixes and asserting url_for resolves to each prefix exactly once."
+  },
+  {
+    "id": "swe-003",
+    "repo": "django/django",
+    "base": "deepseek-v4",
+    "problem_statement": "`QuerySet.update()` on a queryset filtered by a relation that spans a multi-valued relationship (e.g. `Filter(blog__entry__headline=...)`) produces a JOIN that multiplies rows, updating more rows than intended. Fix the update query compilation to subquery the PKs of the filtered model rather than JOIN-ing the multi-valued relation directly.",
+    "expected": "In SQLUpdateCompiler, when the filter contains a multi-valued join, split the WHERE into a subquery selecting the target model pks and apply SET ... WHERE pk IN (subquery). Add a test with a M2M-through relation asserting update() affects exactly the rows matching the filter, not the joined fan-out."
+  },
+  {
+    "id": "swe-004",
+    "repo": "scikit-learn/scikit-learn",
+    "base": "qwen3",
+    "problem_statement": "`ColumnTransformer` with `remainder='passthrough'` and a sparse `remainder` column raises `TypeError: cannot concatenate sparse and dense`. Fix the remainder handling so a sparse passthrough column is preserved as sparse and concatenated into a sparse output.",
+    "expected": "In ColumnTransformer._remainder, detect sparse remainder columns via scipy.sparse.issparse and route them through the sparse concat path. Add a test mixing a dense transformed column and a sparse passthrough remainder and assert the result is scipy.sparse and has the expected shape."
+  },
+  {
+    "id": "swe-005",
+    "repo": "pandas-dev/pandas",
+    "base": "qwen3",
+    "problem_statement": "`DataFrame.groupby(level=0).apply(func)` on a MultiIndex with a timezone-aware DatetimeIndex level coerces the tz to UTC during the apply round-trip, dropping the original tz. Fix the apply path to preserve the index level tz.",
+    "expected": "In groupby apply, when reindexing the result, preserve the original level dtype/tz by reconstructing the MultiIndex from the original level codes with the original dtype rather than inferring. Add a test with a tz-aware level grouping and applying an identity function, asserting the output level tz matches the input."
+  },
+  {
+    "id": "swe-006",
+    "repo": "sympy/sympy",
+    "base": "deepseek-v4",
+    "problem_statement": "`simplify(expr)` on an expression containing `sqrt(x**2)` with `x` assumed real returns `sqrt(x**2)` instead of `Abs(x)`. Fix the simplification so `sqrt(x**2)` reduces to `Abs(x)` under a real assumption on x.",
+    "expected": "In powsimp/sqrt, add a rule: if base is Pow with exp==2 and exponent is Rational(1,2) and the symbol has real=True, return Abs(base.base). Add a test asserting simplify(sqrt(x**2)) == Abs(x) given x = symbols('x', real=True)."
+  },
+  {
+    "id": "swe-007",
+    "repo": "matplotlib/matplotlib",
+    "base": "qwen3",
+    "problem_statement": "`Axes.set_xticks` with `minor=True` and no labels raises `AttributeError: 'NoneType' object has no attribute 'set_visible'` because the minor locator is not initialized. Fix set_xticks(minor=True) to initialize the minor locator before accessing tick artists.",
+    "expected": "In Axes.set_xticks, when minor=True, ensure self.xaxis.set_minor_locator is called (default NullLocator) before iterating the minor tick artists. Add a test calling set_xticks([0.25, 0.75], minor=True) with no labels and asserting no error and two minor ticks exist."
+  },
+  {
+    "id": "swe-008",
+    "repo": "astropy/astropy",
+    "base": "deepseek-v4",
+    "problem_statement": "`Time('2026-02-29')` raises a confusing `ValueError` instead of a clear 'invalid date' message because the day-out-of-range path formats the format string with the wrong field. Fix the error path to name the offending field (day) and value.",
+    "expected": "In Time parse, when day is out of range for the month, raise ValueError(f'invalid day {day} for month {month} in year {year}') naming the field and value. Add a test asserting the raised ValueError message contains 'invalid day' and the day value 29."
+  },
+  {
+    "id": "swe-009",
+    "repo": "pytest-dev/pytest",
+    "base": "qwen3",
+    "problem_statement": "`pytest.raises` used as a context manager around a `yield` fixture leaks the exception into the next test because the context exits after the fixture teardown. Fix raises so the context is closed at the point of the raised exception, not at fixture teardown.",
+    "expected": "In RaisesContext.__exit__, ensure the context is finalized at the point the exception is caught, not deferred to fixture teardown; restore the prior exc state. Add a test where a yield-fixture body uses pytest.raises and a subsequent test asserts sys.exc_info() is (None, None, None)."
+  },
+  {
+    "id": "swe-010",
+    "repo": "scipy/scipy",
+    "base": "deepseek-v4",
+    "problem_statement": "`scipy.optimize.linprog` with `method='highs'` and a single equality constraint returns `status=2` (infeasible) for a trivially feasible problem because the constraint matrix is squeezed to 1-D. Fix the shape handling so a single-row A_eq stays 2-D.",
+    "expected": "In _linprog_highs, reshape A_eq/b_eq so a single equality constraint remains a (1, n) matrix, not (n,). Add a test with one equality constraint and a known feasible vertex asserting status==0 and the expected x."
+  },
+  {
+    "id": "swe-011",
+    "repo": "numpy/numpy",
+    "base": "qwen3",
+    "problem_statement": "`np.savez` with a 0-d (scalar) array and `allow_pickle=True` writes a corrupt header that `np.load` cannot read back, raising `ValueError: invalid header`. Fix the 0-d savez path to write the scalar as a 1-element array for round-trip fidelity.",
+    "expected": "In savez, if an array is 0-d, promote it to shape (1,) before writing, and document the promotion in the docstring. Add a test saving a scalar and asserting np.load round-trips to a (1,) array with the original scalar at [0]."
+  },
+  {
+    "id": "swe-012",
+    "repo": "python/cpython",
+    "base": "deepseek-v4",
+    "problem_statement": "`traceback.format_exception` on an exception whose `__cause__` is itself (a cyclic cause chain) recurses infinitely and hits the recursion limit. Fix format_exception to detect a visited cause set and stop the chain with a note 'cyclic cause chain detected'.",
+    "expected": "In traceback.format_exception, thread a visited set of exception ids through the cause-chain walk; on revisiting an id, append 'cyclic cause chain detected' and break. Add a test constructing e with e.__cause__ = e and asserting format_exception terminates and contains 'cyclic cause chain detected'."
+  }
+]

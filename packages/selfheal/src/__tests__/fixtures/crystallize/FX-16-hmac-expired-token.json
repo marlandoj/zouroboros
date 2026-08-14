@@ -1,0 +1,19 @@
+{
+  "id": "FX-16",
+  "name": "hmac-expired-token",
+  "asserts": "verifyToken returns ok=false reason=expired when now >= created_at + APPROVAL_TTL_DAYS*86400",
+  "phase": "PR3",
+  "scope": "hmac",
+  "input": {
+    "secret_bytes": "abcdefghijklmnopqrstuvwxyz123456",
+    "id": "00000000-0000-0000-0000-000000000002",
+    "created_at": 1700000000,
+    "candidate_path": "/home/workspace/Skills/_candidates/expired-skill",
+    "now_seconds": 1701209601,
+    "ttl_days": 14
+  },
+  "expected": {
+    "ok": false,
+    "reason": "expired"
+  }
+}

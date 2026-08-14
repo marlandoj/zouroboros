@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Zouroboros Agent Observability Report — 2026-06-30</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a2e; line-height: 1.6; max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+  h1 { font-size: 28px; border-bottom: 3px solid #e94560; padding-bottom: 8px; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+  .zou-badge { background: linear-gradient(135deg, #e94560, #0f3460); color: white; padding: 3px 10px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+  .meta { color: #666; font-size: 14px; margin-bottom: 30px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
+  .stat-card { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 16px; text-align: center; }
+  .stat-card .num { font-size: 28px; font-weight: 700; color: #16213e; }
+  .stat-card .label { font-size: 12px; color: #6c757d; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+  h2 { font-size: 20px; color: #16213e; margin-top: 36px; margin-bottom: 12px; }
+  .alert-red { background: #fff5f5; border-left: 4px solid #e03131; padding: 12px 16px; border-radius: 4px; margin: 12px 0; }
+  .alert-red h3 { margin: 0 0 4px 0; color: #e03131; font-size: 16px; }
+  .alert-red p { margin: 0; color: #495057; }
+  .alert-yellow { background: #fff9db; border-left: 4px solid #fab005; padding: 12px 16px; border-radius: 4px; margin: 12px 0; }
+  .alert-yellow h3 { margin: 0 0 4px 0; color: #cc9a06; font-size: 16px; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #dee2e6; }
+  th { background: #16213e; color: white; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:nth-child(even) { background: #f8f9fa; }
+  .badge-fail { background: #ffe0e0; color: #c92a2a; padding: 2px 8px; border-radius: 10px; font-weight: 600; font-size: 12px; }
+  .badge-ok { background: #e6f9e6; color: #2b8a3e; padding: 2px 8px; border-radius: 10px; font-weight: 600; font-size: 12px; }
+  .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #dee2e6; color: #868e96; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1><span class="zou-badge">ZOU-402</span> Per-Agent Observability Report</h1>
+<div class="meta">Period: 2026-06-23 to 2026-06-30 &middot; Generated: 2026-06-30T15:00 UTC</div>
+
+<h2>📊 Executive Summary</h2>
+<p>Over the past 7 days, the agent fleet executed <strong>679 agent runs</strong> across 54 agents, totaling <strong>1,027 model calls</strong> at a cost of <strong>$1.17</strong>. The fleet is broadly healthy, but <strong>2 agents exceed the 20% failure threshold</strong> requiring attention:</p>
+
+<div class="alert-red">
+  <h3>🔴 zbr-audit-paired-branches — 50% failure rate (6 runs, 3 failed)</h3>
+  <p>This automation is failing half its runs. Likely related to stale git branch conditions or merged PR branch cleanup. Needs investigation and either fix or pause.</p>
+</div>
+
+<div class="alert-red">
+  <h3>🔴 mem-reindex-qdrant — 100% failure rate (1 run, 1 failed)</h3>
+  <p>Single-run failure. The 50-minute duration (3,025s) suggests Qdrant reindex may have timed out or hit an OOM condition. May be a one-off, but worth monitoring.</p>
+</div>
+
+<div class="alert-yellow">
+  <h3>⚠️ sys-audit-agent-paths — 14% failure rate (7 runs, 1 failed)</h3>
+  <p>Below 20% threshold but notable — 1 out of 7 runs failed with 876s avg latency. Monitor next cycle.</p>
+</div>
+
+<h2>📈 Key Metrics</h2>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="num">679</div><div class="label">Agent Runs</div></div>
+  <div class="stat-card"><div class="num">1,027</div><div class="label">Model Calls</div></div>
+  <div class="stat-card"><div class="num">$1.17</div><div class="label">Total Cost</div></div>
+  <div class="stat-card"><div class="num">3.4%</div><div class="label">Anomaly Rate</div></div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="num">p50 1,321ms</div><div class="label">Median Latency</div></div>
+  <div class="stat-card"><div class="num">p95 12,366ms</div><div class="label">P95 Latency</div></div>
+  <div class="stat-card"><div class="num">35</div><div class="label">Anomalies (>2σ)</div></div>
+  <div class="stat-card"><div class="num">2</div><div class="label">Agents >20% Fail</div></div>
+</div>
+
+<h2>📋 Workload Breakdown</h2>
+<table>
+  <tr><th>Workload</th><th>Count</th><th>Cost</th><th>Avg Latency</th><th>p95</th></tr>
+  <tr><td>gate</td><td>469</td><td>$1.04</td><td>1,422ms</td><td>2,654ms</td></tr>
+  <tr><td>briefing</td><td>375</td><td>$0.07</td><td>1,760ms</td><td>3,739ms</td></tr>
+  <tr><td>extraction</td><td>177</td><td>$0.06</td><td>11,000ms</td><td>48,387ms</td></tr>
+  <tr><td>summarization</td><td>2</td><td>$0.00</td><td>35,667ms</td><td>39,746ms</td></tr>
+  <tr><td>consensus-gate</td><td>4</td><td>$0.00</td><td>6,353ms</td><td>9,375ms</td></tr>
+</table>
+
+<h2>🚨 Agents Exceeding Failure Threshold</h2>
+<table>
+  <tr><th>Agent</th><th>Runs</th><th>Avg Latency</th><th>Fail Rate</th><th>Status</th></tr>
+  <tr>
+    <td>zbr-audit-paired-branches</td><td>6</td><td>54s</td><td><span class="badge-fail">50%</span></td><td>3 of 6 runs failed — likely stale branch state</td>
+  </tr>
+  <tr>
+    <td>mem-reindex-qdrant</td><td>1</td><td>3,025s</td><td><span class="badge-fail">100%</span></td><td>50-min timeout — possible Qdrant OOM/resource issue</td>
+  </tr>
+</table>
+
+<h2>🔍 Active Agents (Sorted by Runs)</h2>
+<table>
+  <tr><th>Agent</th><th>Runs</th><th>Avg Duration</th><th>Fail Rate</th></tr>
+  <tr><td>[SYS] Sweep Build Watchdogs</td><td>356</td><td>0s</td><td><span class="badge-ok">0%</span></td></tr>
+  <tr><td>sys-watch-automation-contracts</td><td>91</td><td>11s</td><td><span class="badge-ok">0%</span></td></tr>
+  <tr><td>mem-index-vault</td><td>30</td><td>10s</td><td><span class="badge-ok">0%</span></td></tr>
+  <tr><td>sys-audit-agent-paths</td><td>7</td><td>876s</td><td><span class="badge-fail">14%</span></td></tr>
+  <tr><td>zbr-audit-paired-branches</td><td>6</td><td>54s</td><td><span class="badge-fail">50%</span></td></tr>
+  <tr><td>mem-reindex-qdrant</td><td>1</td><td>3,025s</td><td><span class="badge-fail">100%</span></td></tr>
+</table>
+<p style="color: #6c757d; font-size: 13px; margin-top: -8px;">† Only agents with failures shown — all other 48 agents at 0% fail rate.</p>
+
+<h2>📈 Anomaly Detection (>2σ)</h2>
+<p>Threshold: <strong>&gt;18,983ms</strong> (μ=3,282ms, σ=7,851ms). Found <strong>35 anomalies (3.4%)</strong> — below 5% alert threshold. All anomalies are from the <strong>extraction</strong> workload using <code>deepseek/deepseek-chat-v3-0324</code>, suggesting a backend-specific latency issue rather than a systemic problem.</p>
+
+<h2>⚠️ Other Findings</h2>
+<div class="alert-yellow">
+  <h3>⚠️ sys-audit-agent-health — 1 CRIT finding on latest run</h3>
+  <p>The latest health audit produced a critical finding (117s run, 0% fail rate by our metric, but flagged CRIT). Check the agent-health logs for details.</p>
+</div>
+
+<h2>🔧 Recommendations</h2>
+<ol>
+  <li><strong>Investigate zbr-audit-paired-branches:</strong> 50% failure rate suggests stale branch refs or merged PR branches causing git errors. Consider pausing if not mission-critical.</li>
+  <li><strong>Review mem-reindex-qdrant:</strong> 50-minute run timing out. Consider adjusting Qdrant batch size or memory limits.</li>
+  <li><strong>Monitor sys-audit-agent-paths:</strong> 14% fail rate trending up. If it hits 20% next cycle, investigate.</li>
+  <li><strong>Extraction anomalies:</strong> DeepSeek extraction workload has high p95 latency (48s). Consider timeouts or model fallback for extraction tasks.</li>
+  <li><strong>sys-audit-agent-health CRIT:</strong> Review the latest health audit output for the specific critical finding.</li>
+</ol>
+
+<div class="footer">
+  Zouroboros Observability &middot; Auto-generated agent-report
+</div>
+
+</body>
+</html>

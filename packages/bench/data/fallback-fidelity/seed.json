@@ -1,0 +1,117 @@
+{
+  "metadata": {
+    "name": "fallback-fidelity",
+    "version": "1.0.0",
+    "description": "Cross-rung output fidelity benchmark for the Zouroboros healer fallback chain. For each task, calls every rung of the target chain and scores output against tier-specific gates. Verifies that downgrade targets produce usable output for swarm-flavored workloads.",
+    "purpose": "Q2 #5 \u00a73.9 family (b) \u2014 budget-cap downgrade fidelity. When Sonnet is unhealthy and the healer flips an agent to Kimi-K2.5 (open-weight rung) or zo:smart (terminal rung), do those rungs actually produce reasonable output for our workloads? Without this benchmark, fallback is opaque past the unit-invariants layer."
+  },
+  "chain": {
+    "primary": "byok:00000000-0000-4000-8000-000000000002",
+    "primaryLabel": "Claude Code Sonnet",
+    "rungs": [
+      {
+        "model": "byok:00000000-0000-4000-8000-000000000002",
+        "label": "Sonnet",
+        "tier": "proprietary"
+      },
+      {
+        "model": "byok:00000000-0000-4000-8000-000000000001",
+        "label": "Haiku",
+        "tier": "proprietary"
+      },
+      {
+        "model": "vercel:moonshotai/kimi-k2.5",
+        "label": "Kimi-K2.5",
+        "tier": "open-weight"
+      },
+      {
+        "model": "vercel:minimax/minimax-m2.7",
+        "label": "MiniMax-M2.7",
+        "tier": "open-weight"
+      },
+      {
+        "model": "zo:smart",
+        "label": "Zo Smart",
+        "tier": "zo-native"
+      }
+    ]
+  },
+  "tierThresholds": {
+    "proprietary": 0.9,
+    "open-weight": 0.7,
+    "zo-native": 0.5
+  },
+  "tasks": [
+    {
+      "id": "summarize-changelog",
+      "prompt": "Summarize the following changelog in two sentences:\n- added user authentication\n- fixed memory leak in session handler\n- migrated database from Postgres 14 to 16\n- removed deprecated /api/v1/users endpoint\n- added rate limiting at 100 req/min per IP",
+      "expectedKeywords": [
+        "auth",
+        "memory",
+        "database",
+        "deprecated",
+        "rate"
+      ],
+      "minLength": 80
+    },
+    {
+      "id": "extract-actions",
+      "prompt": "Extract the action items from this meeting note as a numbered list:\n\nWe discussed Q2 priorities. Maria will draft the new onboarding flow by Friday. Engineering needs to schedule a postmortem for last week's outage. The design team is blocked on copy review \u2014 Amir to follow up with marketing. Budget approval for the analytics tool is pending finance signoff next Tuesday.",
+      "expectedKeywords": [
+        "maria",
+        "onboarding",
+        "postmortem",
+        "amir",
+        "budget"
+      ],
+      "minLength": 100
+    },
+    {
+      "id": "explain-pattern",
+      "prompt": "Explain the difference between a HashMap and a TreeMap in Java in three sentences. Mention ordering, lookup complexity, and a typical use case for each.",
+      "expectedKeywords": [
+        "hash",
+        "tree",
+        "ordering",
+        "lookup",
+        "use case"
+      ],
+      "minLength": 120
+    },
+    {
+      "id": "fix-bug-suggestion",
+      "prompt": "This Python function has a bug. What is it and how would you fix it?\n\ndef get_user(user_id, users):\n    for u in users:\n        if u.id == user_id:\n            return u\n    return None\n\nThe bug: when called concurrently with the same user_id by 100 callers and the user list is being mutated, the function sometimes returns stale data.",
+      "expectedKeywords": [
+        "concurrent",
+        "lock",
+        "mutate",
+        "stale",
+        "thread"
+      ],
+      "minLength": 100
+    },
+    {
+      "id": "decision-tradeoff",
+      "prompt": "We need to choose between optimistic locking and pessimistic locking for a high-traffic billing API. List one advantage and one disadvantage of each, then recommend which to use and why.",
+      "expectedKeywords": [
+        "optimistic",
+        "pessimistic",
+        "conflict",
+        "throughput",
+        "recommend"
+      ],
+      "minLength": 150
+    },
+    {
+      "id": "json-transformation",
+      "prompt": "Given this input JSON: [{\"name\":\"alice\",\"age\":30,\"role\":\"admin\"},{\"name\":\"bob\",\"age\":25,\"role\":\"user\"},{\"name\":\"carol\",\"age\":35,\"role\":\"admin\"}], output a JSON array of just the admin names sorted alphabetically. Wrap your answer in a code block.",
+      "expectedKeywords": [
+        "alice",
+        "carol",
+        "admin",
+        "sorted"
+      ],
+      "minLength": 30
+    }
+  ]
+}

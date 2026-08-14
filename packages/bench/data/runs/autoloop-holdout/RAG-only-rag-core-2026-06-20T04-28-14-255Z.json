@@ -1,0 +1,1219 @@
+{
+  "run_id": "6dbd8fbc-8156-4571-a426-6ef16f6e8ef8",
+  "timestamp": "2026-06-20T04:28:14.255Z",
+  "dataset": "/home/workspace/zouroboros/packages/bench/data/rag-only/seed-hard.json",
+  "retriever": "rag-core",
+  "top_k": 5,
+  "scores": {
+    "retrieval_recall_at_k": 100,
+    "retrieval_mrr": 0.9666666666666667,
+    "answer_accuracy": 66.66666666666666,
+    "no_answer_rate": 30
+  },
+  "latency": {
+    "avg_retrieval_ms": 150,
+    "avg_answer_ms": 882
+  },
+  "results": [
+    {
+      "id": "h01",
+      "fact_id": "f01",
+      "question": "How do contributors integrate their work into the canonical lineage?",
+      "expected": "Through a pull request that passes the CI gate — no direct commits to the protected line allowed",
+      "predicted": "Contributors integrate their work into the canonical lineage by following the established process that requires all changes to the main branch to go through a pull request (PR) and continuous integration (CI) gate, ensuring no direct pushes are made. Additionally, they must refer to the SKU lists in the specified document as the single source of truth and propagate any updates accordingly.",
+      "retrieved": [
+        {
+          "fact_id": "f29",
+          "score": 0.4140456517197372
+        },
+        {
+          "fact_id": "f01",
+          "score": 0.3964038226244385
+        },
+        {
+          "fact_id": "f26",
+          "score": 0.31583025931198677
+        },
+        {
+          "fact_id": "f19",
+          "score": 0.28635401525674103
+        },
+        {
+          "fact_id": "f07",
+          "score": 0.2787757042775513
+        }
+      ],
+      "gold_rank": 2,
+      "recall_hit": 1,
+      "rr": 0.5,
+      "retrieval_ms": 173,
+      "answer_ms": 2207,
+      "judge": {
+        "correct": true,
+        "confidence": 0.9,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h02",
+      "fact_id": "f02",
+      "question": "If I send a partial dictionary when adjusting a service's runtime settings, what happens to keys I omit?",
+      "expected": "They are dropped — the field is a full replacement, not a patch",
+      "predicted": "If you send a partial dictionary when adjusting a service's runtime settings, the omitted keys will not be merged; instead, the update will replace the existing settings with the complete set you provide.",
+      "retrieved": [
+        {
+          "fact_id": "f02",
+          "score": 0.4998090784950284
+        },
+        {
+          "fact_id": "f05",
+          "score": 0.29235332036088013
+        },
+        {
+          "fact_id": "f22",
+          "score": 0.27467658455914346
+        },
+        {
+          "fact_id": "f09",
+          "score": 0.2687769424659048
+        },
+        {
+          "fact_id": "f21",
+          "score": 0.26822725948402004
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 175,
+      "answer_ms": 982,
+      "judge": {
+        "correct": true,
+        "confidence": 0.9,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h03",
+      "fact_id": "f03",
+      "question": "Where does the visual-asset vendor's authorization token reside, and which execution surface can read it?",
+      "expected": "In the encrypted secret vault on the platform; only the platform's run-bash MCP can see it — local shell sessions cannot",
+      "predicted": "I don't know.",
+      "retrieved": [
+        {
+          "fact_id": "f03",
+          "score": 0.4458673909979898
+        },
+        {
+          "fact_id": "f29",
+          "score": 0.3540950867433403
+        },
+        {
+          "fact_id": "f07",
+          "score": 0.27797837876181586
+        },
+        {
+          "fact_id": "f30",
+          "score": 0.2772691935282698
+        },
+        {
+          "fact_id": "f17",
+          "score": 0.2725208836863134
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 160,
+      "answer_ms": 2052,
+      "judge": {
+        "correct": false,
+        "confidence": 0.9,
+        "label": "NO_ANSWER"
+      },
+      "no_answer": true
+    },
+    {
+      "id": "h04",
+      "fact_id": "f04",
+      "question": "What tier ceiling governs the number of branded hostnames a workspace owner may attach?",
+      "expected": "Free plan: 0, Basic: 3, Pro: 5, Ultra: 10 — branded hostnames require a paid plan",
+      "predicted": "The number of branded hostnames a workspace owner may attach is governed by the tier ceiling of the paid plan, which allows for a maximum of 10 custom domains in the Ultra plan.",
+      "retrieved": [
+        {
+          "fact_id": "f04",
+          "score": 0.4108257187321781
+        },
+        {
+          "fact_id": "f11",
+          "score": 0.3085782756877129
+        },
+        {
+          "fact_id": "f22",
+          "score": 0.29302696754125485
+        },
+        {
+          "fact_id": "f29",
+          "score": 0.2686605205943617
+        },
+        {
+          "fact_id": "f25",
+          "score": 0.24215464805779144
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 188,
+      "answer_ms": 1906,
+      "judge": {
+        "correct": false,
+        "confidence": 0.7,
+        "label": "PARTIAL"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h05",
+      "fact_id": "f05",
+      "question": "Why might my child processes lose their inherited runtime configuration when launched through the JavaScript-native runtime?",
+      "expected": "Because Bun.spawn does not propagate the parent environment automatically — you must explicitly pass env: { ...process.env }",
+      "predicted": "Child processes may lose their inherited runtime configuration when launched through the JavaScript-native runtime because Bun.spawn does not inherit the parent environment. To ensure that the environment variables are available, you must explicitly pass them using env: { ...process.env }, or else the variables will not be accessible at the spawn boundary.",
+      "retrieved": [
+        {
+          "fact_id": "f05",
+          "score": 0.4779981873332575
+        },
+        {
+          "fact_id": "f22",
+          "score": 0.2837421068928937
+        },
+        {
+          "fact_id": "f09",
+          "score": 0.2647304314340143
+        },
+        {
+          "fact_id": "f02",
+          "score": 0.24377823095577655
+        },
+        {
+          "fact_id": "f03",
+          "score": 0.23801663622112976
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 130,
+      "answer_ms": 1182,
+      "judge": {
+        "correct": true,
+        "confidence": 0.95,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h06",
+      "fact_id": "f06",
+      "question": "Which dimensionality and provider currently produces the recall layer's similarity vectors?",
+      "expected": "1536-dimensional vectors from OpenAI's small text embedder (text-embedding-3-small)",
+      "predicted": "The recall layer's similarity vectors are currently produced by OpenAI text-embedding-3-small with a dimensionality of 1536d.",
+      "retrieved": [
+        {
+          "fact_id": "f08",
+          "score": 0.3977307964784286
+        },
+        {
+          "fact_id": "f06",
+          "score": 0.32685745234014424
+        },
+        {
+          "fact_id": "f25",
+          "score": 0.32351268416976475
+        },
+        {
+          "fact_id": "f10",
+          "score": 0.2390851049552276
+        },
+        {
+          "fact_id": "f29",
+          "score": 0.233726293942494
+        }
+      ],
+      "gold_rank": 2,
+      "recall_hit": 1,
+      "rr": 0.5,
+      "retrieval_ms": 147,
+      "answer_ms": 697,
+      "judge": {
+        "correct": true,
+        "confidence": 0.95,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h07",
+      "fact_id": "f07",
+      "question": "Which on-disk artifact serves as the canonical home for codified step sequences?",
+      "expected": "The shared-facts SQLite file (shared-facts.db) — not memory.db or mimir.db",
+      "predicted": "I don't know",
+      "retrieved": [
+        {
+          "fact_id": "f07",
+          "score": 0.5528979876851069
+        },
+        {
+          "fact_id": "f29",
+          "score": 0.3802427666110891
+        },
+        {
+          "fact_id": "f22",
+          "score": 0.28229626689492265
+        },
+        {
+          "fact_id": "f06",
+          "score": 0.27370878524286857
+        },
+        {
+          "fact_id": "f19",
+          "score": 0.271229676623321
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 154,
+      "answer_ms": 376,
+      "judge": {
+        "correct": false,
+        "confidence": 0.9,
+        "label": "NO_ANSWER"
+      },
+      "no_answer": true
+    },
+    {
+      "id": "h08",
+      "fact_id": "f08",
+      "question": "If I try to invoke a verb named 'lookup' on the canonical recall command-line tool, what will I find?",
+      "expected": "That verb does not exist — only store, search, hybrid, index, and stats are supported",
+      "predicted": "You will find that no 'lookup' subcommand exists in the canonical CLI, which is 'bun .zo/memory/scripts/memory.ts'.",
+      "retrieved": [
+        {
+          "fact_id": "f08",
+          "score": 0.6658638192462122
+        },
+        {
+          "fact_id": "f09",
+          "score": 0.38852297661782464
+        },
+        {
+          "fact_id": "f29",
+          "score": 0.3341694185565338
+        },
+        {
+          "fact_id": "f07",
+          "score": 0.26154452534056055
+        },
+        {
+          "fact_id": "f19",
+          "score": 0.2576304778861945
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 103,
+      "answer_ms": 739,
+      "judge": {
+        "correct": true,
+        "confidence": 0.8,
+        "label": "PARTIAL"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h09",
+      "fact_id": "f09",
+      "question": "At the beginning of each turn, am I expected to trigger the prior-context injection layer myself?",
+      "expected": "No — it runs automatically via the UserPromptSubmit hook; manual invocation is forbidden",
+      "predicted": "No, you are not expected to trigger the prior-context injection layer yourself, as the Memory gate auto-injects via the UserPromptSubmit hook and should not be manually called.",
+      "retrieved": [
+        {
+          "fact_id": "f09",
+          "score": 0.3750346172245408
+        },
+        {
+          "fact_id": "f17",
+          "score": 0.2945068180513927
+        },
+        {
+          "fact_id": "f22",
+          "score": 0.2730911875154958
+        },
+        {
+          "fact_id": "f05",
+          "score": 0.2715174996193415
+        },
+        {
+          "fact_id": "f08",
+          "score": 0.26070369881348093
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 175,
+      "answer_ms": 891,
+      "judge": {
+        "correct": true,
+        "confidence": 0.9,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h10",
+      "fact_id": "f10",
+      "question": "By what magnitude did the recent disconnected-node cleanup pass shrink isolated entries in the knowledge web?",
+      "expected": "About a 30% reduction — from 1,966 down to 1,382 — and graph density rose 64%",
+      "predicted": "The recent disconnected-node cleanup pass shrank isolated entries in the knowledge web from 1,966 to 1,382, which is a reduction of 30%.",
+      "retrieved": [
+        {
+          "fact_id": "f10",
+          "score": 0.6519530339249854
+        },
+        {
+          "fact_id": "f06",
+          "score": 0.345065391057843
+        },
+        {
+          "fact_id": "f21",
+          "score": 0.3369140916783243
+        },
+        {
+          "fact_id": "f19",
+          "score": 0.27825728906080266
+        },
+        {
+          "fact_id": "f16",
+          "score": 0.27312923189739624
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 160,
+      "answer_ms": 931,
+      "judge": {
+        "correct": true,
+        "confidence": 0.9,
+        "label": "PARTIAL"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h11",
+      "fact_id": "f11",
+      "question": "What is the hardest cap on capital exposure to one ticker that the advisor will sanction?",
+      "expected": "Five percent of total portfolio value — never larger for any single name",
+      "predicted": "The hardest cap on capital exposure to one ticker that the advisor will sanction is 5% of the total portfolio value.",
+      "retrieved": [
+        {
+          "fact_id": "f11",
+          "score": 0.5104713644816197
+        },
+        {
+          "fact_id": "f12",
+          "score": 0.42575329996604855
+        },
+        {
+          "fact_id": "f18",
+          "score": 0.3900177091477841
+        },
+        {
+          "fact_id": "f13",
+          "score": 0.3556418438390287
+        },
+        {
+          "fact_id": "f14",
+          "score": 0.2896034494308522
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 122,
+      "answer_ms": 718,
+      "judge": {
+        "correct": true,
+        "confidence": 0.95,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h12",
+      "fact_id": "f12",
+      "question": "Beyond what fractions of book value or industry weight should the diversification alarm fire?",
+      "expected": "When a single name exceeds 5%, a sector exceeds 25%, or asset-class drift is material relative to target",
+      "predicted": "I don't know.",
+      "retrieved": [
+        {
+          "fact_id": "f12",
+          "score": 0.6664988303043335
+        },
+        {
+          "fact_id": "f18",
+          "score": 0.3709382337156791
+        },
+        {
+          "fact_id": "f11",
+          "score": 0.3650392187975299
+        },
+        {
+          "fact_id": "f22",
+          "score": 0.24514952189859676
+        },
+        {
+          "fact_id": "f13",
+          "score": 0.24177409423592827
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 173,
+      "answer_ms": 457,
+      "judge": {
+        "correct": false,
+        "confidence": 1,
+        "label": "NO_ANSWER"
+      },
+      "no_answer": true
+    },
+    {
+      "id": "h13",
+      "fact_id": "f13",
+      "question": "After the digital-asset approaches were rejected in walk-forward, which equity-basket breakout system survived and went live in simulation?",
+      "expected": "ETF Donchian 100/50 — deployed to Alpaca paper on 2026-04-20",
+      "predicted": "I don't know.",
+      "retrieved": [
+        {
+          "fact_id": "f13",
+          "score": 0.650472178264893
+        },
+        {
+          "fact_id": "f18",
+          "score": 0.4715022395882137
+        },
+        {
+          "fact_id": "f30",
+          "score": 0.43111656608068283
+        },
+        {
+          "fact_id": "f14",
+          "score": 0.38284865929255013
+        },
+        {
+          "fact_id": "f12",
+          "score": 0.36459354245420417
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 155,
+      "answer_ms": 397,
+      "judge": {
+        "correct": false,
+        "confidence": 0.9,
+        "label": "NO_ANSWER"
+      },
+      "no_answer": true
+    },
+    {
+      "id": "h14",
+      "fact_id": "f14",
+      "question": "Which lawmaker-disclosure-following approach was wound down in early May, and why?",
+      "expected": "The copytrade paper strategy — no edge after the relevant disclosure regulation, 45-day data lag, and 2026 returns were negative; retired 2026-05-08",
+      "predicted": "The Copytrade paper was retired on May 8, 2026, due to having no edge post-STOCK Act, with a reported NANC of -4% year-to-date and a 45-day lag.",
+      "retrieved": [
+        {
+          "fact_id": "f14",
+          "score": 0.6249354297758142
+        },
+        {
+          "fact_id": "f10",
+          "score": 0.2989933363040611
+        },
+        {
+          "fact_id": "f20",
+          "score": 0.25027226511481215
+        },
+        {
+          "fact_id": "f19",
+          "score": 0.24536960051475165
+        },
+        {
+          "fact_id": "f30",
+          "score": 0.2298893265532664
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 178,
+      "answer_ms": 898,
+      "judge": {
+        "correct": true,
+        "confidence": 0.9,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h15",
+      "fact_id": "f15",
+      "question": "Through the brokerage aggregator we integrate with, can a client gain exposure to commodities or yield-curve derivatives?",
+      "expected": "No — that aggregator supports only equities and options, no futures on any broker",
+      "predicted": "I don't know.",
+      "retrieved": [
+        {
+          "fact_id": "f15",
+          "score": 0.6739017952122472
+        },
+        {
+          "fact_id": "f18",
+          "score": 0.36481083370554
+        },
+        {
+          "fact_id": "f13",
+          "score": 0.2978767495410838
+        },
+        {
+          "fact_id": "f30",
+          "score": 0.2741446161890398
+        },
+        {
+          "fact_id": "f12",
+          "score": 0.2715011364080453
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 123,
+      "answer_ms": 687,
+      "judge": {
+        "correct": false,
+        "confidence": 0.8,
+        "label": "NO_ANSWER"
+      },
+      "no_answer": true
+    },
+    {
+      "id": "h16",
+      "fact_id": "f16",
+      "question": "What was the headline performance improvement and bundled capability set in the late-April umbrella release?",
+      "expected": "A roughly 40% drop in p50 latency, plus a RAG package, the swarm decision gate, and Hermes integration (released 2026-04-26 as v2.0.0)",
+      "predicted": "The headline performance improvement in the late-April umbrella release of Zouroboros v2.0.0 was a 40% drop in p50 latency, and it included the RAG package, swarm gate, and Hermes integration as part of its bundled capabilities.",
+      "retrieved": [
+        {
+          "fact_id": "f16",
+          "score": 0.6215609351804963
+        },
+        {
+          "fact_id": "f24",
+          "score": 0.3088493873084944
+        },
+        {
+          "fact_id": "f10",
+          "score": 0.29092186453722546
+        },
+        {
+          "fact_id": "f30",
+          "score": 0.2606956403072525
+        },
+        {
+          "fact_id": "f21",
+          "score": 0.23792399890725838
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 155,
+      "answer_ms": 1227,
+      "judge": {
+        "correct": true,
+        "confidence": 0.95,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h17",
+      "fact_id": "f17",
+      "question": "How does the platform decide whether a user request warrants engaging the multi-agent orchestrator?",
+      "expected": "A mechanical 7-signal classifier (~2ms) that emits DIRECT, SUGGEST, SWARM, or FORCE",
+      "predicted": "I don't know",
+      "retrieved": [
+        {
+          "fact_id": "f17",
+          "score": 0.6694904115402863
+        },
+        {
+          "fact_id": "f22",
+          "score": 0.32881903129996626
+        },
+        {
+          "fact_id": "f09",
+          "score": 0.289393230979469
+        },
+        {
+          "fact_id": "f24",
+          "score": 0.2871525532686498
+        },
+        {
+          "fact_id": "f21",
+          "score": 0.2804204964315751
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 141,
+      "answer_ms": 582,
+      "judge": {
+        "correct": false,
+        "confidence": 0.9,
+        "label": "NO_ANSWER"
+      },
+      "no_answer": true
+    },
+    {
+      "id": "h18",
+      "fact_id": "f18",
+      "question": "What property must underlying-asset baskets satisfy when layering two systematic approaches together?",
+      "expected": "The ETF universes must be disjoint — different indicators on the same names is not sufficient",
+      "predicted": "Underlying-asset baskets must satisfy the requirement of being disjoint ETF universes when layering two systematic approaches together.",
+      "retrieved": [
+        {
+          "fact_id": "f18",
+          "score": 0.6015160321661981
+        },
+        {
+          "fact_id": "f12",
+          "score": 0.4236496395240295
+        },
+        {
+          "fact_id": "f13",
+          "score": 0.3556819343015884
+        },
+        {
+          "fact_id": "f11",
+          "score": 0.32159979780120396
+        },
+        {
+          "fact_id": "f22",
+          "score": 0.31553283241647634
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 153,
+      "answer_ms": 611,
+      "judge": {
+        "correct": true,
+        "confidence": 0.9,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h19",
+      "fact_id": "f19",
+      "question": "Whose 'second brain' note-taking methodology informs the synthesis-and-backlinks persona's design?",
+      "expected": "Andrej Karpathy's — synthesis, feedback loop, backlinks, sage node wired end-to-end",
+      "predicted": "The 'second brain' note-taking methodology that informs the synthesis-and-backlinks persona's design is associated with Karpathy.",
+      "retrieved": [
+        {
+          "fact_id": "f19",
+          "score": 0.5607298315850819
+        },
+        {
+          "fact_id": "f27",
+          "score": 0.3125635494912907
+        },
+        {
+          "fact_id": "f24",
+          "score": 0.30777915605124145
+        },
+        {
+          "fact_id": "f26",
+          "score": 0.30390161410036665
+        },
+        {
+          "fact_id": "f23",
+          "score": 0.2960208684749466
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 185,
+      "answer_ms": 602,
+      "judge": {
+        "correct": true,
+        "confidence": 0.8,
+        "label": "PARTIAL"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h20",
+      "fact_id": "f20",
+      "question": "Is the model-traffic-routing middleware that used to live in the stack still around?",
+      "expected": "No — OmniRoute was removed from the Zouroboros ecosystem permanently on 2026-04-01",
+      "predicted": "I don't know.",
+      "retrieved": [
+        {
+          "fact_id": "f20",
+          "score": 0.7131707863041171
+        },
+        {
+          "fact_id": "f10",
+          "score": 0.290908298398782
+        },
+        {
+          "fact_id": "f06",
+          "score": 0.25966546521105566
+        },
+        {
+          "fact_id": "f17",
+          "score": 0.24512635633040605
+        },
+        {
+          "fact_id": "f22",
+          "score": 0.24406712265569241
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 133,
+      "answer_ms": 448,
+      "judge": {
+        "correct": false,
+        "confidence": 0.8,
+        "label": "NO_ANSWER"
+      },
+      "no_answer": true
+    },
+    {
+      "id": "h21",
+      "fact_id": "f21",
+      "question": "Which scheduled custodian keeps the fleet of recurring background workers tidy and reports back weekly?",
+      "expected": "Agent Doctor — auto-remediates zombies/cost/delivery and emails a weekly change report",
+      "predicted": "I don't know",
+      "retrieved": [
+        {
+          "fact_id": "f21",
+          "score": 0.5572404722808748
+        },
+        {
+          "fact_id": "f22",
+          "score": 0.4207906311595689
+        },
+        {
+          "fact_id": "f30",
+          "score": 0.30253804940891565
+        },
+        {
+          "fact_id": "f17",
+          "score": 0.2993087380050229
+        },
+        {
+          "fact_id": "f07",
+          "score": 0.28289972235404764
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 157,
+      "answer_ms": 420,
+      "judge": {
+        "correct": false,
+        "confidence": 0.9,
+        "label": "NO_ANSWER"
+      },
+      "no_answer": true
+    },
+    {
+      "id": "h22",
+      "fact_id": "f22",
+      "question": "Which top-end model tier is off-limits for recurring background routines?",
+      "expected": "Opus — never assign it to scheduled agents; match capability to instruction",
+      "predicted": "The top-end model tier that is off-limits for recurring background routines is Opus.",
+      "retrieved": [
+        {
+          "fact_id": "f22",
+          "score": 0.5829469129170997
+        },
+        {
+          "fact_id": "f25",
+          "score": 0.39500259865265464
+        },
+        {
+          "fact_id": "f04",
+          "score": 0.34772586260675953
+        },
+        {
+          "fact_id": "f09",
+          "score": 0.3225780217397012
+        },
+        {
+          "fact_id": "f08",
+          "score": 0.2847133862870295
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 116,
+      "answer_ms": 581,
+      "judge": {
+        "correct": true,
+        "confidence": 0.9,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h23",
+      "fact_id": "f23",
+      "question": "In what register does the default persona speak, and how does it address the operator?",
+      "expected": "A formal-yet-friendly J.A.R.V.I.S.-inspired tone with subtle wit; addresses the operator as 'Sir'",
+      "predicted": "The default persona speaks in a formal yet friendly register and addresses the operator as 'Sir'.",
+      "retrieved": [
+        {
+          "fact_id": "f23",
+          "score": 0.612104246404171
+        },
+        {
+          "fact_id": "f24",
+          "score": 0.34391890962022803
+        },
+        {
+          "fact_id": "f25",
+          "score": 0.30657098187700266
+        },
+        {
+          "fact_id": "f09",
+          "score": 0.2760704988378905
+        },
+        {
+          "fact_id": "f19",
+          "score": 0.25042200754656185
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 161,
+      "answer_ms": 691,
+      "judge": {
+        "correct": true,
+        "confidence": 0.9,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h24",
+      "fact_id": "f24",
+      "question": "Which hands-free browser-extension surface did we ship in late April for the primary persona?",
+      "expected": "The Alaric Voice PWA — a Chrome extension wired to ElevenLabs Flash v2.5 TTS via the zo.space /api/tts proxy (2026-04-28)",
+      "predicted": "In late April, we shipped the Alaric Voice PWA, which includes a Chrome extension for the primary persona.",
+      "retrieved": [
+        {
+          "fact_id": "f24",
+          "score": 0.5818873295803699
+        },
+        {
+          "fact_id": "f23",
+          "score": 0.33973253851243507
+        },
+        {
+          "fact_id": "f19",
+          "score": 0.31745823326964456
+        },
+        {
+          "fact_id": "f16",
+          "score": 0.3023059155717747
+        },
+        {
+          "fact_id": "f09",
+          "score": 0.2788463054934967
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 128,
+      "answer_ms": 763,
+      "judge": {
+        "correct": true,
+        "confidence": 0.85,
+        "label": "PARTIAL"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h25",
+      "fact_id": "f25",
+      "question": "Which speech-synthesis tier from our voice vendor produces hallucinated tokens at audio-segment seams, and which configuration sidesteps the issue?",
+      "expected": "turbo_v2_5 hallucinates at chunk boundaries; flash_v2_5 with stability 0.85 and style 0 is clean",
+      "predicted": "The speech-synthesis tier from the voice vendor that produces hallucinated tokens at audio-segment seams is turbo_v2_5. The configuration that sidesteps this issue is flash_v2_5 with stability set to 0.85 and style set to 0.",
+      "retrieved": [
+        {
+          "fact_id": "f25",
+          "score": 0.7082553369644896
+        },
+        {
+          "fact_id": "f24",
+          "score": 0.4332367898733674
+        },
+        {
+          "fact_id": "f30",
+          "score": 0.28805414903369086
+        },
+        {
+          "fact_id": "f17",
+          "score": 0.2450432830663667
+        },
+        {
+          "fact_id": "f29",
+          "score": 0.24421664222003003
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 147,
+      "answer_ms": 1416,
+      "judge": {
+        "correct": true,
+        "confidence": 1,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h26",
+      "fact_id": "f26",
+      "question": "What is the persona handoff sequence for long-form public-site writing?",
+      "expected": "content-strategist → Visual Storyteller → humanizer-skill",
+      "predicted": "The persona handoff sequence for long-form public-site writing involves a content-strategist, followed by a Visual Storyteller, and concludes with a humanizer-skill.",
+      "retrieved": [
+        {
+          "fact_id": "f26",
+          "score": 0.6549885738101335
+        },
+        {
+          "fact_id": "f23",
+          "score": 0.4268436577080389
+        },
+        {
+          "fact_id": "f27",
+          "score": 0.3980954703235634
+        },
+        {
+          "fact_id": "f19",
+          "score": 0.34463616048214984
+        },
+        {
+          "fact_id": "f24",
+          "score": 0.2791405332121894
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 134,
+      "answer_ms": 894,
+      "judge": {
+        "correct": true,
+        "confidence": 1,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h27",
+      "fact_id": "f27",
+      "question": "On the personal site, should articles display a byline component with photo and title?",
+      "expected": "No — the author card is redundant since the user is the only author",
+      "predicted": "Articles on the personal site should not display a byline component with photo and title, as it is considered redundant since the user is the only author.",
+      "retrieved": [
+        {
+          "fact_id": "f27",
+          "score": 0.7813470198397894
+        },
+        {
+          "fact_id": "f26",
+          "score": 0.41651479612504444
+        },
+        {
+          "fact_id": "f19",
+          "score": 0.32446277163953713
+        },
+        {
+          "fact_id": "f23",
+          "score": 0.2617151630659878
+        },
+        {
+          "fact_id": "f29",
+          "score": 0.2606087779346171
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 155,
+      "answer_ms": 850,
+      "judge": {
+        "correct": true,
+        "confidence": 0.95,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h28",
+      "fact_id": "f28",
+      "question": "Which mail provider should handle outbound messages for the botanical brand by default?",
+      "expected": "Zoho Mail via OAuth — not Gmail, unless explicitly requested",
+      "predicted": "The default mail provider for handling outbound messages for the botanical brand should be Zoho Mail, as Gmail should only be used if explicitly requested.",
+      "retrieved": [
+        {
+          "fact_id": "f28",
+          "score": 0.658616481385613
+        },
+        {
+          "fact_id": "f23",
+          "score": 0.2903845931977253
+        },
+        {
+          "fact_id": "f09",
+          "score": 0.28318103156832986
+        },
+        {
+          "fact_id": "f17",
+          "score": 0.25685173987337123
+        },
+        {
+          "fact_id": "f01",
+          "score": 0.24623225582654307
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 98,
+      "answer_ms": 816,
+      "judge": {
+        "correct": true,
+        "confidence": 0.95,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    },
+    {
+      "id": "h29",
+      "fact_id": "f29",
+      "question": "Where does the single source of truth for botanical-brand product codes reside, and what downstream documents must mirror it?",
+      "expected": "Notes/Demo_Canon/DEMO_SKU_CANON.md — the supplier questionnaire and vendor scorecard must both reference it",
+      "predicted": "I don't know",
+      "retrieved": [
+        {
+          "fact_id": "f29",
+          "score": 0.599892316211314
+        },
+        {
+          "fact_id": "f28",
+          "score": 0.3809064370680758
+        },
+        {
+          "fact_id": "f07",
+          "score": 0.2786688297579373
+        },
+        {
+          "fact_id": "f01",
+          "score": 0.25616959424802144
+        },
+        {
+          "fact_id": "f19",
+          "score": 0.2471438728270579
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 221,
+      "answer_ms": 516,
+      "judge": {
+        "correct": false,
+        "confidence": 0.9,
+        "label": "NO_ANSWER"
+      },
+      "no_answer": true
+    },
+    {
+      "id": "h30",
+      "fact_id": "f30",
+      "question": "What database concurrency artifact froze automated equity execution for several hours in incident ep-004?",
+      "expected": "A WAL lock on shared-facts.db blocked all writes for about 3 hours; episode outcome: failure",
+      "predicted": "The database concurrency artifact that froze automated equity execution for several hours in incident ep-004 was a WAL lock on shared-facts.db, which blocked all writes for 3 hours.",
+      "retrieved": [
+        {
+          "fact_id": "f30",
+          "score": 0.8083055231213684
+        },
+        {
+          "fact_id": "f13",
+          "score": 0.3318327622016637
+        },
+        {
+          "fact_id": "f21",
+          "score": 0.29790629002406127
+        },
+        {
+          "fact_id": "f16",
+          "score": 0.2758435175105275
+        },
+        {
+          "fact_id": "f22",
+          "score": 0.27444908517627614
+        }
+      ],
+      "gold_rank": 1,
+      "recall_hit": 1,
+      "rr": 1,
+      "retrieval_ms": 114,
+      "answer_ms": 925,
+      "judge": {
+        "correct": true,
+        "confidence": 0.95,
+        "label": "CORRECT"
+      },
+      "no_answer": false
+    }
+  ]
+}

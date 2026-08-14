@@ -1,0 +1,26 @@
+{
+  "id": "FX-08",
+  "name": "slug-traversal",
+  "asserts": "path-traversal & malformed slugs rejected by regex (length already ≥ 3)",
+  "phase": "PR1",
+  "scope": "slug-validate",
+  "input": {
+    "rejectingInputs": [
+      "../../../etc/passwd",
+      "/etc/passwd",
+      "../foo",
+      "foo/bar",
+      "Foo-Bar",
+      "1foo",
+      "foo--bar",
+      "-foo",
+      "foo-",
+      "foo_bar",
+      "...."
+    ]
+  },
+  "expected": {
+    "allRejected": true,
+    "expectedReason": "regex"
+  }
+}

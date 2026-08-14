@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-07-08",
+  "description": "Per-provider classifier-block signal catalog. Patterns are regex matched (case-insensitive) against model output. A match indicates the model hit a classifier boundary, not a genuine failure.",
+  "providers": {
+    "anthropic": {
+      "label": "Anthropic (Claude)",
+      "patterns": {
+        "refusal": [
+          {
+            "regex": "I can't help (with|you) (that|this)",
+            "confidence": 0.9,
+            "description": "Direct refusal phrase"
+          },
+          {
+            "regex": "I'm not able to (help|assist|provide)",
+            "confidence": 0.9,
+            "description": "Inability phrasing"
+          },
+          {
+            "regex": "(Unfortunately|Sorry),? I (can't|cannot|am unable to)",
+            "confidence": 0.85,
+            "description": "Apologetic refusal"
+          },
+          {
+            "regex": "goes against (my|our) (guidelines|policies|principles)",
+            "confidence": 0.85,
+            "description": "Policy-cited refusal"
+          }
+        ],
+        "filtered_empty": [
+          {
+            "regex": "^\\s*$",
+            "confidence": 0.5,
+            "description": "Empty output (needs context to distinguish from genuine empty)"
+          }
+        ],
+        "truncated_disclaimer": [
+          {
+            "regex": "\\[Content (filtered|removed|blocked)\\]",
+            "confidence": 0.8,
+            "description": "Content filter marker"
+          },
+          {
+            "regex": "I've (filtered|omitted|redacted).*?(content|details|information)",
+            "confidence": 0.75,
+            "description": "Post-filter disclaimer"
+          }
+        ],
+        "policy_flag": [
+          {
+            "regex": "(content policy|safety policy|usage policy|acceptable use)",
+            "confidence": 0.6,
+            "description": "Policy reference in output"
+          }
+        ]
+      }
+    },
+    "openai": {
+      "label": "OpenAI (GPT)",
+      "patterns": {
+        "refusal": [
+          {
+            "regex": "I (can't|cannot|am unable to) (help|assist|provide|generate)",
+            "confidence": 0.9,
+            "description": "Direct refusal"
+          },
+          {
+            "regex": "(Sorry|Unfortunately),? (but )?I (can't|cannot)",
+            "confidence": 0.85,
+            "description": "Apologetic refusal"
+          },
+          {
+            "regex": "violates (my|our|the) (content|usage) (policy|guidelines)",
+            "confidence": 0.85,
+            "description": "Policy-cited refusal"
+          }
+        ],
+        "filtered_empty": [
+          {
+            "regex": "^\\s*$",
+            "confidence": 0.5,
+            "description": "Empty output"
+          },
+          {
+            "regex": "\\[Content (blocked|filtered|removed by moderation)\\]",
+            "confidence": 0.8,
+            "description": "Moderation block marker"
+          }
+        ],
+        "truncated_disclaimer": [
+          {
+            "regex": "I've (filtered|omitted|removed|skipped).*?(content|information|details)",
+            "confidence": 0.75,
+            "description": "Post-filter disclaimer"
+          }
+        ],
+        "policy_flag": [
+          {
+            "regex": "against (our|my) (content|safety) (policy|guidelines)",
+            "confidence": 0.6,
+            "description": "Policy reference"
+          }
+        ]
+      }
+    }
+  },
+  "generic_patterns": {
+    "refusal": [
+      {
+        "regex": "I (can't|cannot|am unable to) (help|assist|provide|generate|create)",
+        "confidence": 0.7,
+        "description": "Generic refusal (provider unknown)"
+      }
+    ],
+    "filtered_empty": [
+      {
+        "regex": "^\\s*$",
+        "confidence": 0.3,
+        "description": "Empty output (provider unknown, low confidence)"
+      }
+    ],
+    "policy_flag": [
+      {
+        "regex": "(content policy|safety guidelines|acceptable use|usage policy)",
+        "confidence": 0.5,
+        "description": "Generic policy reference"
+      }
+    ]
+  }
+}

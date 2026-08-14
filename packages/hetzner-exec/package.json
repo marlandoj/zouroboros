@@ -1,0 +1,21 @@
+{
+  "name": "@zouroboros/hetzner-exec",
+  "version": "0.1.0",
+  "description": "Hetzner Compute Annex — remote command execution MCP server (HTTP + bearer auth). Accepts { command, docker_image?, env?, timeout?, sandbox? } → { exit_code, stdout, stderr, elapsed_ms }.",
+  "type": "module",
+  "private": true,
+  "main": "src/server.ts",
+  "scripts": {
+    "start": "bun src/server.ts",
+    "smoke": "bun scripts/smoke-test.ts",
+    "register": "bun scripts/register-mcp.ts",
+    "worker": "bun scripts/ephemeral-worker.ts",
+    "reaper": "bun scripts/ephemeral-worker.ts reap",
+    "control-plane": "bun scripts/control-plane.ts",
+    "control-plane:smoke": "bun scripts/control-plane-smoke.ts",
+    "shadow-adapter": "bun scripts/shadow-adapter.ts",
+    "test": "bun test/selftest.ts && bun test test/ephemeral-worker.test.ts && bun test test/control-plane.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "license": "UNLICENSED"
+}

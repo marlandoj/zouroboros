@@ -1,0 +1,57 @@
+{
+  "name": "zouroboros-workflow",
+  "version": "2.1.1",
+  "description": "Spec-first development tools: interview, evaluation, unstuck, and autoloop",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./plan-gate": {
+      "import": "./dist/plan-gate/index.js",
+      "types": "./dist/plan-gate/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marlandoj/zouroboros.git",
+    "directory": "packages/workflow"
+  },
+  "bin": {
+    "zouroboros-interview": "./dist/cli/interview.js",
+    "zouroboros-evaluate": "./dist/cli/evaluate.js",
+    "zouroboros-unstuck": "./dist/cli/unstuck.js",
+    "zouroboros-autoloop": "./dist/cli/autoloop.js",
+    "zouroboros-plan-gate": "./dist/cli/plan-gate.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "bun test src/plan-gate/__tests__"
+  },
+  "dependencies": {
+    "yaml": "^2.9.0",
+    "zouroboros-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "workflow",
+    "spec-first",
+    "evaluation",
+    "autoloop",
+    "zouroboros"
+  ],
+  "license": "MIT",
+  "author": "marlandoj.zo.computer"
+}

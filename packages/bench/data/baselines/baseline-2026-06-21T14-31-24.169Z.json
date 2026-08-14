@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-06-21T14-31-24.169Z",
+  "scores": {
+    "overall": 0.963,
+    "procedural-recall": 0.9440000000000001,
+    "cross-persona-transfer": 0.9440000000000001,
+    "swarm-context-propagation": 1
+  },
+  "run_file": "2026-06-21T14:31:24.153Z"
+}

@@ -1,0 +1,298 @@
+id: seed-hierarchical-orchestration-v1
+created: 2026-04-02T22:30:00Z
+goal: >
+  Add v1 hierarchical orchestration to the swarm system so eligible parent
+  executors can decompose a routed task into bounded inner child tasks, while
+  the outer orchestrator remains the source of truth for guardrails, logging,
+  evaluation, and learning.
+
+constraints:
+  - "Outer orchestrator remains authoritative for DAG execution, retries, acceptance criteria, and final task status"
+  - "Hierarchical orchestration is allowed for analysis, planning, research, and implementation tasks only when child write scopes are disjoint"
+  - "Only executors with verified delegation primitives may self-decompose in v1"
+  - "v1 eligibility: hermes enabled; claude-code enabled conditionally; codex and gemini remain leaf executors"
+  - "Inner delegation must be depth-1 only from the swarm executor's perspective"
+  - "Hermes child count cap must not exceed 3 concurrent children"
+  - "Claude-code child count cap must be conservative and bounded by orchestrator policy"
+  - "Child tasks must emit fine-grained telemetry when available: IDs, timings, model/provider, toolset/write scope, outcome, artifacts"
+  - "Inner child execution must not bypass centralized write-scope and safety guardrails"
+  - "Mutation tasks default to no delegation unless disjoint write ownership is declared by the parent"
+  - "Campaign authoring overhead should stay low; automatic self-decomposition is the default for eligible executors"
+  - "Current Task, TaskResult, and OrchestratorConfig schemas do not yet expose delegation or child telemetry fields; v1 must add them explicitly rather than rely on prompt-only behavior"
+  - "Current saved results and episode metadata only persist outer task summaries; child telemetry persistence must be added deliberately to results JSON, NDJSON logs, and episode metadata"
+  - "ContextSharingManager currently supports only string artifact lists; richer child telemetry must not assume existing context-sharing structures are sufficient"
+  - "Implementation must keep the canonical package surfaces aligned across both package runtime paths: zouroboros/packages/swarm/scripts/* and any corresponding src/ library/runtime interfaces that remain user-facing"
+  - "Bridge-level structured result support differs by path; hierarchical telemetry design must not assume every executor bridge already returns child-level records"
+
+acceptance_criteria:
+  - "AC1: Task, TaskResult, and OrchestratorConfig schemas support hierarchical policy, write-scope declaration, and child telemetry references"
+  - "AC2: Orchestrator supports a hierarchical delegation policy layer with centralized defaults and executor eligibility rules"
+  - "AC3: Hermes parent tasks can emit child task records with IDs, timings, model/provider metadata, and outcomes"
+  - "AC4: Claude-code parent tasks can participate in hierarchical orchestration only when guardrails allow it and nested-session issues are avoided"
+  - "AC5: Codex and Gemini are explicitly treated as leaf executors in v1 routing/policy"
+  - "AC6: Delegated implementation tasks are blocked unless the parent declares disjoint child write scopes"
+  - "AC7: Outer results JSON and NDJSON logs persist child metrics when available, and episode metadata includes enough summary data to support future routing/learning"
+  - "AC8: Parent task completion requires synthesizing child results; child success alone does not mark the outer task complete"
+  - "AC9: Automatic self-decomposition can be enabled without requiring per-task delegation config in campaign JSON"
+  - "AC10: Post-flight evaluation can inspect both parent-level AC compliance and child-level execution evidence"
+  - "AC11: Package/runtime parity is maintained for the public swarm surfaces affected by hierarchical orchestration"
+
+ontology:
+  - name: hierarchical_policy
+    description: "Global rules that govern whether and how a routed executor may spawn inner child tasks"
+    fields:
+      - name: eligible_executors
+        type: array
+        description: "Executors allowed to self-decompose in v1"
+      - name: max_depth
+        type: integer
+        description: "Maximum allowed inner delegation depth from the outer swarm perspective"
+      - name: default_mode
+        type: string
+        description: "Default delegation mode (automatic | disabled)"
+      - name: mutation_guard
+        type: string
+        description: "Rule for file-mutating tasks; requires declared disjoint write scopes"
+      - name: telemetry_level
+        type: string
+        description: "Minimum child telemetry captured by the outer orchestrator"
+      - name: allowed_task_modes
+        type: array
+        description: "Task classes eligible for delegation (analysis | planning | research | implementation-with-disjoint-scopes)"
+
+  - name: executor_delegation_profile
+    description: "Delegation capabilities and limits for a specific executor"
+    fields:
+      - name: executor_id
+        type: string
+        description: "Executor identifier (hermes, claude-code, codex, gemini)"
+      - name: delegation_supported
+        type: boolean
+        description: "Whether verified delegation exists in the executor path"
+      - name: mode
+        type: string
+        description: "leaf | conditional | enabled"
+      - name: max_children
+        type: integer
+        description: "Maximum concurrent inner child tasks for this executor"
+      - name: allowed_task_classes
+        type: array
+        description: "Task categories where delegation is permitted"
+      - name: blocked_tool_classes
+        type: array
+        description: "Tools or behaviors forbidden to inner children"
+      - name: telemetry_mode
+        type: string
+        description: "none | summary_only | child_records"
+
+  - name: child_task_record
+    description: "A first-class telemetry record for an inner delegated task"
+    fields:
+      - name: child_id
+        type: string
+        description: "Unique child execution identifier"
+      - name: parent_task_id
+        type: string
+        description: "Outer swarm task that spawned the child"
+      - name: executor_id
+        type: string
+        description: "Parent executor responsible for the child run"
+      - name: delegated_model
+        type: string
+        description: "Model/provider used for the child"
+      - name: write_scope
+        type: array
+        description: "Declared writable files or paths for the child"
+      - name: toolset
+        type: array
+        description: "Child toolset or capability subset"
+      - name: status
+        type: string
+        description: "success | failure | blocked | skipped"
+      - name: duration_ms
+        type: integer
+        description: "Wall-clock execution time in milliseconds"
+      - name: artifacts
+        type: array
+        description: "Produced outputs, files, summaries, or evidence references"
+      - name: source
+        type: string
+        description: "Where the record was captured from (executor bridge | parent summary | logger synthesis)"
+
+  - name: write_scope_contract
+    description: "A parent-declared partition of writable ownership across delegated children"
+    fields:
+      - name: parent_task_id
+        type: string
+        description: "Owning outer task"
+      - name: child_assignments
+        type: array
+        description: "Mapping of child IDs to disjoint files or path prefixes"
+      - name: overlaps_detected
+        type: boolean
+        description: "Whether any child write scopes collide"
+      - name: enforcement_action
+        type: string
+        description: "block | reduce_to_leaf | require_replan"
+
+  - name: orchestrator_schema_surface
+    description: "The runtime and persisted schema locations that hierarchical orchestration must update"
+    fields:
+      - name: task_fields
+        type: array
+        description: "Task-level additions such as delegation policy, write scopes, and delegation hints"
+      - name: result_fields
+        type: array
+        description: "TaskResult-level additions such as child records, artifacts, and execution metadata"
+      - name: config_fields
+        type: array
+        description: "Global configuration additions for policy defaults and executor limits"
+      - name: persistence_surfaces
+        type: array
+        description: "Results JSON, NDJSON logger events, episode metadata, and optional context-sharing artifacts"
+
+evaluation_principles:
+  - name: correctness
+    description: "Hierarchical runs obey delegation guardrails and preserve correct outer task semantics"
+    weight: 0.30
+  - name: observability
+    description: "Inner child telemetry is captured well enough to support routing and learning"
+    weight: 0.25
+  - name: safety
+    description: "Write-scope enforcement and executor eligibility prevent unsafe nested execution"
+    weight: 0.20
+  - name: efficiency
+    description: "Automatic self-decomposition lowers authoring overhead and improves parallel throughput"
+    weight: 0.15
+  - name: maintainability
+    description: "Policy is centralized rather than scattered across prompts and task files"
+    weight: 0.10
+
+exit_conditions:
+  - name: policy_active
+    description: "A centralized hierarchical policy is implemented and consulted during task execution"
+    criteria: "Eligible executors and delegation guardrails are enforced in code"
+  - name: telemetry_persisted
+    description: "Inner child execution records are logged and available for future learning"
+    criteria: "Run artifacts include child task records or normalized child summaries with metrics and outcomes"
+  - name: mutation_safe
+    description: "Delegated file-mutation tasks are only allowed with verified disjoint scopes"
+    criteria: "Overlapping scopes are blocked or downgraded to leaf execution"
+  - name: v1_executor_boundaries
+    description: "Executor support levels are explicit and respected"
+    criteria: "Hermes enabled, Claude conditional, Codex/Gemini leaf-only"
+  - name: schema_aligned
+    description: "Public package/runtime schemas are updated consistently"
+    criteria: "Task/TaskResult/config and persistence surfaces agree on hierarchical fields"
+
+tasks:
+  - id: T1-schema-surfaces
+    description: >
+      Amend the current Task, TaskResult, and OrchestratorConfig surfaces to
+      carry hierarchical policy, write-scope contracts, child telemetry
+      references, and executor delegation metadata. Include persisted results
+      and logger event shapes.
+    depends_on: []
+    persona: agents-orchestrator
+    tier: swarm-heavy
+
+  - id: T2-policy-model
+    description: >
+      Define the hierarchical policy schema and runtime defaults: eligible
+      executors, max depth, executor child caps, automatic self-decomposition
+      mode, mutation guard, and telemetry requirements.
+    depends_on: [T1-schema-surfaces]
+    persona: agents-orchestrator
+    tier: swarm-mid
+
+  - id: T3-executor-capability-profiles
+    description: >
+      Encode executor delegation support profiles for hermes, claude-code,
+      codex, and gemini using verified bridge/runtime behavior rather than
+      prompt assumptions.
+    depends_on: [T1-schema-surfaces, T2-policy-model]
+    persona: agents-orchestrator
+    tier: swarm-mid
+
+  - id: T4-write-scope-enforcement
+    description: >
+      Add a write-scope contract for delegated implementation work. Block or
+      downgrade delegation when scopes overlap or are omitted for mutation
+      tasks.
+    depends_on: [T2-policy-model, T3-executor-capability-profiles]
+    persona: claude-code
+    tier: swarm-heavy
+
+  - id: T5-child-telemetry
+    description: >
+      Extend runtime logging, result schemas, and memory/episode capture so
+      inner child tasks become first-class execution records with metrics and
+      artifacts when supported by the executor, with graceful fallback to
+      normalized parent-reported summaries when executor-native child records
+      are unavailable.
+    depends_on: [T1-schema-surfaces, T2-policy-model, T3-executor-capability-profiles]
+    persona: hermes
+    tier: swarm-heavy
+
+  - id: T6-parent-synthesis-contract
+    description: >
+      Define the parent executor contract: children may return evidence and
+      partial outputs, but only the parent may synthesize and finalize the
+      outer task result.
+    depends_on: [T2-policy-model, T5-child-telemetry]
+    persona: technical-writer
+    tier: swarm-mid
+
+  - id: T7-routing-integration
+    description: >
+      Integrate hierarchical delegation decisions into routing/execution so
+      eligible executors can self-decompose automatically under policy
+      guardrails, without requiring per-task campaign boilerplate in v1.
+    depends_on: [T3-executor-capability-profiles, T4-write-scope-enforcement, T5-child-telemetry, T6-parent-synthesis-contract]
+    persona: agents-orchestrator
+    tier: swarm-heavy
+
+  - id: T8-package-runtime-parity
+    description: >
+      Ensure the hierarchical orchestration changes are applied consistently to
+      the canonical package/runtime surfaces that users rely on, rather than
+      landing only in one duplicate orchestrator path.
+    depends_on: [T7-routing-integration]
+    persona: agents-orchestrator
+    tier: swarm-mid
+
+  - id: T9-evaluation-harness
+    description: >
+      Add post-flight evaluation coverage that verifies parent AC compliance,
+      child telemetry presence, and safe behavior for delegated mutation tasks.
+    depends_on: [T7-routing-integration, T8-package-runtime-parity]
+    persona: qa-engineer
+    tier: swarm-mid
+
+implementation_status:
+  last_updated: 2026-04-03T00:46:00Z
+  summary: >
+    Hierarchical orchestration v1 is implemented and now backed by retained
+    validation artifacts. The deprecated skill entrypoint delegates to the
+    canonical package runtime, and executor-registry bridge resolution now
+    supports absolute paths consistently across load/preflight/runtime paths.
+  completed_tasks:
+    - id: T1-schema-surfaces
+      note: "Task/result/config surfaces now carry delegation and child telemetry fields."
+    - id: T2-policy-model
+      note: "Centralized hierarchical policy defaults and guardrails are implemented."
+    - id: T3-executor-capability-profiles
+      note: "Hermes enabled, Claude conditional, Codex/Gemini leaf-only."
+    - id: T4-write-scope-enforcement
+      note: "Delegated mutation work is blocked unless disjoint write scopes are declared."
+    - id: T5-child-telemetry
+      note: "Child records, delegation state, artifacts, and episode metrics are persisted."
+    - id: T6-parent-synthesis-contract
+      note: "Parent-responsibility contract is encoded in the shared policy block and tested."
+    - id: T7-routing-integration
+      note: "Automatic self-decomposition is wired into orchestrate-v5 under centralized policy."
+    - id: T8-package-runtime-parity
+      note: "The deprecated skill-facing orchestrate-v5 entrypoint now delegates to the canonical package runtime, eliminating drift."
+    - id: T9-evaluation-harness
+      note: "Targeted regression/build evals plus retained Hermes and Claude conditional validation artifacts exist for child telemetry persistence."
+  remaining_followups: []

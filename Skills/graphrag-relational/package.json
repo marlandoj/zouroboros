@@ -1,0 +1,25 @@
+{
+  "name": "graphrag-relational",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "extract": "bun scripts/extract.ts",
+    "index": "bun scripts/index.ts",
+    "test": "bun test scripts/index.test.ts scripts/query.test.ts",
+    "typecheck": "tsc --noEmit",
+    "query": "bun scripts/query.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@falkordblite/linux-x64": "8.2.3-falkordb.4.16.3",
+    "falkordblite": "0.3.0"
+  },
+  "trustedDependencies": [
+    "falkordblite"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "id": "FX-01",
+  "name": "happy-path-procedure",
+  "asserts": "weighted score ≥ 3.0 → 1 candidate produced, slug derived from procedure name",
+  "phase": "PR1",
+  "scope": "scoring + draft",
+  "input": {
+    "coldStart": false,
+    "procedures": [
+      { "kind": "procedure", "id": "proc-1", "name": "deploy-zo-route", "steps": [], "success_count": 7, "failure_count": 0 },
+      { "kind": "procedure", "id": "proc-2", "name": "deploy-zo-route", "steps": [], "success_count": 5, "failure_count": 0 },
+      { "kind": "procedure", "id": "proc-3", "name": "deploy-zo-route", "steps": [], "success_count": 4, "failure_count": 1 }
+    ],
+    "episodes": [],
+    "skillExecutions": []
+  },
+  "expected": {
+    "candidateCount": 1,
+    "topCandidate": {
+      "score": 3.0,
+      "source_kind": "procedure",
+      "slug_suggestion": "deploy-zo-route",
+      "sourceIds": ["proc-1", "proc-2", "proc-3"]
+    }
+  }
+}

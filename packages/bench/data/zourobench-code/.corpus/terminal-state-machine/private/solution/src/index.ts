@@ -1,0 +1,1 @@
+export type State="queued"|"running"|"done"|"failed"; const allowed:Record<State,State[]>={queued:["running"],running:["done","failed"],done:[],failed:[]}; export function transition(from:State,to:State):State{if(from===to)return from;if(!allowed[from]?.includes(to))throw new Error("invalid transition "+from+"->"+to);return to}

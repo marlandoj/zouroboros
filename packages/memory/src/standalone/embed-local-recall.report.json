@@ -1,0 +1,235 @@
+{
+  "mode": "dry",
+  "generated": "2026-08-08T22:27:16.967Z",
+  "fixtures": "/home/workspace/packages/memory/src/standalone/embed-local-recall.fixtures.json",
+  "nQueries": 12,
+  "nCorpus": 40,
+  "topk": 10,
+  "results": [
+    {
+      "id": "q01",
+      "query": "What embedding model should replace text-embedding-3-small for higher recall?",
+      "baseline": {
+        "recall5": 0,
+        "recall10": 0,
+        "latency_ms": 4,
+        "cost_usd": 0
+      },
+      "local": {
+        "recall5": 0,
+        "recall10": 0,
+        "latency_ms": 2,
+        "cost_usd": 0
+      },
+      "verdict": "TIE"
+    },
+    {
+      "id": "q02",
+      "query": "How does the bge reranker compare to the LLM listwise reranker?",
+      "baseline": {
+        "recall5": 0.25,
+        "recall10": 0.25,
+        "latency_ms": 2,
+        "cost_usd": 0
+      },
+      "local": {
+        "recall5": 0.25,
+        "recall10": 0.5,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "verdict": "LOCAL_WINS"
+    },
+    {
+      "id": "q03",
+      "query": "What serves self-hosted embeddings and reranking over HTTP?",
+      "baseline": {
+        "recall5": 0,
+        "recall10": 0.5,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "local": {
+        "recall5": 0.5,
+        "recall10": 0.5,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "verdict": "TIE"
+    },
+    {
+      "id": "q04",
+      "query": "How do you reindex a Qdrant collection after changing the embedding model?",
+      "baseline": {
+        "recall5": 0,
+        "recall10": 0,
+        "latency_ms": 2,
+        "cost_usd": 0
+      },
+      "local": {
+        "recall5": 0,
+        "recall10": 0.3333333333333333,
+        "latency_ms": 0,
+        "cost_usd": 0
+      },
+      "verdict": "LOCAL_WINS"
+    },
+    {
+      "id": "q05",
+      "query": "What is the dormancy contract for opt-in inference tiers?",
+      "baseline": {
+        "recall5": 0,
+        "recall10": 0.5,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "local": {
+        "recall5": 0.5,
+        "recall10": 0.5,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "verdict": "TIE"
+    },
+    {
+      "id": "q06",
+      "query": "How does HyDE improve retrieval recall?",
+      "baseline": {
+        "recall5": 0,
+        "recall10": 0,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "local": {
+        "recall5": 0.5,
+        "recall10": 0.5,
+        "latency_ms": 2,
+        "cost_usd": 0
+      },
+      "verdict": "LOCAL_WINS"
+    },
+    {
+      "id": "q07",
+      "query": "How are sparse and dense retrieval fused in hybrid search?",
+      "baseline": {
+        "recall5": 0.5,
+        "recall10": 0.5,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "local": {
+        "recall5": 0,
+        "recall10": 0,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "verdict": "BASELINE_WINS"
+    },
+    {
+      "id": "q08",
+      "query": "What is the standard benchmark for evaluating embedding models?",
+      "baseline": {
+        "recall5": 0,
+        "recall10": 0,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "local": {
+        "recall5": 0,
+        "recall10": 0,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "verdict": "TIE"
+    },
+    {
+      "id": "q09",
+      "query": "How does the consensus gate decide before promoting a fact?",
+      "baseline": {
+        "recall5": 0.5,
+        "recall10": 0.5,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "local": {
+        "recall5": 0,
+        "recall10": 0.5,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "verdict": "TIE"
+    },
+    {
+      "id": "q10",
+      "query": "What does the deep-research skill synthesize?",
+      "baseline": {
+        "recall5": 0,
+        "recall10": 0,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "local": {
+        "recall5": 0,
+        "recall10": 0,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "verdict": "TIE"
+    },
+    {
+      "id": "q11",
+      "query": "Why is a self-hosted embedding service cheaper than the API?",
+      "baseline": {
+        "recall5": 0,
+        "recall10": 0.5,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "local": {
+        "recall5": 0,
+        "recall10": 0,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "verdict": "BASELINE_WINS"
+    },
+    {
+      "id": "q12",
+      "query": "What metric measures the fraction of relevant docs in the top-k results?",
+      "baseline": {
+        "recall5": 0.5,
+        "recall10": 0.5,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "local": {
+        "recall5": 0,
+        "recall10": 0.5,
+        "latency_ms": 1,
+        "cost_usd": 0
+      },
+      "verdict": "TIE"
+    }
+  ],
+  "aggregate": {
+    "baseline": {
+      "recall5": 0.14583333333333334,
+      "recall10": 0.2708333333333333,
+      "latency_ms": 17,
+      "cost_usd": 0
+    },
+    "local": {
+      "recall5": 0.14583333333333334,
+      "recall10": 0.27777777777777773,
+      "latency_ms": 13,
+      "cost_usd": 0
+    },
+    "verdicts": {
+      "LOCAL_WINS": 3,
+      "BASELINE_WINS": 2,
+      "TIE": 7,
+      "ERROR": 0
+    }
+  },
+  "note": "Dry-run uses tier-salted deterministic mock embeddings for both tiers (zero API spend). Per-tier recall@k differs due to the salt perturbation, which exercises the verdict logic and proves the harness captures tier differences — the magnitude is a mock artifact, NOT a model-quality signal. The live run (--live, requires OPENAI_API_KEY + ZO_EMBED_BASE_URL) measures the true recall delta of BGE-M3 vs text-embedding-3-small; live GPU provisioning is deferred to the Hetzner annex (ZOU-414)."
+}

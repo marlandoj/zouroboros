@@ -1,0 +1,29 @@
+{
+  "id": "FX-26",
+  "name": "expired-gc-job",
+  "asserts": "expirePending transitions pending rows past expires_at to approval_status='expired', appends an 'expired' event with age_days, and archives draft directories. Idempotent on re-run.",
+  "phase": "PR3",
+  "scope": "expire",
+  "input": {
+    "rows": [
+      {
+        "id": "00000000-0000-0000-0000-000000000026",
+        "slug": "expired-skill-1",
+        "created_at_offset_days": -20,
+        "expires_at_offset_days": -6
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000027",
+        "slug": "fresh-skill",
+        "created_at_offset_days": -2,
+        "expires_at_offset_days": 12
+      }
+    ]
+  },
+  "expected": {
+    "expired_ids": ["00000000-0000-0000-0000-000000000026"],
+    "archived_count": 1,
+    "first_run_event_count_for_expired": 1,
+    "second_run_expired_count": 0
+  }
+}

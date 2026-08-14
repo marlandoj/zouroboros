@@ -1,0 +1,45 @@
+{
+  "schema_version": 2,
+  "run": {
+    "run_id": "zb-2026-07-24-r03",
+    "benchmark": "ZouroBench",
+    "timestamp": "2026-07-24T14:00:00.000Z",
+    "dataset": "data/zourobench/seed.json"
+  },
+  "cohort": {
+    "cohort_id": "cohort-2026-07-24",
+    "replicate_index": 3,
+    "replicate_seed": 3004216399,
+    "minimum_n": 3,
+    "timeout_ms": null
+  },
+  "provenance": {
+    "produced_by": "zourobench-adapter",
+    "adapter_version": "2.0.0",
+    "host": "zo-workspace",
+    "invocation": "bun adapters/zourobench-adapter.ts",
+    "config_fingerprint": "sha256:3f1b9c0d7e5a",
+    "recorded_at": "2026-07-24T14:00:02.000Z"
+  },
+  "execution": {
+    "answer_model": "gpt-4o-mini",
+    "judge_model": { "value": null, "availability_reason": "heuristic judge used" },
+    "embedding_model": { "value": null, "availability_reason": "no embeddings" },
+    "truncation_guard_enabled": false,
+    "generation_timeout_ms": { "value": null, "availability_reason": "no deadline enforced" }
+  },
+  "totals": { "total_questions": 0, "answered": 0 },
+  "scores": { "overall_accuracy": 0, "by_category": {}, "by_type": {} },
+  "latency": { "avg_retrieval_ms": 0, "avg_answer_ms": 0, "p95_retrieval_ms": 0 },
+  "usage": { "value": null, "availability_reason": "not recorded" },
+  "pricing": { "value": null, "availability_reason": "not recorded" },
+  "consensus": {
+    "enabled": false,
+    "threshold": { "value": null, "availability_reason": "consensus gate was disabled for this run" },
+    "invocations": { "value": null, "availability_reason": "consensus gate was disabled for this run" },
+    "splits": { "value": null, "availability_reason": "consensus gate was disabled for this run" }
+  },
+  "parity": { "value": null, "availability_reason": "no baseline run declared" },
+  "errors": [],
+  "questions": []
+}

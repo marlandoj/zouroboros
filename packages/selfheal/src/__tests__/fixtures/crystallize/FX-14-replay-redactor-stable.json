@@ -1,0 +1,26 @@
+{
+  "id": "FX-14",
+  "name": "replay-redactor-stability",
+  "asserts": "Stdout redactor normalizes timestamps (≥10 digits → <TS>), UUIDs (8-4-4-4-12 hex → <UUID>), and absolute $HOME paths → ~ before ordered diff.",
+  "phase": "PR2",
+  "scope": "eval-replay",
+  "home": "/home/workspace/sandbox",
+  "cases": [
+    {
+      "in": "wrote 1714200000000 records",
+      "out": "wrote <TS> records"
+    },
+    {
+      "in": "id=ABCDEF12-1111-2222-3333-444444444444 done",
+      "out": "id=<UUID> done"
+    },
+    {
+      "in": "wrote /home/workspace/sandbox/out/file.txt",
+      "out": "wrote ~/out/file.txt"
+    },
+    {
+      "in": "saved /home/workspace/sandbox/x at 1714200000999",
+      "out": "saved ~/x at <TS>"
+    }
+  ]
+}

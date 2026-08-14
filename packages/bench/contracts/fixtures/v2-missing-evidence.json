@@ -1,0 +1,76 @@
+{
+  "schema_version": 2,
+  "run": {
+    "run_id": "zb-2026-07-24-r02",
+    "benchmark": "ZouroBench",
+    "timestamp": "2026-07-24T13:00:00.000Z",
+    "dataset": "data/zourobench/seed.json"
+  },
+  "cohort": {
+    "cohort_id": "cohort-2026-07-24",
+    "replicate_index": 2,
+    "replicate_seed": 2004216311,
+    "minimum_n": 3,
+    "timeout_ms": null
+  },
+  "provenance": {
+    "produced_by": "zourobench-adapter",
+    "adapter_version": "2.0.0",
+    "git_commit": "d5cac30c0000000000000000000000000000abcd",
+    "host": "zo-workspace",
+    "invocation": "bun adapters/zourobench-adapter.ts --dataset data/zourobench/seed.json --output data/runs/",
+    "config_fingerprint": "sha256:3f1b9c0d7e5a",
+    "recorded_at": "2026-07-24T13:00:02.000Z"
+  },
+  "execution": {
+    "answer_model": "gpt-4o-mini",
+    "judge_model": { "value": null, "availability_reason": "heuristic judge used; no judge model invoked" },
+    "embedding_model": { "value": null, "availability_reason": "OPENAI_API_KEY absent; FTS-only retrieval" },
+    "truncation_guard_enabled": false,
+    "generation_timeout_ms": { "value": null, "availability_reason": "BENCH_GEN_TIMEOUT_MS unset; no deadline enforced" }
+  },
+  "totals": { "total_questions": 1, "answered": 1 },
+  "scores": {
+    "overall_accuracy": 100,
+    "by_category": {
+      "swarm-context-propagation": { "correct": 1, "total": 1, "accuracy": 100 }
+    },
+    "by_type": {
+      "swarm-context-propagation:dag-structure": { "correct": 1, "total": 1, "accuracy": 100 }
+    }
+  },
+  "latency": { "avg_retrieval_ms": 150, "avg_answer_ms": 1200, "p95_retrieval_ms": 180 },
+  "usage": {
+    "value": null,
+    "availability_reason": "provider response omitted usage block for this run"
+  },
+  "pricing": {
+    "value": null,
+    "availability_reason": "no published price sheet for pinned model snapshot"
+  },
+  "consensus": {
+    "enabled": false,
+    "threshold": { "value": null, "availability_reason": "consensus gate was disabled for this run" },
+    "invocations": { "value": null, "availability_reason": "consensus gate was disabled for this run" },
+    "splits": { "value": null, "availability_reason": "consensus gate was disabled for this run" }
+  },
+  "parity": {
+    "value": null,
+    "availability_reason": "no baseline run declared for this cohort"
+  },
+  "errors": [],
+  "questions": [
+    {
+      "question_id": "sw-01",
+      "question_type": "dag-structure",
+      "category": "swarm-context-propagation",
+      "question": "Which tasks are in wave 1 of the release DAG?",
+      "ground_truth": "build and lint have no dependencies",
+      "hypothesis": "Wave 1 contains build and lint.",
+      "retrieved_context": ["swarm task release:build ..."],
+      "retrieval_ms": 150,
+      "answer_ms": 1200,
+      "correct": true
+    }
+  ]
+}

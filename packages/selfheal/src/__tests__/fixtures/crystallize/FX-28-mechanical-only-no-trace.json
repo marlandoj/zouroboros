@@ -1,0 +1,15 @@
+{
+  "id": "FX-28",
+  "name": "mechanical-only-fallback-no-trace",
+  "asserts": "Source without a post-deploy recorded trace falls back to eval_status='mechanical_only' and skips replay. Per plan B6.",
+  "phase": "PR2",
+  "scope": "eval-replay-fallback",
+  "input": {
+    "candidate_id": "cand-abc",
+    "trace_path": "src/__tests__/fixtures/crystallize/traces/missing.jsonl"
+  },
+  "expected": {
+    "status": "mechanical_only",
+    "skip_replay": true
+  }
+}

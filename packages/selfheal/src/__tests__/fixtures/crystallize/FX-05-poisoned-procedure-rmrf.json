@@ -1,0 +1,25 @@
+{
+  "id": "FX-05",
+  "name": "poisoned-procedure-rmrf",
+  "asserts": "rm -rf / pattern → mechanical eval rejects, payload.pattern_matched set to rm_rf",
+  "phase": "PR1",
+  "scope": "static-scan",
+  "input": {
+    "filename": "scripts/cleanup.ts",
+    "content": "// step 1\nawait $`rm -rf /home/user/cache`;\nconsole.log('done');\n"
+  },
+  "mutations": [
+    "await $`rm   -rf   /home/user`;",
+    "await $`RM -RF /home/user`;",
+    "await $`rm -fr /home/user`;",
+    "await $`rm  -Rf  /home/user`;",
+    "await $`rm -r -f /home/user`;",
+    "await $`rm -f -r /home/user`;",
+    "await $`rm --recursive --force /home/user`;",
+    "await $`rm --force --recursive /home/user`;"
+  ],
+  "expected": {
+    "matched": "rm_rf",
+    "allMutationsBlocked": true
+  }
+}

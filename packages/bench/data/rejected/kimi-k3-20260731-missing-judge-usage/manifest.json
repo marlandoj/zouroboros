@@ -1,0 +1,29 @@
+{
+  "cohort_id": "co-20260730-kimi-k3",
+  "status": "rejected",
+  "reason": "Package-scoped command execution omitted the root-injected OPENAI_API_KEY, causing --judge to fall back to heuristic scoring and producing 54 unobserved judge calls per artifact.",
+  "preserved_at": "2026-07-31T11:53:08.639Z",
+  "source_root": "/home/workspace/packages/bench/data/runs",
+  "artifacts": [
+    {
+      "name": "ZouroBench-2026-07-31T11-25-26-307Z-r01.json",
+      "sha256": "1c34bcababc1bb38e775fc103e0abe3066217c677c27b091459f993c144c4f40"
+    },
+    {
+      "name": "ZouroBench-2026-07-31T11-34-11-869Z-r02.json",
+      "sha256": "b80722b6b7e2d851584261514ec295ebb9db20bf96c3a6f3e469e322d51148f0"
+    },
+    {
+      "name": "ZouroBench-2026-07-31T11-39-12-872Z-r03.json",
+      "sha256": "50e74c109d9e66e20254dc072f300ec0c8bf20b9259cf365f7e4212f3ba20501"
+    },
+    {
+      "name": "ZouroBench-2026-07-31T11-43-41-595Z-r04.json",
+      "sha256": "b6aaf4f2710a4374f084486df678040e4c6bbe8f5f31f2d25ddca5e8f73de71e"
+    },
+    {
+      "name": "ZouroBench-2026-07-31T11-48-23-048Z-r05.json",
+      "sha256": "fd94c42cd08cd903d9a7827fc969f9abff09a9509ba53259335439b526bf8854"
+    }
+  ]
+}

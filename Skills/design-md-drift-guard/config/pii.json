@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "description": "PII / personal-detail leak scan config. Identifiers below are flagged when they appear inside path globs in `flagPaths`. Paths matching `allowPaths` are exempt (personal voice expected). Replace the placeholder identifiers with your real handle, email, and personal-detail patterns on your machine; this file ships with neutral placeholders so the public repo carries no maintainer PII.",
+  "identifiers": [
+    {
+      "label": "primary_handle",
+      "patterns": ["\\bYourHandleHere\\b"]
+    },
+    {
+      "label": "personal_email",
+      "patterns": ["\\byour\\.email@example\\.com\\b"]
+    },
+    {
+      "label": "first_person_voice",
+      "patterns": [
+        "\\bI personally\\b",
+        "\\bmy personal\\b",
+        "\\bmy Zo\\b",
+        "\\bmy own\\s+(workshop|portfolio|trading bot)\\b"
+      ]
+    }
+  ],
+  "flagPaths": [
+    "Projects/*/copy/**/*.md",
+    "Projects/*/posts/**/*.md",
+    "Projects/*/drafts/**/*.md",
+    "Projects/*/blog/**/*.md",
+    "Projects/*/marketing/**/*.md"
+  ],
+  "allowPaths": [
+    "Notes/**",
+    "Backups/**",
+    "Skills/**/SKILL.md",
+    "Skills/**/references/**",
+    "Projects/**/00-admin/**",
+    "Projects/**/_archive/**",
+    "Projects/**/evaluations/**",
+    "Projects/**/seed*.yaml"
+  ],
+  "contextLines": 2,
+  "maxFindingsPerProject": 25
+}

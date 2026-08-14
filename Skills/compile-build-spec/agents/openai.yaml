@@ -1,0 +1,4 @@
+interface:
+  display_name: "Compile Build Spec"
+  short_description: "Standardize build prompts for review and factory use"
+  default_prompt: "Convert this build prompt into the Agentic Build Specification standard, preserve source provenance, lint it, and prepare consensus and factory outputs without dispatching execution."

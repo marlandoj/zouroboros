@@ -1,0 +1,83 @@
+{
+  "benchmark": "ZouroBench",
+  "timestamp": "2026-06-21T01:30:11.152Z",
+  "dataset": "data/zourobench/seed.json",
+  "total_questions": 3,
+  "answered": 3,
+  "scores": {
+    "overall_accuracy": 66.7,
+    "by_category": {
+      "procedural-recall": { "correct": 2, "total": 3, "accuracy": 66.7 }
+    },
+    "by_type": {
+      "procedural-recall:step-recall": { "correct": 1, "total": 1, "accuracy": 100 },
+      "procedural-recall:precise-count": { "correct": 1, "total": 2, "accuracy": 50 }
+    }
+  },
+  "latency": { "avg_retrieval_ms": 240, "avg_answer_ms": 2500, "p95_retrieval_ms": 330 },
+  "consensus_gate": {
+    "enabled": true,
+    "threshold": 0.7,
+    "invocations": 2,
+    "splits": 1
+  },
+  "replicate": {
+    "index": 1,
+    "seed": 1084216302,
+    "cohort_id": "cohort-2026-06-21",
+    "minimum_n": 3,
+    "timeout_ms": 0
+  },
+  "questions": [
+    {
+      "question_id": "pr-01",
+      "question_type": "step-recall",
+      "category": "procedural-recall",
+      "question": "What are the steps in the deploy-production procedure?",
+      "ground_truth": "v2 has 7 steps",
+      "hypothesis": "deploy-production v2 has 7 steps.",
+      "retrieved_context": ["procedure deploy-production v2 ..."],
+      "retrieval_ms": 230,
+      "answer_ms": 2400,
+      "correct": true,
+      "judge_label": "correct",
+      "judge_confidence": 0.65,
+      "consensus_invoked": true,
+      "consensus_verdict": "passed",
+      "consensus_confidence": 0.82
+    },
+    {
+      "question_id": "pr-09",
+      "question_type": "precise-count",
+      "category": "procedural-recall",
+      "question": "How many failures does deploy-production have across all versions?",
+      "ground_truth": "4 failures",
+      "hypothesis": "",
+      "retrieved_context": [],
+      "retrieval_ms": 250,
+      "answer_ms": 2600,
+      "correct": false,
+      "judge_label": "incorrect",
+      "judge_confidence": 0.6,
+      "consensus_invoked": true,
+      "consensus_verdict": "split",
+      "consensus_confidence": 0.55,
+      "timed_out": true
+    },
+    {
+      "question_id": "pr-10",
+      "question_type": "precise-count",
+      "category": "procedural-recall",
+      "question": "What is the longest step timeout across all procedures?",
+      "ground_truth": "600 seconds",
+      "hypothesis": "The longest timeout is 600 seconds, found in",
+      "retrieved_context": ["procedure incident-response v1 ..."],
+      "retrieval_ms": 240,
+      "answer_ms": 2500,
+      "correct": true,
+      "judge_label": "correct",
+      "judge_confidence": 0.9,
+      "truncated": true
+    }
+  ]
+}

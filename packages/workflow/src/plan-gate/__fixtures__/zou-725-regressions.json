@@ -1,0 +1,685 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "_meta": {
+    "description": "Regression fixtures derived from the ZOU-725 v1–v9 plan consensus exercise. Each fixture captures a substantive, infrastructure, or policy scenario that PCG contracts must handle without regression.",
+    "source": "PCG-001 baseline evidence sweep 2026-07-17",
+    "paths_referenced": [
+      "zouroboros/packages/swarm/src/orchestrator.ts",
+      "zouroboros/packages/swarm/scripts/orchestrate-v5.ts",
+      "zouroboros/packages/selfheal/src/index.ts",
+      "zouroboros/packages/selfheal/src/standalone/prescribe.ts",
+      "Skills/consensus-gate/scripts/consensus-gate.ts"
+    ],
+    "protected_invariants": [
+      "provider_failure must never become substantive_rejection",
+      "malformed_output must never produce a substantive finding",
+      "abstention must propagate as escalate, not as rejection",
+      "infrastructure_limited_acceptance requires explicit operator receipt",
+      "unsigned_receipt must be rejected in enforcement mode",
+      "stale_artifact_hash must be rejected regardless of signature validity"
+    ]
+  },
+  "fixtures": [
+    {
+      "id": "zou-725-v1-substantive-rejection",
+      "description": "v1 exercise: two of three reviewers found a high-severity missing rollback section in the plan; one reviewer passed. Deterministic validator also flagged missing rollback. Expected decision: rejected.",
+      "scenario": "substantive_rejection",
+      "plan_artifact": {
+        "id": "seed-zou-725-v1",
+        "title": "Deploy payment-processor schema migration",
+        "risk": "high",
+        "tasks": [
+          { "id": "T1", "title": "Run ALTER TABLE migration", "paths": ["db/migrations/0042_payment.sql"] }
+        ],
+        "acceptance_criteria": [
+          "Migration applies without error on staging",
+          "Rollback tested within 5 minutes"
+        ],
+        "exit_conditions": [],
+        "rollback": null
+      },
+      "artifact_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "deterministic_report": {
+        "passed": false,
+        "findings": [
+          {
+            "rule_id": "MISSING_ROLLBACK",
+            "severity": "blocker",
+            "message": "High-risk plan has no rollback section; AC-02 requires rollback for irreversible changes."
+          },
+          {
+            "rule_id": "MISSING_EXIT_CONDITIONS",
+            "severity": "warning",
+            "message": "exit_conditions array is empty."
+          }
+        ]
+      },
+      "reviewer_verdicts": [
+        {
+          "model": "hf:moonshotai/Kimi-K2.7-Code",
+          "pass": false,
+          "confidence": 0.92,
+          "finding_type": "substantive",
+          "claims": [
+            {
+              "claim": "Plan is missing a rollback procedure for an irreversible schema migration.",
+              "evidence": "rollback field is null; migration drops a NOT NULL constraint with no undo path.",
+              "severity": "high"
+            }
+          ]
+        },
+        {
+          "model": "hf:zai-org/GLM-5.2",
+          "pass": false,
+          "confidence": 0.88,
+          "finding_type": "substantive",
+          "claims": [
+            {
+              "claim": "No rollback step documented; exit_conditions array is empty.",
+              "evidence": "rollback: null, exit_conditions: []",
+              "severity": "high"
+            }
+          ]
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": true,
+          "confidence": 0.70,
+          "finding_type": "none",
+          "claims": []
+        }
+      ],
+      "expected_consensus_decision": "rejected",
+      "expected_consensus_status": "rejected",
+      "expected_pass": false,
+      "notes": "Majority rejection (2/3). computeConsensus: failCount=2, N-1=2, so this maps to 'rejected' at 2/3 with the deterministic arbiter also flagging MISSING_ROLLBACK as critical."
+    },
+    {
+      "id": "zou-725-v2-split-verdict",
+      "description": "v2 exercise: four-model panel split 2-2; no majority. Expected decision: escalate with pass=null.",
+      "scenario": "split_verdict",
+      "plan_artifact": {
+        "id": "seed-zou-725-v2",
+        "title": "Refactor authentication middleware",
+        "risk": "medium",
+        "tasks": [
+          { "id": "T1", "title": "Extract JWT validation to shared module", "paths": ["src/auth/jwt.ts"] },
+          { "id": "T2", "title": "Update callers", "paths": ["src/api/routes.ts"], "depends_on": ["T1"] }
+        ],
+        "acceptance_criteria": [
+          "All existing tests pass",
+          "No regression in auth latency >5%"
+        ],
+        "exit_conditions": [
+          { "name": "tests_green", "criteria": "CI passes on main" }
+        ],
+        "rollback": "revert commits T1 and T2"
+      },
+      "artifact_sha256": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
+      "deterministic_report": {
+        "passed": true,
+        "findings": []
+      },
+      "reviewer_verdicts": [
+        {
+          "model": "hf:moonshotai/Kimi-K2.7-Code",
+          "pass": true,
+          "confidence": 0.80,
+          "finding_type": "none",
+          "claims": []
+        },
+        {
+          "model": "hf:zai-org/GLM-5.2",
+          "pass": false,
+          "confidence": 0.75,
+          "finding_type": "substantive",
+          "claims": [
+            {
+              "claim": "Acceptance criteria do not specify a rollback test beyond commit revert.",
+              "evidence": "rollback: 'revert commits T1 and T2' — no smoke test to confirm revert correctness.",
+              "severity": "medium"
+            }
+          ]
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": true,
+          "confidence": 0.82,
+          "finding_type": "none",
+          "claims": []
+        },
+        {
+          "model": "hf:MiniMaxAI/MiniMax-M3",
+          "pass": false,
+          "confidence": 0.78,
+          "finding_type": "substantive",
+          "claims": [
+            {
+              "claim": "T2 could conflict with in-flight requests during migration window.",
+              "evidence": "No zero-downtime migration path specified.",
+              "severity": "medium"
+            }
+          ]
+        }
+      ],
+      "expected_consensus_decision": "escalate",
+      "expected_consensus_status": "escalate",
+      "expected_pass": null,
+      "notes": "2-2 split on a 4-model panel. computeConsensus: passCount=2, failCount=2, neither N-1 nor 1; falls to 'escalate'. Human operator must adjudicate."
+    },
+    {
+      "id": "zou-725-v3-provider-failure",
+      "description": "v3 exercise: one reviewer seat returned HTTP 503 (Service Unavailable); the resulting pass=false was conflated with a substantive objection. Expected: provider_failure must be classified separately; gate decision must reflect only the two substantive votes, not treat the failed seat as a rejector.",
+      "scenario": "provider_failure",
+      "plan_artifact": {
+        "id": "seed-zou-725-v3",
+        "title": "Add feature flag for A/B experiment",
+        "risk": "low",
+        "tasks": [
+          { "id": "T1", "title": "Add EXPERIMENT_FLAG env var check to render.ts", "paths": ["src/render.ts"] }
+        ],
+        "acceptance_criteria": [
+          "Feature flag toggles A/B variant correctly in staging"
+        ],
+        "exit_conditions": [
+          { "name": "staging_verified", "criteria": "QA sign-off on flag behavior" }
+        ],
+        "rollback": "Set EXPERIMENT_FLAG=0 and redeploy"
+      },
+      "artifact_sha256": "2c624232cdd221771294dfbb310acbc3ccf6a4b2ac4f31e0b9ccb8b4ea7b8a3",
+      "deterministic_report": {
+        "passed": true,
+        "findings": []
+      },
+      "reviewer_verdicts": [
+        {
+          "model": "hf:moonshotai/Kimi-K2.7-Code",
+          "pass": true,
+          "confidence": 0.91,
+          "finding_type": "none",
+          "claims": []
+        },
+        {
+          "model": "hf:zai-org/GLM-5.2",
+          "pass": true,
+          "confidence": 0.87,
+          "finding_type": "none",
+          "claims": []
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "confidence": 0.0,
+          "finding_type": "provider_failure",
+          "provider_error": {
+            "http_status": 503,
+            "message": "API error: 503",
+            "failover_attempted": true,
+            "failover_chain": ["xai:grok-3-mini", "openrouter/xai/grok-3-mini"],
+            "all_failover_exhausted": true
+          },
+          "claims": [
+            {
+              "claim": "API error: 503",
+              "severity": null
+            }
+          ]
+        }
+      ],
+      "current_behavior": {
+        "computeConsensus_result": "rejected",
+        "reason": "passCount=2, failCount=1, N-1 of 3 passes → should be 'passed' under N-1 rule; BUT arbiter or recall-bias may flip to escalate. computeConsensus with N=3: N-1=2 pass → 'passed'. However if the timeout verdict triggers CONSENSUS_RECALL_BIAS with a high-confidence high-severity issue it could escalate. The defect is that pass=false from provider failure is treated as a substantive dissent.",
+        "defect": "provider_failure conflated with substantive_rejection — infrastructure finding has no explicit type field"
+      },
+      "expected_behavior": {
+        "finding_type_required": "provider_failure",
+        "expected_consensus_decision": "passed",
+        "expected_consensus_status": "passed",
+        "expected_pass": true,
+        "rationale": "Two substantive passes; one infrastructure failure. Infrastructure failures must not count as substantive votes. The gate should record the failure in provider_health but exclude the seat from the vote tally."
+      },
+      "notes": "This fixture validates AC-04: substantive findings, provider failures, malformed responses, abstentions, and out-of-scope objections must be separately typed and reported."
+    },
+    {
+      "id": "zou-725-v4-malformed-output",
+      "description": "v4 exercise: YAML plan seed was reviewed in code-review mode; a reviewer identified TSX/JSX syntax errors in the YAML that are not real defects. Malformed-output findings must be classified separately.",
+      "scenario": "malformed_output",
+      "plan_artifact": {
+        "id": "seed-zou-725-v4",
+        "title": "Generate weekly dashboard report",
+        "risk": "low",
+        "tasks": [
+          { "id": "T1", "title": "Run scorecard-report.ts and email output", "paths": ["packages/bench/scripts/scorecard-report.ts"] }
+        ],
+        "acceptance_criteria": [
+          "Report emailed by 08:30 Monday"
+        ],
+        "exit_conditions": [
+          { "name": "email_delivered", "criteria": "Email delivery confirmed via SMTP log" }
+        ],
+        "rollback": "Re-run script manually"
+      },
+      "artifact_sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a8",
+      "reviewer_verdicts": [
+        {
+          "model": "hf:moonshotai/Kimi-K2.7-Code",
+          "pass": false,
+          "confidence": 0.72,
+          "finding_type": "malformed_output",
+          "malformed_reason": "model_applied_code_review_mode_to_yaml",
+          "claims": [
+            {
+              "claim": "Unexpected token '<' — JSX syntax not allowed in this context.",
+              "evidence": "Line 3: `title: 'Generate weekly dashboard report'` — single-quoted string looks like JSX prop.",
+              "severity": "high",
+              "finding_type_actual": "out_of_scope"
+            },
+            {
+              "claim": "Missing type annotations on `tasks` array.",
+              "evidence": "tasks: [ { id: T1... } ] — no TypeScript type declaration.",
+              "severity": "medium",
+              "finding_type_actual": "out_of_scope"
+            }
+          ]
+        },
+        {
+          "model": "hf:zai-org/GLM-5.2",
+          "pass": true,
+          "confidence": 0.90,
+          "finding_type": "none",
+          "claims": []
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": true,
+          "confidence": 0.88,
+          "finding_type": "none",
+          "claims": []
+        }
+      ],
+      "current_behavior": {
+        "defect": "code-review mode applied to YAML plan; TSX/type-annotation findings counted as substantive objections; gate may escalate or reject based on one model's mode-confusion",
+        "root_cause": "consensus-gate.ts has no 'plan' mode; standalone/prescribe.ts does not pass --mode sufficiency or --mode plan"
+      },
+      "expected_behavior": {
+        "finding_type_required": "out_of_scope",
+        "expected_consensus_decision": "passed",
+        "expected_consensus_status": "passed",
+        "expected_pass": true,
+        "rationale": "YAML/JSON/Markdown plan review must use sufficiency or a dedicated plan mode; code-syntax findings on YAML are out_of_scope and must not count as substantive objections. AC-03: plan consensus accepts YAML without invoking TSX parser or returning code-syntax findings."
+      },
+      "notes": "AC-03 and AC-04 coverage. The plan-aware adapter (PCG-004) must filter or reclassify out-of-scope findings before aggregation."
+    },
+    {
+      "id": "zou-725-v5-abstention",
+      "description": "v5 exercise: one reviewer could not form a substantive opinion (insufficient context to evaluate safety) and returned a null verdict; the gate escalated. Abstention must be modeled as a distinct outcome, not as rejection.",
+      "scenario": "abstention",
+      "plan_artifact": {
+        "id": "seed-zou-725-v5",
+        "title": "Migrate secrets from .env to Vault",
+        "risk": "high",
+        "tasks": [
+          { "id": "T1", "title": "Provision Vault path and write initial secrets", "paths": ["infra/vault/init.sh"] },
+          { "id": "T2", "title": "Update app config to read from Vault SDK", "paths": ["src/config.ts"], "depends_on": ["T1"] }
+        ],
+        "acceptance_criteria": [
+          "All secrets removed from .env",
+          "App boots successfully from Vault config"
+        ],
+        "exit_conditions": [
+          { "name": "no_env_secrets", "criteria": "grep -r 'SECRET_' .env returns nothing" }
+        ],
+        "rollback": "Restore .env from backup and revert src/config.ts"
+      },
+      "artifact_sha256": "4e07408562bedb8b60ce05c1decaffeinated834b36b3c1b5c2c1a867b0e67b7",
+      "reviewer_verdicts": [
+        {
+          "model": "hf:moonshotai/Kimi-K2.7-Code",
+          "pass": true,
+          "confidence": 0.85,
+          "finding_type": "none",
+          "claims": []
+        },
+        {
+          "model": "hf:zai-org/GLM-5.2",
+          "pass": true,
+          "confidence": 0.82,
+          "finding_type": "none",
+          "claims": []
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "confidence": 0.55,
+          "finding_type": "abstention",
+          "abstention_reason": "Insufficient context to evaluate Vault provisioning safety — no Vault policy or IAM role specified in plan.",
+          "claims": [
+            {
+              "claim": "Cannot evaluate safety of Vault path provisioning without knowing the IAM policy and Vault role.",
+              "evidence": "infra/vault/init.sh is referenced but not included; no least-privilege policy shown.",
+              "severity": "low"
+            }
+          ]
+        }
+      ],
+      "current_behavior": {
+        "defect": "low-confidence failure (0.55) counted as a substantive objection; CONSENSUS_RECALL_BIAS may escalate when the dissenter has confidence ≥ 0.7, but at 0.55 it may pass or escalate depending on arbiter result. No abstain outcome exists at voter level.",
+        "computeConsensus_with_arbiter": "likely passed (2 pass, 1 low-conf fail, N-1 rule applies if arbiter passes)"
+      },
+      "expected_behavior": {
+        "finding_type_required": "abstention",
+        "expected_consensus_decision": "passed",
+        "expected_consensus_status": "passed",
+        "expected_pass": true,
+        "rationale": "Low-confidence votes indicating insufficient context should be classified as abstentions. An abstention from one seat with two substantive passes should yield 'passed'. Abstentions must not contribute to rejection or escalation unless a minimum-quorum policy is violated."
+      },
+      "notes": "AC-04 coverage. The plan-gate provider interface must model abstention as a distinct finding_type alongside substantive, infrastructure, formatting, and out_of_scope."
+    },
+    {
+      "id": "zou-725-v6-infra-limited-acceptance",
+      "description": "v6 exercise: all three provider seats were unreachable (no API keys configured, full provider outage). Gate returned 'unavailable'. Execution was accepted by an operator with an explicit infrastructure-limited acceptance receipt. No consensus result authorizes production; the receipt records the degraded-gate condition.",
+      "scenario": "infrastructure_limited_acceptance",
+      "plan_artifact": {
+        "id": "seed-zou-725-v6",
+        "title": "Hot-patch null dereference in order processor",
+        "risk": "medium",
+        "tasks": [
+          { "id": "T1", "title": "Guard order.items access in processor.ts", "paths": ["src/processor.ts"] }
+        ],
+        "acceptance_criteria": [
+          "No null dereference in order processor logs",
+          "Existing test suite passes"
+        ],
+        "exit_conditions": [
+          { "name": "tests_pass", "criteria": "bun test passes on main" }
+        ],
+        "rollback": "revert T1 commit"
+      },
+      "artifact_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52dfd89b2c0",
+      "reviewer_verdicts": [],
+      "gate_outcome": {
+        "status": "unavailable",
+        "reason": "All provider seats unreachable — no API keys configured and network unreachable.",
+        "provider_health": {
+          "hf:moonshotai/Kimi-K2.7-Code": "unreachable",
+          "hf:zai-org/GLM-5.2": "unreachable",
+          "xai:grok-3-mini": "unreachable"
+        }
+      },
+      "operator_receipt": {
+        "receipt_type": "infrastructure_limited_acceptance",
+        "artifact_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52dfd89b2c0",
+        "gate_run_id": "cg-1721239800000-abc123",
+        "decision": "accepted",
+        "actor": {
+          "id": "marlandoj",
+          "source": "linear-operator-token",
+          "authorization": "owner"
+        },
+        "reason": "Hot-patch urgency; provider outage confirmed; deterministic validator passed; risk accepted.",
+        "timestamp": "2026-07-17T20:00:00Z",
+        "expiry": "2026-07-17T22:00:00Z",
+        "signed": false,
+        "enforcement_eligible": false
+      },
+      "expected_behavior": {
+        "finding_type_required": "infrastructure_failure",
+        "expected_consensus_decision": "unavailable",
+        "receipt_required": true,
+        "receipt_enforcement_eligible": false,
+        "rationale": "Infrastructure-limited acceptance receipts are advisory-only. Enforcement mode must reject unsigned receipts. The 'unavailable' status must propagate as a distinct outcome, not as 'passed' or 'rejected'. AC-04 and protected behavior: provider outage never becomes substantive plan rejection."
+      },
+      "notes": "Tests the boundary between advisory acceptance (degraded gate, operator override) and enforcement eligibility (requires signed receipt). Verifies that 'unavailable' is a named ConsensusDecision value, not an error or false rejection."
+    },
+    {
+      "id": "zou-725-v7-signed-override",
+      "description": "v7 exercise: plan was unanimously rejected (all three reviewers flagged missing acceptance criteria). Operator provided a signed override receipt with justification. In enforcement mode the verifier must accept the signed override; in advisory mode it is logged only.",
+      "scenario": "signed_override",
+      "plan_artifact": {
+        "id": "seed-zou-725-v7",
+        "title": "Emergency disable rate limiter for incident response",
+        "risk": "high",
+        "tasks": [
+          { "id": "T1", "title": "Set RATE_LIMITER_ENABLED=false in production config", "paths": ["infra/config/production.env"] }
+        ],
+        "acceptance_criteria": [],
+        "exit_conditions": [
+          { "name": "incident_resolved", "criteria": "Incident ticket ZOU-INC-042 closed" }
+        ],
+        "rollback": "Set RATE_LIMITER_ENABLED=true and redeploy"
+      },
+      "artifact_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+      "reviewer_verdicts": [
+        {
+          "model": "hf:moonshotai/Kimi-K2.7-Code",
+          "pass": false,
+          "confidence": 0.95,
+          "finding_type": "substantive",
+          "claims": [
+            {
+              "claim": "acceptance_criteria is empty; no measurable success condition defined.",
+              "evidence": "acceptance_criteria: []",
+              "severity": "high"
+            }
+          ]
+        },
+        {
+          "model": "hf:zai-org/GLM-5.2",
+          "pass": false,
+          "confidence": 0.93,
+          "finding_type": "substantive",
+          "claims": [
+            {
+              "claim": "No acceptance criteria; disabling rate limiter without a measurable re-enable trigger is unsafe.",
+              "evidence": "acceptance_criteria: []",
+              "severity": "high"
+            }
+          ]
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "confidence": 0.90,
+          "finding_type": "substantive",
+          "claims": [
+            {
+              "claim": "Plan lacks acceptance criteria and a defined re-enable step.",
+              "evidence": "acceptance_criteria: []",
+              "severity": "high"
+            }
+          ]
+        }
+      ],
+      "gate_result": {
+        "status": "rejected",
+        "pass": false,
+        "consensus_id": "cg-1721239900000-def456"
+      },
+      "operator_receipt": {
+        "receipt_type": "override",
+        "artifact_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+        "gate_run_ids": ["cg-1721239900000-def456"],
+        "decision": "overridden",
+        "actor": {
+          "id": "marlandoj",
+          "source": "linear-operator-token",
+          "authorization": "owner"
+        },
+        "reason": "Incident ZOU-INC-042: production traffic down; emergency disable; AC deliberately omitted under time pressure; re-enable is tracked in incident ticket.",
+        "timestamp": "2026-07-17T20:15:00Z",
+        "expiry": "2026-07-17T21:15:00Z",
+        "key_id": "plan-gate-key-v1",
+        "signature": "ed25519:BASE64PLACEHOLDER_OPERATOR_SIGNATURE_WOULD_BE_HERE",
+        "signed": true,
+        "enforcement_eligible": true
+      },
+      "expected_behavior": {
+        "enforcement_mode": {
+          "verifier_result": "accepted_override",
+          "proceed": true,
+          "audit_event": "override_consumed"
+        },
+        "advisory_mode": {
+          "verifier_result": "advisory_override_logged",
+          "proceed": true,
+          "audit_event": "override_advisory"
+        },
+        "rationale": "Signed override with valid key_id, matching artifact_sha256, and non-expired timestamp must be accepted in enforcement mode. AC-06: every override contains artifact hash, actor/source, authorization evidence, timestamp, expiry, decision, gate-run IDs, and a verifiable signature."
+      },
+      "notes": "Tests the full override lifecycle. In production, 'signature' would be a real Ed25519 signature over the canonical receipt JSON. The fixture uses a placeholder to test the field-presence validation layer separately from cryptographic verification."
+    },
+    {
+      "id": "zou-725-v8-stale-artifact-hash",
+      "description": "v8 exercise: a receipt from a prior review referred to an older version of the plan (artifact_sha256 mismatch). Verifier must reject a stale receipt even if the signature is otherwise valid.",
+      "scenario": "stale_artifact_hash",
+      "plan_artifact": {
+        "id": "seed-zou-725-v8-current",
+        "title": "Expand rate limiter to include GraphQL endpoint",
+        "risk": "medium",
+        "tasks": [
+          { "id": "T1", "title": "Apply rate limiter middleware to /graphql route", "paths": ["src/routes/graphql.ts"] },
+          { "id": "T2", "title": "Update load tests for new rate limit behavior", "paths": ["tests/load/graphql.ts"], "depends_on": ["T1"] }
+        ],
+        "acceptance_criteria": [
+          "Rate limiter rejects requests above 100/min on /graphql",
+          "Load test confirms p99 latency < 50ms"
+        ],
+        "exit_conditions": [
+          { "name": "load_test_pass", "criteria": "Load test passes at 200 req/min with <1% 429s" }
+        ],
+        "rollback": "Remove middleware from graphql.ts and revert load tests"
+      },
+      "current_artifact_sha256": "9d5ed678fe57bcca610140957afab571d2b1d15e7a3a74e55c30427d37e6a1d",
+      "stale_receipt": {
+        "receipt_type": "approval",
+        "artifact_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb5b9fdd504fb9a52a",
+        "gate_run_ids": ["cg-1721239700000-aaa111"],
+        "decision": "passed",
+        "actor": {
+          "id": "marlandoj",
+          "source": "linear-operator-token",
+          "authorization": "owner"
+        },
+        "timestamp": "2026-07-17T19:00:00Z",
+        "expiry": "2026-07-17T23:00:00Z",
+        "key_id": "plan-gate-key-v1",
+        "signature": "ed25519:BASE64PLACEHOLDER_STALE_RECEIPT_SIGNATURE",
+        "signed": true,
+        "enforcement_eligible": true
+      },
+      "expected_behavior": {
+        "verifier_result": "rejected_stale_hash",
+        "proceed": false,
+        "error": "receipt artifact_sha256 does not match current plan content hash",
+        "audit_event": "stale_receipt_rejected",
+        "rationale": "The plan was revised after the receipt was issued; the artifact_sha256 in the receipt (4b227...) no longer matches the current plan content hash (9d5ed...). Verifier must reject stale receipts in both enforcement and advisory modes. AC-06: every receipt is bound to a canonical artifact SHA-256 hash. AC-08: stale-receipt rejection rate is a tracked metric."
+      },
+      "notes": "Tests the hash-binding invariant. Even a validly signed receipt for a prior version of the plan must be rejected. The plan gate must canonicalize the current plan content and compare SHA-256 before checking any other receipt field."
+    },
+    {
+      "id": "zou-725-v9-invalid-receipt",
+      "description": "v9 exercise: a receipt was presented without a signature field (unsigned). In enforcement mode the verifier must reject unsigned receipts. In advisory/shadow mode, unsigned receipts are logged but not enforced.",
+      "scenario": "invalid_receipt",
+      "plan_artifact": {
+        "id": "seed-zou-725-v9",
+        "title": "Add OpenTelemetry tracing to API gateway",
+        "risk": "medium",
+        "tasks": [
+          { "id": "T1", "title": "Install @opentelemetry/api and configure exporter", "paths": ["src/telemetry/init.ts", "package.json"] },
+          { "id": "T2", "title": "Wrap HTTP handlers with trace spans", "paths": ["src/api/handlers.ts"], "depends_on": ["T1"] }
+        ],
+        "acceptance_criteria": [
+          "Traces appear in Jaeger for all /api/* requests",
+          "No increase in p99 latency >5ms"
+        ],
+        "exit_conditions": [
+          { "name": "traces_visible", "criteria": "Jaeger UI shows traces for 100% of sampled requests after deploy" }
+        ],
+        "rollback": "Remove @opentelemetry packages and revert src/telemetry/init.ts and src/api/handlers.ts"
+      },
+      "artifact_sha256": "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39",
+      "invalid_receipts": [
+        {
+          "receipt_type": "approval",
+          "artifact_sha256": "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39",
+          "gate_run_ids": ["cg-1721240000000-bbb222"],
+          "decision": "passed",
+          "actor": {
+            "id": "marlandoj",
+            "source": "linear-operator-token",
+            "authorization": "owner"
+          },
+          "timestamp": "2026-07-17T21:00:00Z",
+          "expiry": "2026-07-18T09:00:00Z",
+          "signed": false,
+          "invalidation_reason": "missing_signature_field"
+        },
+        {
+          "receipt_type": "approval",
+          "artifact_sha256": "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39",
+          "gate_run_ids": ["cg-1721240000000-bbb222"],
+          "decision": "passed",
+          "actor": {
+            "id": "marlandoj",
+            "source": "linear-operator-token",
+            "authorization": "owner"
+          },
+          "timestamp": "2026-07-17T21:00:00Z",
+          "expiry": "2026-07-18T09:00:00Z",
+          "key_id": "plan-gate-key-UNKNOWN",
+          "signature": "ed25519:BASE64PLACEHOLDER_UNKNOWN_KEY_SIGNATURE",
+          "signed": true,
+          "invalidation_reason": "unknown_key_id"
+        },
+        {
+          "receipt_type": "approval",
+          "artifact_sha256": "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39",
+          "gate_run_ids": ["cg-1721240000000-bbb222"],
+          "decision": "passed",
+          "actor": {
+            "id": "marlandoj",
+            "source": "linear-operator-token",
+            "authorization": "owner"
+          },
+          "timestamp": "2026-07-17T21:00:00Z",
+          "expiry": "2026-07-17T20:59:00Z",
+          "key_id": "plan-gate-key-v1",
+          "signature": "ed25519:BASE64PLACEHOLDER_EXPIRED_RECEIPT_SIGNATURE",
+          "signed": true,
+          "invalidation_reason": "receipt_expired"
+        }
+      ],
+      "expected_behavior": {
+        "enforcement_mode": {
+          "missing_signature": {
+            "verifier_result": "rejected_unsigned",
+            "proceed": false,
+            "error": "enforcement rejects unsigned receipt: missing signature field",
+            "audit_event": "unsigned_receipt_rejected"
+          },
+          "unknown_key_id": {
+            "verifier_result": "rejected_unknown_key",
+            "proceed": false,
+            "error": "enforcement fails closed: key_id 'plan-gate-key-UNKNOWN' not in trust store",
+            "audit_event": "unknown_key_rejected"
+          },
+          "expired_receipt": {
+            "verifier_result": "rejected_expired",
+            "proceed": false,
+            "error": "receipt expired at 2026-07-17T20:59:00Z; current time is after expiry",
+            "audit_event": "expired_receipt_rejected"
+          }
+        },
+        "advisory_shadow_mode": {
+          "all_cases": {
+            "verifier_result": "advisory_invalid_logged",
+            "proceed": true,
+            "audit_event": "invalid_receipt_advisory"
+          }
+        },
+        "rationale": "AC-06: enforcement rejects invalid, expired, unauthorized, or artifact-mismatched override receipts. AC-19: receipt verification passes current/overlap Ed25519 keys and rejects unknown, revoked, expired, malformed, or missing trust material without exposing private key data. The verifier must fail closed when trust material is absent or invalid."
+      },
+      "notes": "Three sub-cases test the three most common receipt invalidity scenarios. The trust store is provided via PLAN_GATE_TRUSTED_PUBLIC_KEYS environment variable. Missing or invalid trust material must fail closed in enforcement, not fail open."
+    }
+  ]
+}

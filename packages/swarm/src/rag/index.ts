@@ -1,0 +1,19 @@
+export {
+  shouldEnrichWithRAG,
+  enrichTaskWithRAG,
+  prefetchRAGForTasks,
+  resolveCollections,
+  type RAGEnrichmentOptions,
+} from './enrichment.js';
+
+export {
+  detectDomain,
+  fetchDomainContext,
+  enrichTasksWithDomainContext,
+} from './domain-context.js';
+
+export {
+  emitRAGTelemetry,
+  matchedKeywords,
+  type RAGTelemetryRecord,
+} from './telemetry.js';

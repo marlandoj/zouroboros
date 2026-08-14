@@ -1,0 +1,2 @@
+export interface Candidate { id:string; provider:string; family:string; health:"healthy"|"held" }
+export function selectFallback(failed:Candidate,candidates:Candidate[]):Candidate|null { const eligible=candidates.filter(c=>c.id!==failed.id&&c.health==="healthy"); return eligible.find(c=>c.provider!==failed.provider&&c.family!==failed.family) ?? eligible.find(c=>c.provider!==failed.provider) ?? eligible.find(c=>c.family!==failed.family) ?? eligible[0] ?? null; }

@@ -1,0 +1,929 @@
+{
+  "schemaVersion": 1,
+  "benchmark": "ZouroBench-Code",
+  "corpusVersion": "2026.08.04-v1",
+  "generatedAt": "2026-08-04T00:00:00.000Z",
+  "policy": "five-fold-typescript-bun-v1",
+  "tasks": [
+    {
+      "id": "retry-after-bounds",
+      "fold": 1,
+      "seed": 1101,
+      "category": "bug-fix",
+      "title": "Repair Retry-After parsing",
+      "prompt": "Repair parseRetryAfter so it accepts seconds and HTTP dates, falls back for invalid or past values, and never exceeds maxMs. Add tests for the behavior. Do not change the exported signature.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/retry-after-bounds/starter",
+      "solutionDir": "data/zourobench-code/.corpus/retry-after-bounds/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/retry-after-bounds/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/retry-after-bounds/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "ttl-cache",
+      "fold": 1,
+      "seed": 1102,
+      "category": "feature",
+      "title": "Implement a bounded TTL cache",
+      "prompt": "Implement TtlCache with get, set, delete, and size. Expired entries must disappear on access, capacity eviction must remove the least recently used entry, and now() must remain injectable. Add tests.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/ttl-cache/starter",
+      "solutionDir": "data/zourobench-code/.corpus/ttl-cache/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/ttl-cache/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/ttl-cache/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "provider-config-merge",
+      "fold": 1,
+      "seed": 1103,
+      "category": "integration",
+      "title": "Merge provider configuration safely",
+      "prompt": "Implement mergeProviderConfig. Preserve untouched providers and nested options, replace arrays instead of concatenating them, reject prototype-pollution keys, and never mutate either input. Add tests.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/provider-config-merge/starter",
+      "solutionDir": "data/zourobench-code/.corpus/provider-config-merge/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/provider-config-merge/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/provider-config-merge/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "typed-result-refactor",
+      "fold": 1,
+      "seed": 1104,
+      "category": "refactor",
+      "title": "Refactor parsing into a typed result",
+      "prompt": "Refactor parsePort to return the exported discriminated ParseResult union without throwing. Accept integer ports 1 through 65535, preserve the public names, and add tests. Do not use any or type assertions.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/typed-result-refactor/starter",
+      "solutionDir": "data/zourobench-code/.corpus/typed-result-refactor/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/typed-result-refactor/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/typed-result-refactor/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "stable-dedupe",
+      "fold": 2,
+      "seed": 1201,
+      "category": "bug-fix",
+      "title": "Repair stable record deduplication",
+      "prompt": "Fix dedupeById to retain the first record for each non-empty id in original order. Empty ids must be rejected and the input must not be mutated. Add tests.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/stable-dedupe/starter",
+      "solutionDir": "data/zourobench-code/.corpus/stable-dedupe/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/stable-dedupe/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/stable-dedupe/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "concurrency-limiter",
+      "fold": 2,
+      "seed": 1202,
+      "category": "feature",
+      "title": "Implement bounded async mapping",
+      "prompt": "Implement mapConcurrent so results preserve input order, active work never exceeds limit, rejection stops scheduling new work after already-active work settles, and invalid limits fail before invoking the mapper. Add tests.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/concurrency-limiter/starter",
+      "solutionDir": "data/zourobench-code/.corpus/concurrency-limiter/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/concurrency-limiter/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/concurrency-limiter/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "provider-fallback",
+      "fold": 2,
+      "seed": 1203,
+      "category": "integration",
+      "title": "Select a provider-diverse fallback",
+      "prompt": "Implement selectFallback. Prefer candidates in declared order, require healthy status, exclude the failed route, prefer a different provider and family, then relax family before provider. Return null when none qualify. Add tests.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/provider-fallback/starter",
+      "solutionDir": "data/zourobench-code/.corpus/provider-fallback/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/provider-fallback/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/provider-fallback/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "retry-policy-tests",
+      "fold": 2,
+      "seed": 1204,
+      "category": "test-creation",
+      "title": "Add adversarial retry-policy tests",
+      "prompt": "Add tests for retryDelayMs. Cover Retry-After seconds, HTTP dates, caps, invalid values, and non-retriable statuses. Do not change src/index.ts.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/retry-policy-tests/starter",
+      "solutionDir": "data/zourobench-code/.corpus/retry-policy-tests/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/retry-policy-tests/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/retry-policy-tests/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "safe-path-join",
+      "fold": 3,
+      "seed": 1301,
+      "category": "bug-fix",
+      "title": "Repair path traversal protection",
+      "prompt": "Fix safeJoin so it returns a resolved path strictly inside root, rejects absolute paths, traversal, sibling-prefix escapes, and the root itself, and handles platform separators. Add tests.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/safe-path-join/starter",
+      "solutionDir": "data/zourobench-code/.corpus/safe-path-join/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/safe-path-join/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/safe-path-join/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "topological-layers",
+      "fold": 3,
+      "seed": 1302,
+      "category": "feature",
+      "title": "Implement deterministic DAG layers",
+      "prompt": "Implement topologicalLayers. Return deterministic alphabetically sorted execution layers, reject missing dependencies, duplicate ids, and cycles, and do not mutate input. Add tests.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/topological-layers/starter",
+      "solutionDir": "data/zourobench-code/.corpus/topological-layers/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/topological-layers/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/topological-layers/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "deterministic-sort",
+      "fold": 3,
+      "seed": 1304,
+      "category": "refactor",
+      "title": "Refactor candidate sorting deterministically",
+      "prompt": "Refactor rankCandidates into a pure deterministic sort: measured candidates first, selection floor descending, provider rank ascending, cost ascending, then id. Null floors must not be treated as zero. Do not mutate input. Add tests.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/deterministic-sort/starter",
+      "solutionDir": "data/zourobench-code/.corpus/deterministic-sort/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/deterministic-sort/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/deterministic-sort/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "terminal-state-machine",
+      "fold": 4,
+      "seed": 1401,
+      "category": "bug-fix",
+      "title": "Repair terminal lifecycle transitions",
+      "prompt": "Fix transition so only queued->running, running->done, and running->failed are accepted. Repeating the current state is idempotent, terminal states cannot move, and unknown states fail closed. Add tests.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/terminal-state-machine/starter",
+      "solutionDir": "data/zourobench-code/.corpus/terminal-state-machine/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/terminal-state-machine/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/terminal-state-machine/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "artifact-aggregation",
+      "fold": 4,
+      "seed": 1403,
+      "category": "integration",
+      "title": "Aggregate comparable benchmark artifacts",
+      "prompt": "Implement aggregateRuns. Deduplicate run ids by newest timestamp, require one context fingerprint, require unique replicate indexes and seeds, enforce minimumN, and return mean plus sample standard deviation. Add tests.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/artifact-aggregation/starter",
+      "solutionDir": "data/zourobench-code/.corpus/artifact-aggregation/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/artifact-aggregation/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/artifact-aggregation/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "parser-edge-tests",
+      "fold": 4,
+      "seed": 1404,
+      "category": "test-creation",
+      "title": "Add parser boundary tests",
+      "prompt": "Add tests for parseModelRoute. Cover supported prefixes, whitespace, missing model ids, unknown prefixes, and embedded separators. Do not change src/index.ts.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/parser-edge-tests/starter",
+      "solutionDir": "data/zourobench-code/.corpus/parser-edge-tests/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/parser-edge-tests/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/parser-edge-tests/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "sliding-rate-limit",
+      "fold": 5,
+      "seed": 1502,
+      "category": "feature",
+      "title": "Implement a sliding-window limiter",
+      "prompt": "Implement SlidingWindowLimiter.allow. Keep at most limit accepted timestamps in the inclusive window, prune old entries, reject non-monotonic clocks, and expose immutable snapshot(). Add tests.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/sliding-rate-limit/starter",
+      "solutionDir": "data/zourobench-code/.corpus/sliding-rate-limit/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/sliding-rate-limit/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/sliding-rate-limit/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "summary-integration",
+      "fold": 5,
+      "seed": 1503,
+      "category": "integration",
+      "title": "Integrate benchmark summary classification",
+      "prompt": "Implement summarizeModels. Deduplicate canonical models, prefer qualified then runnable routes, count qualified/queued/held/unsupported exactly once per model, and return deterministic model order without mutating input. Add tests.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/summary-integration/starter",
+      "solutionDir": "data/zourobench-code/.corpus/summary-integration/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/summary-integration/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/summary-integration/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "immutable-queue",
+      "fold": 5,
+      "seed": 1504,
+      "category": "refactor",
+      "title": "Refactor queue claiming without mutation",
+      "prompt": "Refactor claimNext into a pure function. Choose the highest priority ready item, then oldest createdAt, then id. Return cloned selected and remaining values, increment only the selected attempt, and leave input untouched. Add tests.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/immutable-queue/starter",
+      "solutionDir": "data/zourobench-code/.corpus/immutable-queue/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/immutable-queue/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/immutable-queue/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "cost-rounding-tests",
+      "fold": 3,
+      "seed": 1310,
+      "category": "test-creation",
+      "title": "Add monetary rounding tests",
+      "prompt": "Add tests for estimateCostMicros. Cover fractional rates, zero usage, large integer usage, and half-up micro-dollar rounding. Do not change src/index.ts.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/cost-rounding-tests/starter",
+      "solutionDir": "data/zourobench-code/.corpus/cost-rounding-tests/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/cost-rounding-tests/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/cost-rounding-tests/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "error-message-refactor",
+      "fold": 4,
+      "seed": 1410,
+      "category": "refactor",
+      "title": "Refactor structured provider errors",
+      "prompt": "Refactor providerError into an exhaustive discriminated union renderer. Preserve the exported API, redact bearer tokens and query token values, include provider and status when present, and add tests.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/error-message-refactor/starter",
+      "solutionDir": "data/zourobench-code/.corpus/error-message-refactor/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/error-message-refactor/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/error-message-refactor/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    },
+    {
+      "id": "config-precedence",
+      "fold": 5,
+      "seed": 1510,
+      "category": "test-creation",
+      "title": "Add layered configuration tests",
+      "prompt": "Add tests for resolveConfig. Cover four-layer precedence, undefined preservation, explicit null clearing, unknown-key rejection, and input immutability. Do not change src/index.ts.",
+      "targetFile": "src/index.ts",
+      "starterDir": "data/zourobench-code/.corpus/config-precedence/starter",
+      "solutionDir": "data/zourobench-code/.corpus/config-precedence/private/solution",
+      "hiddenChecksDir": "data/zourobench-code/.corpus/config-precedence/private/hidden",
+      "mutationFile": "data/zourobench-code/.corpus/config-precedence/private/hidden/mutation.ts",
+      "timeoutMs": 300000,
+      "maxChangedFiles": 4,
+      "maxChangedLines": 220,
+      "requiredCommands": [
+        [
+          "tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        [
+          "bun",
+          "test",
+          "test"
+        ]
+      ],
+      "hiddenCommands": [
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-1.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-2.test.ts"
+        ],
+        [
+          "bun",
+          "test",
+          "./.zbc-hidden/check-3.test.ts"
+        ]
+      ]
+    }
+  ]
+}

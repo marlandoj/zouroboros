@@ -1,0 +1,31 @@
+[Unit]
+Description=Zouroboros Hetzner factory control plane (shadow)
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/install -d -o 1000 -g 1000 -m 0700 /var/lib/zouroboros-control-plane
+ExecStartPre=-/usr/bin/docker rm -f zouroboros-control-plane
+ExecStart=/usr/bin/docker run --name zouroboros-control-plane --rm \
+  --user 1000:1000 \
+  --read-only \
+  --tmpfs /tmp:rw,noexec,nosuid,size=32m \
+  --cap-drop ALL \
+  --security-opt no-new-privileges \
+  -p 6670:6670 \
+  -v /var/lib/zouroboros-control-plane:/state \
+  --env-file /etc/zouroboros-control-plane/env \
+  hetzner-control-plane:0.1.0
+ExecStop=/usr/bin/docker stop zouroboros-control-plane
+Restart=always
+RestartSec=3
+TimeoutStopSec=20
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/zouroboros-control-plane
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

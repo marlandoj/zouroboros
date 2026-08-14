@@ -1,0 +1,20 @@
+{
+  "id": "FX-22",
+  "name": "capacity-ceiling-pending",
+  "asserts": "checkCapacity returns ok=false when pending count >= ceiling; orchestrateScan emits outcome=capacity_backpressure WITHOUT calling the LLM",
+  "phase": "PR3",
+  "scope": "capacity + orchestrate",
+  "input": {
+    "ceiling": 5,
+    "pending_count": 5
+  },
+  "expected": {
+    "checkCapacity": {
+      "ok": false,
+      "pending_count": 5,
+      "ceiling": 5
+    },
+    "orchestrate_outcome": "capacity_backpressure",
+    "candidates_emitted": 0
+  }
+}

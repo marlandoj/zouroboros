@@ -1,0 +1,12 @@
+{
+  "id": "FX-12",
+  "name": "replay-egress-blocked",
+  "asserts": "Replay child that calls fetch('https://example.com') must fail with non-zero exit (HTTPS_PROXY refuses) — sandbox env strips network.",
+  "phase": "PR2",
+  "scope": "eval-replay",
+  "child_script": "const r = await fetch('https://example.com').catch((e) => e); console.log('caught:', r?.code ?? r?.message ?? r); process.exit(r instanceof Error ? 7 : 0);",
+  "expected": {
+    "exit_code_nonzero": true,
+    "stdout_contains_caught": true
+  }
+}

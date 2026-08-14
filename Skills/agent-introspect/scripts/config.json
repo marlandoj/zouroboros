@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "probe_timeout_s": 10,
+  "retries": 1,
+  "audit_budget_s": 600,
+  "max_timeouts": 5,
+  "skip_health": [
+    "gemini-daemon.ts",
+    "mcp-server-http.ts",
+    "test-bridges.ts",
+    "test-harness.ts",
+    "deploy-tts-endpoint.ts",
+    "orchestrate.ts",
+    "benchmark-v2-v3.ts",
+    "demo.ts",
+    "feedback-promote.ts",
+    "ingest-hermes-docs-hybrid.ts",
+    "seed-mimir-corpus.ts",
+    "test-pka-briefing.ts",
+    "mcp-trust-check.ts",
+    "doctor.ts",
+    "auto-heal.ts",
+    "drift-guard.ts",
+    "raptor_hierarchy.py",
+    "memory-gate.ts"
+  ]
+}

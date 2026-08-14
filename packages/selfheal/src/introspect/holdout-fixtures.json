@@ -1,0 +1,130 @@
+{
+  "name": "holdout-anti-goodhart-v1",
+  "windowDays": 14,
+  "threshold": 0.85,
+  "_provenance": "Fresh reserved held-out eval bank for the anti-Goodhart tripwire (seed-antigoodhart-wiring-2026-06-01). Synthetic, disjoint-by-construction from Skills/zo-memory-system/assets/continuation-eval-fixture-set.json. NO visible introspect collector reads this file. Domains here (atlas/cobalt/kraken/helios) never appear in the visible set.",
+  "facts": [
+    {
+      "entity": "project.atlas-data-migration",
+      "key": "status",
+      "value": "Atlas migration is backfilling the warehouse into a columnar store; next is backfill validation before cutover.",
+      "text": "Atlas data migration backfill into columnar store; backfill validation pending before cutover.",
+      "category": "project",
+      "decayClass": "active",
+      "createdDaysAgo": 4,
+      "lastAccessedDaysAgo": 2
+    },
+    {
+      "entity": "decision.cobalt-api-versioning",
+      "key": "policy",
+      "value": "Cobalt API versioning uses a semver version header (X-Api-Version) rather than URL path prefixes.",
+      "text": "Cobalt API versioning decision: semver version header X-Api-Version, not URL path prefixes.",
+      "category": "decision",
+      "decayClass": "stable",
+      "createdDaysAgo": 6,
+      "lastAccessedDaysAgo": 3
+    },
+    {
+      "entity": "project.helios-billing",
+      "key": "focus",
+      "value": "Helios billing rollout focuses on usage metering, invoice generation, and proration on plan changes.",
+      "text": "Helios billing rollout: usage metering, invoice generation, proration on plan changes.",
+      "category": "project",
+      "decayClass": "active",
+      "createdDaysAgo": 5,
+      "lastAccessedDaysAgo": 2
+    }
+  ],
+  "episodes": [
+    {
+      "summary": "Kraken queue backlog spiked when consumer lag grew during a deploy; throughput recovered after scaling consumers.",
+      "outcome": "resolved",
+      "happenedDaysAgo": 3,
+      "entities": ["incident.kraken-queue-backlog", "service.kraken", "project.atlas-data-migration"],
+      "metadata": { "consumerLag": "high" }
+    },
+    {
+      "summary": "Atlas migration planning session settled on backfill-then-validate before any production cutover.",
+      "outcome": "resolved",
+      "happenedDaysAgo": 4,
+      "entities": ["project.atlas-data-migration", "decision.atlas-cutover"],
+      "metadata": { "phase": "planning" }
+    }
+  ],
+  "openLoops": [
+    {
+      "title": "Validate Atlas backfill row counts before cutover",
+      "summary": "Next step is to validate Atlas backfill row counts against the source warehouse before cutover.",
+      "kind": "task",
+      "status": "open",
+      "priority": 0.9,
+      "entity": "project.atlas-data-migration",
+      "createdDaysAgo": 2,
+      "updatedDaysAgo": 1
+    },
+    {
+      "title": "Scale Kraken consumers to clear remaining backlog",
+      "summary": "Remaining Kraken queue backlog still needs consumers scaled to clear it fully.",
+      "kind": "incident",
+      "status": "open",
+      "priority": 0.9,
+      "entity": "incident.kraken-queue-backlog",
+      "createdDaysAgo": 3,
+      "updatedDaysAgo": 1
+    },
+    {
+      "title": "Confirm Helios proration formula for mid-cycle plan changes",
+      "summary": "Pending confirmation on the Helios proration formula for mid-cycle plan changes before billing launch.",
+      "kind": "approval",
+      "status": "open",
+      "priority": 0.8,
+      "entity": "project.helios-billing",
+      "createdDaysAgo": 2,
+      "updatedDaysAgo": 1
+    }
+  ],
+  "cases": [
+    {
+      "id": "holdout-atlas-left-off",
+      "query": "where did we leave off on the atlas migration?",
+      "expectDetection": true,
+      "expectAny": ["columnar", "backfill", "atlas"]
+    },
+    {
+      "id": "holdout-cobalt-decision",
+      "query": "what was the status of the cobalt api versioning decision?",
+      "expectDetection": true,
+      "expectAny": ["semver", "version header", "x-api-version"]
+    },
+    {
+      "id": "holdout-kraken-incident",
+      "query": "what happened with the kraken queue backlog earlier?",
+      "expectDetection": true,
+      "expectAny": ["consumer lag", "backlog", "kraken"]
+    },
+    {
+      "id": "holdout-helios-next",
+      "query": "what is the next step on helios billing?",
+      "expectDetection": true,
+      "expectAny": ["proration", "metering", "invoice"]
+    },
+    {
+      "id": "holdout-atlas-cutover-loop",
+      "query": "is the atlas backfill validation still open before cutover?",
+      "expectDetection": true,
+      "expectAny": ["backfill", "row counts", "cutover"]
+    },
+    {
+      "id": "holdout-greeting-negative",
+      "query": "good morning",
+      "expectDetection": false,
+      "expectAny": []
+    },
+    {
+      "id": "holdout-codegen-negative",
+      "query": "write a regex to match email addresses",
+      "expectDetection": false,
+      "expectAny": []
+    }
+  ]
+}

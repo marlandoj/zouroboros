@@ -1,0 +1,29 @@
+{
+  "name": "production-ready",
+  "version": "1.0.0",
+  "description": "Production-readiness audit for AI-generated web apps and SaaS — 17 domains, executable checks, coverage-aware launch verdict, remediation prompts.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "audit": "bun scripts/audit.ts",
+    "verdict": "bun scripts/verdict.ts",
+    "prompts": "bun scripts/prompts.ts",
+    "list": "bun scripts/audit.ts --list",
+    "test": "bun test scripts/__tests__",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "production-readiness",
+    "security-audit",
+    "owasp",
+    "launch-checklist",
+    "ai-code-review",
+    "vibeshield",
+    "static-analysis"
+  ],
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "author": "marlandoj.zo.computer",
+  "license": "MIT"
+}

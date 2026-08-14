@@ -1,0 +1,17 @@
+{
+  "name": "zouroboros-bench",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "files": ["dist/", "README.md"],
+  "dependencies": {
+    "zouroboros-selfheal": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "bun-types": "^1.3.11"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

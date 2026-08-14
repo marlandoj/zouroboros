@@ -1,0 +1,57 @@
+{
+  "name": "zouroboros-core",
+  "version": "2.2.0",
+  "description": "Core types, configuration, and utilities for Zouroboros",
+  "type": "module",
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./config": {
+      "import": "./dist/config/loader.js",
+      "types": "./dist/config/loader.d.ts"
+    },
+    "./adapters": {
+      "import": "./dist/adapters/index.js",
+      "types": "./dist/adapters/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test src/",
+    "test:coverage": "bun test --coverage src/",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "keywords": [
+    "zouroboros",
+    "core",
+    "config",
+    "types"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zouroboros-ai/zouroboros.git",
+    "directory": "packages/core"
+  }
+}

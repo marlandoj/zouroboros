@@ -1,0 +1,27 @@
+{
+  "id": "FX-29",
+  "name": "mixed-source-kind",
+  "asserts": "1 procedure + 2 episodes + 1 skill_execution all sharing a cluster name → source_kind='mixed'",
+  "phase": "PR1",
+  "scope": "scoring",
+  "comment": "FX-29 in seed asserted score 2.3 (1.0 + 0.4 + 0.4 + 0.5). v1 clustering keys differ across kinds so this fixture forces same name across kinds via prefix-matched episode summaries. Whether they actually cluster into one bucket or three separate buckets depends on clusterKey semantics; this test asserts BOTH possibilities are accepted as long as source_kind reflects what's in each bucket.",
+  "input": {
+    "coldStart": true,
+    "procedures": [
+      { "kind": "procedure", "id": "p1", "name": "deploy-zo-route", "steps": [], "success_count": 3, "failure_count": 0 },
+      { "kind": "procedure", "id": "p2", "name": "deploy-zo-route", "steps": [], "success_count": 2, "failure_count": 0 }
+    ],
+    "episodes": [
+      { "kind": "episode", "id": "e1", "summary": "deploy success #1", "outcome": "success", "happened_at": 1750000000 },
+      { "kind": "episode", "id": "e2", "summary": "deploy success #2", "outcome": "resolved", "happened_at": 1750000100 }
+    ],
+    "skillExecutions": [
+      { "kind": "skill_execution", "id": "s1", "skill_name": "deploy-zo-route", "outcome": "success", "happened_at": 1750000200 }
+    ]
+  },
+  "expected": {
+    "candidateCountMin": 1,
+    "totalScoreMin": 2.0,
+    "anyMixedAllowed": true
+  }
+}

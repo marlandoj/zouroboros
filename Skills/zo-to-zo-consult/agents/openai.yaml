@@ -1,0 +1,4 @@
+interface:
+  display_name: "Zo-to-Zo Consult"
+  short_description: "Run human-gated read-only consultations between Zo personas"
+  default_prompt: "Establish or operate a read-only Zo-to-Zo troubleshooting consultation with explicit human approval for every change."
