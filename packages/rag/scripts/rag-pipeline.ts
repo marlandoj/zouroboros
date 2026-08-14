@@ -11,7 +11,19 @@
  *   rankgpt-sun-2023, fusion-functions-bruch-2023, hyde-gao-2022, crag-yan-2024.
  */
 
-import { generate } from "./model-client";
+type GenerateOptions = {
+  workload: "gate" | "hyde" | "crag";
+  model?: string;
+  system?: string;
+  prompt: string;
+  temperature?: number;
+  maxTokens?: number;
+};
+
+async function generate(options: GenerateOptions) {
+  const modelClient = await import("./model-client");
+  return modelClient.generate(options);
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

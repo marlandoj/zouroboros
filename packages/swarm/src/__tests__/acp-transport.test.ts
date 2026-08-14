@@ -51,6 +51,8 @@ const mockACPEntry = {
   acp: { adapterBin: 'claude-agent-acp' },
 };
 
+const mcpFixturePath = `${import.meta.dir}/fixtures/mcp-config.json`;
+
 const mockBridgeEntryWithTransport = {
   ...mockBridgeEntry,
   transport: 'bridge' as const,
@@ -346,12 +348,11 @@ describe('ACPTransport', () => {
   test('loads shared MCP servers and an authenticated Zo server for OpenCode', () => {
     const servers = loadAcpMcpServers(
       {
-        configPath: '.mcp.json',
+        configPath: mcpFixturePath,
         includeShared: true,
         includeZo: true,
       },
       {
-        workdir: '/home/workspace',
         env: {
           ZO_API_KEY: 'test-token',
           ZO_CONVERSATION_ID: 'test-conversation',
@@ -375,7 +376,7 @@ describe('ACPTransport', () => {
       adapterBin: 'bun',
       adapterArgs: [`${import.meta.dir}/fixtures/mock-acp-adapter.ts`],
       mcpConfig: {
-        configPath: '.mcp.json',
+        configPath: mcpFixturePath,
         includeShared: true,
         includeZo: true,
       },

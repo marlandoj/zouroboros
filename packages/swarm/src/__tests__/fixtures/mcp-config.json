@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "zo-memory": {
+      "command": "bun",
+      "args": ["memory-server.ts"]
+    },
+    "qdrant-rag": {
+      "url": "http://127.0.0.1:6333/mcp"
+    }
+  }
+}
