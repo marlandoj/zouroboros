@@ -1,0 +1,8 @@
+scenario_id: rollback
+description: Auto-rollback watches the SLO breach, records rollback evidence, and trips the circuit after repeated failures.
+seed: 127
+steps:
+  - name: rollback-and-circuit
+    run: bun {scripts_dir}/auto-merge-selftest.ts
+    timeout_ms: 45000
+    expect: { exit_code: 0 }
