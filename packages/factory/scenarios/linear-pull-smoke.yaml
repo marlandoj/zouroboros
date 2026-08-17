@@ -1,0 +1,40 @@
+# SF-009 committed smoke scenario — linear-puller vs the deterministic Linear twin.
+# Run:      SF009_SCENARIOS=1 bun scripts/scenario-run.ts run scenarios/linear-pull-smoke.yaml
+# Validate: SF009_SCENARIOS=1 bun scripts/scenario-spec.ts validate --spec scenarios/linear-pull-smoke.yaml
+#
+# env values are LITERALS (nothing forwarded from the parent env). The
+# LINEAR_API_KEY below is a fake — the twin never checks auth; the puller only
+# requires the variable to be set.
+scenario_id: linear-pull-smoke
+description: >-
+  Pull the factory-ready queue from the deterministic Linear twin and assert
+  the conveyor selects the SINGLE highest-priority pullable ticket. ZOU-9004 is
+  urgent but In Review (started) so it is reaped + excluded; ZOU-9002 (urgent,
+  Todo) wins over ZOU-9001 (none). Exercises state filter + expedite ordering +
+  label reap round-trip.
+seed: 42
+twin:
+  kind: linear
+  fixture: fixtures/linear-pull-smoke.json
+env:
+  LINEAR_API_KEY: twin-smoke-key
+steps:
+  - name: pull-queue
+    run: set -o pipefail; bun {scripts_dir}/linear-puller.ts | tee queue.json
+    timeout_ms: 30000
+    expect:
+      exit_code: 0
+      stdout_contains:
+        - ZOU-9002
+  - name: assert-single-highest-priority
+    run: >-
+      bun -e 'const q = JSON.parse(await Bun.file("queue.json").text());
+      if (q.length !== 1 || q[0].identifier !== "ZOU-9002") { console.error("bad queue: " + JSON.stringify(q.map((t) => t.identifier))); process.exit(1); }
+      console.log("select-ok filter-ok reap-ok");'
+    timeout_ms: 15000
+    expect:
+      exit_code: 0
+      files_exist:
+        - queue.json
+      stdout_contains:
+        - select-ok filter-ok reap-ok

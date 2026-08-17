@@ -87,6 +87,31 @@ importers:
         specifier: ^5.3.3
         version: 5.9.3
 
+  packages/factory:
+    dependencies:
+      '@zouroboros/hetzner-exec':
+        specifier: workspace:*
+        version: link:../hetzner-exec
+      zouroboros-core:
+        specifier: workspace:*
+        version: link:../core
+      zouroboros-selfheal:
+        specifier: workspace:*
+        version: link:../selfheal
+      zouroboros-swarm:
+        specifier: workspace:*
+        version: link:../swarm
+      zouroboros-workflow:
+        specifier: workspace:*
+        version: link:../workflow
+    devDependencies:
+      '@types/bun':
+        specifier: latest
+        version: 1.3.14
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+
   packages/hetzner-exec: {}
 
   packages/mcp-memory:

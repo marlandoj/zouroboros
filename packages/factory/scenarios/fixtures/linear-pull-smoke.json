@@ -1,0 +1,56 @@
+{
+  "fixture_id": "linear-pull-smoke",
+  "kind": "linear",
+  "issues": [
+    {
+      "id": "0f9e2a10-0000-4000-8000-00000000a001",
+      "identifier": "ZOU-9001",
+      "title": "Twin smoke — low-priority contract ticket",
+      "description": "## Goal\nSmoke fixture ticket (none priority) for the SF-009 Linear twin.\n\n## Acceptance Criteria\n- [ ] pulled by linear-puller via the twin\n\n## Scope\nFixture-only; never reaches a real board.",
+      "priority": 0,
+      "project_id": "b621d7a1-bb3d-4df9-ae11-3034789e204c",
+      "state": { "id": "twin-state-todo", "name": "Todo", "type": "unstarted" },
+      "labels": [
+        { "id": "f4a73851-6c6b-4a19-b397-c2bd62eeb694", "name": "factory-ready" }
+      ],
+      "team": { "id": "twin-team-zou", "name": "Zouroboros", "key": "ZOU" }
+    },
+    {
+      "id": "0f9e2a10-0000-4000-8000-00000000a002",
+      "identifier": "ZOU-9002",
+      "title": "Twin smoke — urgent contract ticket",
+      "description": "## Goal\nSmoke fixture ticket (urgent priority) — must sort FIRST under SF-007 expedite ordering.\n\n## Acceptance Criteria\n- [ ] sorts ahead of ZOU-9001\n\n## Scope\nFixture-only; never reaches a real board.",
+      "priority": 1,
+      "project_id": "b621d7a1-bb3d-4df9-ae11-3034789e204c",
+      "state": { "id": "twin-state-todo", "name": "Todo", "type": "unstarted" },
+      "labels": [
+        { "id": "f4a73851-6c6b-4a19-b397-c2bd62eeb694", "name": "factory-ready" }
+      ],
+      "team": { "id": "twin-team-zou", "name": "Zouroboros", "key": "ZOU" }
+    },
+    {
+      "id": "0f9e2a10-0000-4000-8000-00000000a003",
+      "identifier": "ZOU-9003",
+      "title": "Twin smoke — unlabeled ticket, must be filtered out",
+      "description": "## Goal\nCarries no factory-ready label — the twin's filter must exclude it.",
+      "priority": 2,
+      "project_id": "b621d7a1-bb3d-4df9-ae11-3034789e204c",
+      "state": { "id": "twin-state-todo", "name": "Todo", "type": "unstarted" },
+      "labels": [],
+      "team": { "id": "twin-team-zou", "name": "Zouroboros", "key": "ZOU" }
+    },
+    {
+      "id": "0f9e2a10-0000-4000-8000-00000000a004",
+      "identifier": "ZOU-9004",
+      "title": "Twin smoke — In-Review ticket, must be reaped + excluded",
+      "description": "## Goal\nUrgent-priority ticket that has left the backlog (In Review / started). The puller must strip its factory-ready label (reap) and never select it, even though it outranks ZOU-9002 on priority.",
+      "priority": 1,
+      "project_id": "b621d7a1-bb3d-4df9-ae11-3034789e204c",
+      "state": { "id": "twin-state-review", "name": "In Review", "type": "started" },
+      "labels": [
+        { "id": "f4a73851-6c6b-4a19-b397-c2bd62eeb694", "name": "factory-ready" }
+      ],
+      "team": { "id": "twin-team-zou", "name": "Zouroboros", "key": "ZOU" }
+    }
+  ]
+}
