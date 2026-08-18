@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "templateId": "developer-tool",
+  "version": "1.0.0",
+  "level": "standard",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "Developer tools",
+  "definition": "Tools consumed by developers through commands, configuration, generated artifacts, editor behavior, or machine-readable output.",
+  "examples": [
+    "CLI",
+    "linter",
+    "test runner",
+    "code generator"
+  ],
+  "counterexample": "A consumer application with no developer-facing contract.",
+  "executionModes": [
+    "direct",
+    "swarm"
+  ],
+  "requiredSections": [
+    "mission",
+    "users",
+    "workflows",
+    "data",
+    "security",
+    "lifecycle",
+    "quality",
+    "verification",
+    "exclusions"
+  ],
+  "emphasis": [
+    "command contracts",
+    "exit codes",
+    "configuration",
+    "compatibility",
+    "fixtures and diagnostics"
+  ],
+  "nonGoals": [
+    "Do not return exit zero after a failed requested operation.",
+    "Do not mutate user projects without a dry run or explicit command."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "Which commands, inputs, outputs, and exit codes are stable?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which runtimes, versions, and project layouts are supported?"
+    },
+    {
+      "id": "D-003",
+      "question": "Which mutations require dry-run or confirmation?"
+    },
+    {
+      "id": "D-004",
+      "question": "Which data and lifecycle contracts are authoritative?"
+    },
+    {
+      "id": "D-005",
+      "question": "Which failure and recovery behavior is required?"
+    },
+    {
+      "id": "D-006",
+      "question": "What deployment environment is authoritative?"
+    }
+  ],
+  "requirements": [
+    "Document stable command and machine-output contracts.",
+    "Return nonzero status for failed requested operations.",
+    "Preserve user-authored content and provide deterministic fixtures."
+  ],
+  "verifications": [
+    "Run help, valid, invalid, and failure command fixtures.",
+    "Test supported runtime and configuration matrices.",
+    "Compare generated artifacts deterministically."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "dcbdcdf49a23fa9cd766d1fb37ebc8f5072825b9ce55722a10e12a69cfb36710"
+}

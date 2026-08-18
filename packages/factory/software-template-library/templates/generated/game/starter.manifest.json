@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "templateId": "game",
+  "version": "1.0.0",
+  "level": "starter",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "Games",
+  "definition": "Interactive entertainment products governed by a game loop, controls, rules, feedback, content, and performance.",
+  "examples": [
+    "boat racer",
+    "puzzle game",
+    "roguelike",
+    "multiplayer arena"
+  ],
+  "counterexample": "A scientific physics sandbox whose primary purpose is measurement rather than play.",
+  "executionModes": [
+    "direct"
+  ],
+  "requiredSections": [
+    "mission",
+    "capabilities",
+    "constraints",
+    "acceptance",
+    "exclusions"
+  ],
+  "emphasis": [
+    "core loop",
+    "controls and feel",
+    "rules and state",
+    "art direction",
+    "temporal and performance evidence"
+  ],
+  "nonGoals": [
+    "Do not use screenshots as the only evidence for motion or feel.",
+    "Do not expand content before the core loop is playable and verified."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "What is the repeatable core loop and win or loss condition?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which controls, platforms, and target hardware apply?"
+    },
+    {
+      "id": "D-003",
+      "question": "Which art, audio, physics, and performance qualities are protected?"
+    },
+    {
+      "id": "D-004",
+      "question": "What is the smallest usable vertical slice?"
+    },
+    {
+      "id": "D-005",
+      "question": "What must explicitly remain out of scope?"
+    }
+  ],
+  "requirements": [
+    "Maintain deterministic game-state transitions under a declared seed where feasible.",
+    "Provide responsive controls and explicit pause, restart, focus-loss, and input-device behavior.",
+    "Meet the declared frame-time budget in a repeatable stress scenario."
+  ],
+  "verifications": [
+    "Replay canonical input and state scenarios.",
+    "Capture time-separated visual or video evidence.",
+    "Measure frame times and dropped frames on the target tier."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "dd8c978de4a3723bcf0be06e12dfdc13024c57ba010dac38119ead339c543b98"
+}

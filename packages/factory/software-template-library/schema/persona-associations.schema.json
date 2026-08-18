@@ -1,0 +1,265 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zouroboros.ai/schemas/persona-associations-v1.json",
+  "title": "Persona Association Registry",
+  "description": "A separately versioned exact-template association registry. Persona selectors contain immutable role IDs and exact live-directory names, never mutable persona UUIDs, model routes, or harness routes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "associationVersion",
+    "catalogVersion",
+    "status",
+    "owner",
+    "hashContract",
+    "dispatchContract",
+    "capabilityVocabulary",
+    "scopeVocabulary",
+    "selectorVocabulary",
+    "associations"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "associationVersion": { "$ref": "#/$defs/semver" },
+    "catalogVersion": { "$ref": "#/$defs/semver" },
+    "status": { "enum": ["draft", "validated", "reviewed", "published", "deprecated"] },
+    "owner": { "$ref": "#/$defs/nonEmpty" },
+    "hashContract": { "$ref": "#/$defs/hashContract" },
+    "dispatchContract": { "$ref": "#/$defs/dispatchContract" },
+    "capabilityVocabulary": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/vocabularyEntry" }
+    },
+    "scopeVocabulary": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/scopeEntry" }
+    },
+    "selectorVocabulary": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/selectorEntry" }
+    },
+    "associations": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/association" }
+    }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "nonEmpty": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "scopeId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*(?::[a-z][a-z0-9_-]*)?$"
+    },
+    "stringSet": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/stableId" }
+    },
+    "vocabularyEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "description": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "scopeEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "phases"],
+      "properties": {
+        "id": { "$ref": "#/$defs/scopeId" },
+        "description": { "$ref": "#/$defs/nonEmpty" },
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/phase" }
+        }
+      }
+    },
+    "selectorEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dimension", "values"],
+      "properties": {
+        "dimension": { "enum": ["engine", "platform"] },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/stableId" }
+        }
+      }
+    },
+    "hashContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "algorithm", "registryInput", "associationInput", "output"],
+      "properties": {
+        "version": { "$ref": "#/$defs/semver" },
+        "algorithm": { "const": "sha256-canonical-json" },
+        "registryInput": { "$ref": "#/$defs/nonEmpty" },
+        "associationInput": { "$ref": "#/$defs/nonEmpty" },
+        "output": { "const": "lowercase-hex-64" }
+      }
+    },
+    "dispatchContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "defaultAuthority",
+        "implementationAuthority",
+        "identityResolution",
+        "identityEvidence",
+        "uuidPolicy",
+        "routingIndependence",
+        "requiredFailurePolicy",
+        "optionalFailurePolicy",
+        "outputTrust",
+        "modes"
+      ],
+      "properties": {
+        "version": { "$ref": "#/$defs/semver" },
+        "defaultAuthority": { "const": "advise-review-only" },
+        "implementationAuthority": { "$ref": "#/$defs/nonEmpty" },
+        "identityResolution": { "$ref": "#/$defs/nonEmpty" },
+        "identityEvidence": { "$ref": "#/$defs/nonEmpty" },
+        "uuidPolicy": { "$ref": "#/$defs/nonEmpty" },
+        "routingIndependence": { "$ref": "#/$defs/nonEmpty" },
+        "requiredFailurePolicy": { "$ref": "#/$defs/nonEmpty" },
+        "optionalFailurePolicy": { "$ref": "#/$defs/nonEmpty" },
+        "outputTrust": { "$ref": "#/$defs/nonEmpty" },
+        "modes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["off", "shadow", "enforce"],
+          "properties": {
+            "off": { "$ref": "#/$defs/nonEmpty" },
+            "shadow": { "$ref": "#/$defs/nonEmpty" },
+            "enforce": { "$ref": "#/$defs/nonEmpty" }
+          }
+        }
+      }
+    },
+    "phase": {
+      "enum": ["advise", "implement", "review"]
+    },
+    "personaSelector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "name"],
+      "properties": {
+        "type": { "const": "exact-name" },
+        "name": {
+          "type": "string",
+          "pattern": "^(?!.*[?*\\[\\]])\\S(?:.*\\S)?$"
+        }
+      }
+    },
+    "capabilitySelector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allOf", "anyOf", "noneOf"],
+      "properties": {
+        "allOf": { "$ref": "#/$defs/stringSet" },
+        "anyOf": { "$ref": "#/$defs/stringSet" },
+        "noneOf": { "$ref": "#/$defs/stringSet" }
+      }
+    },
+    "selectorCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dimension", "operator", "value", "capability"],
+      "properties": {
+        "dimension": { "enum": ["engine", "platform"] },
+        "operator": { "const": "equals" },
+        "value": { "$ref": "#/$defs/stableId" },
+        "capability": { "$ref": "#/$defs/stableId" }
+      }
+    },
+    "activation": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["allOf", "requiresRoles"],
+      "properties": {
+        "allOf": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/selectorCondition" }
+        },
+        "requiresRoles": { "$ref": "#/$defs/stringSet" }
+      }
+    },
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roleId",
+        "personaSelector",
+        "required",
+        "phases",
+        "capabilitySelector",
+        "requiredScopes",
+        "invocationCap",
+        "activation"
+      ],
+      "properties": {
+        "roleId": { "$ref": "#/$defs/stableId" },
+        "personaSelector": { "$ref": "#/$defs/personaSelector" },
+        "required": { "type": "boolean" },
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/phase" }
+        },
+        "capabilitySelector": { "$ref": "#/$defs/capabilitySelector" },
+        "requiredScopes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/scopeId" }
+        },
+        "invocationCap": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "activation": { "$ref": "#/$defs/activation" }
+      }
+    },
+    "association": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["templateId", "templateVersion", "category", "roles"],
+      "properties": {
+        "templateId": { "$ref": "#/$defs/stableId" },
+        "templateVersion": { "$ref": "#/$defs/semver" },
+        "category": { "$ref": "#/$defs/nonEmpty" },
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/role" }
+        }
+      }
+    }
+  }
+}

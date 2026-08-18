@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "templateId": "data-product",
+  "version": "1.0.0",
+  "level": "factory",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "Data products",
+  "definition": "Pipelines, analytical products, and decision surfaces governed by schema, lineage, freshness, quality, and reproducibility.",
+  "examples": [
+    "analytics dashboard",
+    "ETL pipeline",
+    "forecasting system",
+    "data-quality monitor"
+  ],
+  "counterexample": "A content website with no analytical or data-processing contract.",
+  "executionModes": [
+    "swarm",
+    "undecided"
+  ],
+  "requiredSections": [
+    "mission",
+    "provenance",
+    "contracts",
+    "requirements",
+    "dag",
+    "ownership",
+    "verification",
+    "scope-policy",
+    "rollout",
+    "rollback",
+    "authority"
+  ],
+  "emphasis": [
+    "schema",
+    "lineage",
+    "freshness",
+    "quality",
+    "reproducibility and recovery"
+  ],
+  "nonGoals": [
+    "Do not silently coerce malformed records.",
+    "Do not display metrics without source, timestamp, and definition."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "Which source systems and schemas are authoritative?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which freshness, completeness, and quality thresholds apply?"
+    },
+    {
+      "id": "D-003",
+      "question": "How are backfills, late data, retention, and recovery handled?"
+    },
+    {
+      "id": "D-004",
+      "question": "Which repository and branch policy are authoritative?"
+    },
+    {
+      "id": "D-005",
+      "question": "Who may approve promotion, merge, migration, deployment, and publication?"
+    },
+    {
+      "id": "D-006",
+      "question": "What is the scope-cut order?"
+    },
+    {
+      "id": "D-007",
+      "question": "What rollback restores code, data, and external side effects?"
+    }
+  ],
+  "requirements": [
+    "Validate data at each declared boundary.",
+    "Record lineage, transformation version, and freshness metadata.",
+    "Make backfill and partial-failure behavior idempotent and observable."
+  ],
+  "verifications": [
+    "Run representative, missing, duplicate, late, and malformed data fixtures.",
+    "Reproduce published metrics from versioned inputs.",
+    "Exercise partial failure, retry, and backfill."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "0f053e9184ff0930dc012fad94cb23f4aa7be7da229f1a92102cec95bc4e48cc"
+}

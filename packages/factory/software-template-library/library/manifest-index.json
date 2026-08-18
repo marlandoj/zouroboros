@@ -1,0 +1,696 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "1.0.0",
+  "status": "published",
+  "resolutionContract": {
+    "version": "1.0.0",
+    "hashAlgorithm": "sha256-canonical-json",
+    "hashInput": "fully resolved category, detail level, ordered annexes, assumptions, catalog version, maturity, and resolution contract version",
+    "hashOutput": "resolved template manifest sha256 and discovery-index entry",
+    "baseTemplateCount": 1,
+    "mergeOrder": [
+      "category",
+      "detail-level",
+      "annexes-in-declared-order",
+      "user-answers"
+    ],
+    "arrayPolicy": "append-unique",
+    "conflictPolicy": "fail-closed",
+    "rules": [
+      "Resolve one exact category id@version before applying a detail level.",
+      "Apply annexes only in the operator-declared order; every required annex must already be present.",
+      "Validate the annex requires graph with depth-first traversal; reject any back-edge as a dependency cycle before resolution.",
+      "Reject duplicate, unknown, incompatible, cyclic, floating-version, or hash-drift inputs.",
+      "Append unique category, level, and annex decisions, requirements, and verifications; never overwrite earlier entries silently.",
+      "User answers may resolve declared decisions and supply repository facts but may not delete source-derived requirements.",
+      "Any incompatible assumption or unresolved consequential decision returns HOLD or FAIL rather than a default."
+    ]
+  },
+  "exportContract": {
+    "version": "1.0.0",
+    "artifactKinds": [
+      "factory-ticket",
+      "swarm-seed"
+    ],
+    "candidateOnly": true,
+    "requiredValidationDecision": "PASS",
+    "requiredLineage": [
+      "source path",
+      "source sha256",
+      "build-spec version",
+      "template id",
+      "template version",
+      "template level",
+      "template sha256",
+      "ordered annex ids, versions, and sha256 values"
+    ],
+    "ticketHeaders": [
+      "Acceptance Criteria",
+      "Target Repo",
+      "Archetype",
+      "Repro"
+    ],
+    "prohibitedAuthorities": [
+      "create or mutate Linear",
+      "apply factory-ready",
+      "dispatch",
+      "merge",
+      "migrate data",
+      "deploy",
+      "publish",
+      "finalize courseware"
+    ],
+    "failurePolicy": "Fail closed when deterministic validation, lineage, target repository, archetype, area, or live parser validation is unavailable."
+  },
+  "assumptionVocabulary": [
+    {
+      "id": "anonymous-only",
+      "description": "The product intentionally has no identity, account, session, role, or resource-ownership model."
+    },
+    {
+      "id": "offline-only",
+      "description": "Every required workflow must complete without network access or a remotely hosted dependency."
+    },
+    {
+      "id": "online-required",
+      "description": "The primary workflow requires an active network connection and does not promise offline completion."
+    }
+  ],
+  "executionModeDefinitions": {
+    "direct": "One bounded builder owns implementation and integration; no parallel workstreams are implied.",
+    "swarm": "Multiple dependency-aware workstreams execute under explicit ownership, integration, and approval gates.",
+    "undecided": "Execution topology is a blocking human decision; the artifact remains HOLD and cannot be exported for factory execution until resolved."
+  },
+  "entries": [
+    {
+      "templateId": "web-app",
+      "version": "1.0.0",
+      "level": "starter",
+      "sha256": "c06bbd5d8648915ab04f803aa7d65204e34f3648cbc827a841dfb8fc5338646e",
+      "maturity": "published",
+      "category": "Web applications",
+      "supportedExecutionModes": [
+        "direct"
+      ]
+    },
+    {
+      "templateId": "web-app",
+      "version": "1.0.0",
+      "level": "standard",
+      "sha256": "408102da663410730a686d077296d0689801bfdf7a2671251b61dc5043a5dbfb",
+      "maturity": "published",
+      "category": "Web applications",
+      "supportedExecutionModes": [
+        "direct",
+        "swarm"
+      ]
+    },
+    {
+      "templateId": "web-app",
+      "version": "1.0.0",
+      "level": "factory",
+      "sha256": "3f27a046d93b28bcc9f33b178234ab0e5d32c8c409b0c7551881ddea084bc6d2",
+      "maturity": "published",
+      "category": "Web applications",
+      "supportedExecutionModes": [
+        "swarm",
+        "undecided"
+      ]
+    },
+    {
+      "templateId": "saas",
+      "version": "1.0.0",
+      "level": "starter",
+      "sha256": "5f3e1d672edf5bd45fbdbc4bf5fa1975de020f6e9a794adaccba9f1a6d2feae9",
+      "maturity": "published",
+      "category": "SaaS products",
+      "supportedExecutionModes": [
+        "direct"
+      ]
+    },
+    {
+      "templateId": "saas",
+      "version": "1.0.0",
+      "level": "standard",
+      "sha256": "ab81715dcb7d0b6df193fc12678839f2ae95d80b737c45e1ebb9ef996d4a8220",
+      "maturity": "published",
+      "category": "SaaS products",
+      "supportedExecutionModes": [
+        "direct",
+        "swarm"
+      ]
+    },
+    {
+      "templateId": "saas",
+      "version": "1.0.0",
+      "level": "factory",
+      "sha256": "6cb27bdc581fdc5a386c80941458fea9bc1a3a206565b9caaf01ef13da614e58",
+      "maturity": "published",
+      "category": "SaaS products",
+      "supportedExecutionModes": [
+        "swarm",
+        "undecided"
+      ]
+    },
+    {
+      "templateId": "mobile-app",
+      "version": "1.0.0",
+      "level": "starter",
+      "sha256": "361f9e81a9f90b40447be39849c2a4878b57d1eb49b0d8fd871b94bcef0e5593",
+      "maturity": "published",
+      "category": "Mobile applications",
+      "supportedExecutionModes": [
+        "direct"
+      ]
+    },
+    {
+      "templateId": "mobile-app",
+      "version": "1.0.0",
+      "level": "standard",
+      "sha256": "84182901a729fd777fa1642a20b798606cecdf7d8a0be76efb6e4c44f5202b7d",
+      "maturity": "published",
+      "category": "Mobile applications",
+      "supportedExecutionModes": [
+        "direct",
+        "swarm"
+      ]
+    },
+    {
+      "templateId": "mobile-app",
+      "version": "1.0.0",
+      "level": "factory",
+      "sha256": "13d21e78b1de74d620793cfb90a79cbb97f2bf627fd4e508bbd167d4961f838a",
+      "maturity": "published",
+      "category": "Mobile applications",
+      "supportedExecutionModes": [
+        "swarm",
+        "undecided"
+      ]
+    },
+    {
+      "templateId": "desktop-app",
+      "version": "1.0.0",
+      "level": "starter",
+      "sha256": "1a07e2fc7e4f0a551db6ffcaa5dd05419875eb68edc9cd3ca21c3fd1a63acaf7",
+      "maturity": "published",
+      "category": "Desktop applications",
+      "supportedExecutionModes": [
+        "direct"
+      ]
+    },
+    {
+      "templateId": "desktop-app",
+      "version": "1.0.0",
+      "level": "standard",
+      "sha256": "3d7b5bd390aad8168d3ac79acdd75b22c359f5b7977cec2608b767b5bb37e06e",
+      "maturity": "published",
+      "category": "Desktop applications",
+      "supportedExecutionModes": [
+        "direct",
+        "swarm"
+      ]
+    },
+    {
+      "templateId": "desktop-app",
+      "version": "1.0.0",
+      "level": "factory",
+      "sha256": "97db03faecfc0bf5ec4a7a07d4131dbe50e856593b4d499d1cdd79a442fcdc90",
+      "maturity": "published",
+      "category": "Desktop applications",
+      "supportedExecutionModes": [
+        "swarm",
+        "undecided"
+      ]
+    },
+    {
+      "templateId": "game",
+      "version": "1.0.0",
+      "level": "starter",
+      "sha256": "dd8c978de4a3723bcf0be06e12dfdc13024c57ba010dac38119ead339c543b98",
+      "maturity": "published",
+      "category": "Games",
+      "supportedExecutionModes": [
+        "direct"
+      ]
+    },
+    {
+      "templateId": "game",
+      "version": "1.0.0",
+      "level": "standard",
+      "sha256": "626c8fc82cf6555f49132548847caa621c042357044d48e35eff79a9ca19bac6",
+      "maturity": "published",
+      "category": "Games",
+      "supportedExecutionModes": [
+        "direct",
+        "swarm"
+      ]
+    },
+    {
+      "templateId": "game",
+      "version": "1.0.0",
+      "level": "factory",
+      "sha256": "95f973c4a8cc2e5005159030d93041e331eb7e7f67352b05aa9ed3680f6f62d5",
+      "maturity": "published",
+      "category": "Games",
+      "supportedExecutionModes": [
+        "swarm",
+        "undecided"
+      ]
+    },
+    {
+      "templateId": "simulation-3d",
+      "version": "1.0.0",
+      "level": "starter",
+      "sha256": "d1f1eb11d901983ce58a47b6de3abd41a5b524476b3f46bbb4d1333412759446",
+      "maturity": "published",
+      "category": "3D and simulations",
+      "supportedExecutionModes": [
+        "direct"
+      ]
+    },
+    {
+      "templateId": "simulation-3d",
+      "version": "1.0.0",
+      "level": "standard",
+      "sha256": "3ce0f4fe29d3bc94971030f7d82219541d40356b04e0a3dace1678d93494c774",
+      "maturity": "published",
+      "category": "3D and simulations",
+      "supportedExecutionModes": [
+        "direct",
+        "swarm"
+      ]
+    },
+    {
+      "templateId": "simulation-3d",
+      "version": "1.0.0",
+      "level": "factory",
+      "sha256": "92c6d03fb7f9b4449bde3ba861c0514eb3475405715f5a72efe76336da449322",
+      "maturity": "published",
+      "category": "3D and simulations",
+      "supportedExecutionModes": [
+        "swarm",
+        "undecided"
+      ]
+    },
+    {
+      "templateId": "api-backend",
+      "version": "1.0.0",
+      "level": "starter",
+      "sha256": "311f846772884e69bb0465c341a6a1e19bcc5d9be2702f392fcd45d6b7059677",
+      "maturity": "published",
+      "category": "APIs and backends",
+      "supportedExecutionModes": [
+        "direct"
+      ]
+    },
+    {
+      "templateId": "api-backend",
+      "version": "1.0.0",
+      "level": "standard",
+      "sha256": "70cc98d7debfe5ae42fa0d1b26f02009ca1086a499d0df6c9f4b4d063a85c6e6",
+      "maturity": "published",
+      "category": "APIs and backends",
+      "supportedExecutionModes": [
+        "direct",
+        "swarm"
+      ]
+    },
+    {
+      "templateId": "api-backend",
+      "version": "1.0.0",
+      "level": "factory",
+      "sha256": "3003add11fa33f752fec63570c17756aa712137a0b2e6ae6cdd1886aba004745",
+      "maturity": "published",
+      "category": "APIs and backends",
+      "supportedExecutionModes": [
+        "swarm",
+        "undecided"
+      ]
+    },
+    {
+      "templateId": "ai-application",
+      "version": "1.0.0",
+      "level": "starter",
+      "sha256": "7c5234af044beb68f293f3e1f659937cc304bec2aece9d66a316191339565803",
+      "maturity": "published",
+      "category": "AI applications",
+      "supportedExecutionModes": [
+        "direct"
+      ]
+    },
+    {
+      "templateId": "ai-application",
+      "version": "1.0.0",
+      "level": "standard",
+      "sha256": "b4437ccd5018364223363d4c33178c14d6dc00413ce68e5c8606895092df1d20",
+      "maturity": "published",
+      "category": "AI applications",
+      "supportedExecutionModes": [
+        "direct",
+        "swarm"
+      ]
+    },
+    {
+      "templateId": "ai-application",
+      "version": "1.0.0",
+      "level": "factory",
+      "sha256": "01d920dae1eeab277004d7f1e0cb0f90aa1e0d69d58f2e6ff507bd73e2dc6ceb",
+      "maturity": "published",
+      "category": "AI applications",
+      "supportedExecutionModes": [
+        "swarm",
+        "undecided"
+      ]
+    },
+    {
+      "templateId": "data-product",
+      "version": "1.0.0",
+      "level": "starter",
+      "sha256": "f946e61a068ab8473ce82038e99e996593cf5e8c202e2bb5809f3e1c9c849a9f",
+      "maturity": "published",
+      "category": "Data products",
+      "supportedExecutionModes": [
+        "direct"
+      ]
+    },
+    {
+      "templateId": "data-product",
+      "version": "1.0.0",
+      "level": "standard",
+      "sha256": "b01d7628de27a33c04c82531decac36e44c4ea285d56ab261ebc6e680ee54be9",
+      "maturity": "published",
+      "category": "Data products",
+      "supportedExecutionModes": [
+        "direct",
+        "swarm"
+      ]
+    },
+    {
+      "templateId": "data-product",
+      "version": "1.0.0",
+      "level": "factory",
+      "sha256": "0f053e9184ff0930dc012fad94cb23f4aa7be7da229f1a92102cec95bc4e48cc",
+      "maturity": "published",
+      "category": "Data products",
+      "supportedExecutionModes": [
+        "swarm",
+        "undecided"
+      ]
+    },
+    {
+      "templateId": "automation",
+      "version": "1.0.0",
+      "level": "starter",
+      "sha256": "a62c98e30efbf285adada88f9d150f3037da7c468a7a3c9aa03cbe4f34554073",
+      "maturity": "published",
+      "category": "Automation",
+      "supportedExecutionModes": [
+        "direct"
+      ]
+    },
+    {
+      "templateId": "automation",
+      "version": "1.0.0",
+      "level": "standard",
+      "sha256": "a5942b219d4b0701ecd5e89b1475e282ad27b7e42927ed8b4037b4ff16052a1a",
+      "maturity": "published",
+      "category": "Automation",
+      "supportedExecutionModes": [
+        "direct",
+        "swarm"
+      ]
+    },
+    {
+      "templateId": "automation",
+      "version": "1.0.0",
+      "level": "factory",
+      "sha256": "0ee3f7177a41d23a372b41ab15790b4e697fb03ce46bae775c2f0128bab8c891",
+      "maturity": "published",
+      "category": "Automation",
+      "supportedExecutionModes": [
+        "swarm",
+        "undecided"
+      ]
+    },
+    {
+      "templateId": "integration",
+      "version": "1.0.0",
+      "level": "starter",
+      "sha256": "885cb3e8d98f85e86ead14b69983910dbdbbf088ce8e3cc139f9a811b8dd89b4",
+      "maturity": "published",
+      "category": "Integrations",
+      "supportedExecutionModes": [
+        "direct"
+      ]
+    },
+    {
+      "templateId": "integration",
+      "version": "1.0.0",
+      "level": "standard",
+      "sha256": "d5c43fc8c11ffb7121fd6ca175eec3631796081d8455155373f49bf21777c02c",
+      "maturity": "published",
+      "category": "Integrations",
+      "supportedExecutionModes": [
+        "direct",
+        "swarm"
+      ]
+    },
+    {
+      "templateId": "integration",
+      "version": "1.0.0",
+      "level": "factory",
+      "sha256": "3fa00d5e2ef5bdd99c75e5ac4595c8a399b6a96e67610dad2d34173d1ddabd41",
+      "maturity": "published",
+      "category": "Integrations",
+      "supportedExecutionModes": [
+        "swarm",
+        "undecided"
+      ]
+    },
+    {
+      "templateId": "developer-tool",
+      "version": "1.0.0",
+      "level": "starter",
+      "sha256": "9577f9d5a2e13a89edc040a38a4d489f1a5cff14b7b4366e88c1b7fd8235267f",
+      "maturity": "published",
+      "category": "Developer tools",
+      "supportedExecutionModes": [
+        "direct"
+      ]
+    },
+    {
+      "templateId": "developer-tool",
+      "version": "1.0.0",
+      "level": "standard",
+      "sha256": "dcbdcdf49a23fa9cd766d1fb37ebc8f5072825b9ce55722a10e12a69cfb36710",
+      "maturity": "published",
+      "category": "Developer tools",
+      "supportedExecutionModes": [
+        "direct",
+        "swarm"
+      ]
+    },
+    {
+      "templateId": "developer-tool",
+      "version": "1.0.0",
+      "level": "factory",
+      "sha256": "c8209fa07a48bd9aebbae178b789ac146ab786cb0a593d184336c85b00edede1",
+      "maturity": "published",
+      "category": "Developer tools",
+      "supportedExecutionModes": [
+        "swarm",
+        "undecided"
+      ]
+    },
+    {
+      "templateId": "infrastructure",
+      "version": "1.0.0",
+      "level": "starter",
+      "sha256": "4fdb970b409033f94b058cb3c4b10a8d5386a7ee1667a1a6c7c75711caeb6a4d",
+      "maturity": "published",
+      "category": "Infrastructure",
+      "supportedExecutionModes": [
+        "direct"
+      ]
+    },
+    {
+      "templateId": "infrastructure",
+      "version": "1.0.0",
+      "level": "standard",
+      "sha256": "237fd37e18561e24d28016eb50808e41158f415557d4ec88fdde83ccf48678e1",
+      "maturity": "published",
+      "category": "Infrastructure",
+      "supportedExecutionModes": [
+        "direct",
+        "swarm"
+      ]
+    },
+    {
+      "templateId": "infrastructure",
+      "version": "1.0.0",
+      "level": "factory",
+      "sha256": "e97edfb28fbf13e1a5c2e85e10a53d7ed5bba34a68d4f7d299000cbaa0fa42cf",
+      "maturity": "published",
+      "category": "Infrastructure",
+      "supportedExecutionModes": [
+        "swarm",
+        "undecided"
+      ]
+    },
+    {
+      "templateId": "existing-system-change",
+      "version": "1.0.0",
+      "level": "starter",
+      "sha256": "870589af287b2a96aae31a8243eedd38343674bd30f79707b3f2ec66bac2f7f1",
+      "maturity": "published",
+      "category": "Existing-system changes",
+      "supportedExecutionModes": [
+        "direct"
+      ]
+    },
+    {
+      "templateId": "existing-system-change",
+      "version": "1.0.0",
+      "level": "standard",
+      "sha256": "a4802f2fc9a084b3e871190420be930eb6dfa090b4f28ccb2d27961d7aea2c32",
+      "maturity": "published",
+      "category": "Existing-system changes",
+      "supportedExecutionModes": [
+        "direct",
+        "swarm"
+      ]
+    },
+    {
+      "templateId": "existing-system-change",
+      "version": "1.0.0",
+      "level": "factory",
+      "sha256": "f9c20b1b3cf854921846585ee15de8d780eadd57fa304b7522e5633f2ec14526",
+      "maturity": "published",
+      "category": "Existing-system changes",
+      "supportedExecutionModes": [
+        "swarm",
+        "undecided"
+      ]
+    }
+  ],
+  "annexes": [
+    {
+      "id": "auth",
+      "version": "1.0.0",
+      "sha256": "b4df1e849d1b01b8e28cdb06debde5f060e02c24098a063431d4541a8b7dd036",
+      "requires": [],
+      "incompatibleAnnexes": [],
+      "incompatibleAssumptions": [
+        "anonymous-only"
+      ]
+    },
+    {
+      "id": "booking",
+      "version": "1.0.0",
+      "sha256": "9ef38bfe141b2253f8bf46836f992500d85f2c173ff54d0b566e11ecd115c66c",
+      "requires": [
+        "auth"
+      ],
+      "incompatibleAnnexes": [],
+      "incompatibleAssumptions": []
+    },
+    {
+      "id": "payments",
+      "version": "1.0.0",
+      "sha256": "4d8b7ec9f6b9ff716b1dcc45dad8d7caa7b51a708e39f241a94ee1ba2767a881",
+      "requires": [
+        "auth"
+      ],
+      "incompatibleAnnexes": [],
+      "incompatibleAssumptions": [
+        "offline-only"
+      ]
+    },
+    {
+      "id": "media",
+      "version": "1.0.0",
+      "sha256": "051ddf9128c8dbd8a77dafcfe7ce73fee392eae5a39219a36a2161f70be2475f",
+      "requires": [],
+      "incompatibleAnnexes": [],
+      "incompatibleAssumptions": []
+    },
+    {
+      "id": "offline",
+      "version": "1.0.0",
+      "sha256": "510fa6e3a41d9c5af1728d3988e3146bd4b218dbafb8274d4956f8e7f3b5e4df",
+      "requires": [],
+      "incompatibleAnnexes": [],
+      "incompatibleAssumptions": [
+        "online-required"
+      ]
+    },
+    {
+      "id": "realtime",
+      "version": "1.0.0",
+      "sha256": "9fcfa715e90e640f931aa7f1197882b0b07aea2a93451c5e898d669351bf0d66",
+      "requires": [
+        "auth"
+      ],
+      "incompatibleAnnexes": [],
+      "incompatibleAssumptions": [
+        "offline-only"
+      ]
+    },
+    {
+      "id": "ai-evaluation",
+      "version": "1.0.0",
+      "sha256": "4e04390c9e2bab23a5c33d8c30281b5aac0242e19b2a92cf93e0c593e72886b2",
+      "requires": [],
+      "incompatibleAnnexes": [],
+      "incompatibleAssumptions": []
+    },
+    {
+      "id": "migration",
+      "version": "1.0.0",
+      "sha256": "0b04a46ed5ff97e9ed089d46ccc2d3296021cf883f6541adcbcbcce45442dda4",
+      "requires": [
+        "observability"
+      ],
+      "incompatibleAnnexes": [],
+      "incompatibleAssumptions": []
+    },
+    {
+      "id": "simulation-model",
+      "version": "1.0.0",
+      "sha256": "cf7ca365eb816237ab85dfd23b465475cd08686f2481d25efa1683f111a60bc4",
+      "requires": [
+        "hardware"
+      ],
+      "incompatibleAnnexes": [],
+      "incompatibleAssumptions": []
+    },
+    {
+      "id": "hardware",
+      "version": "1.0.0",
+      "sha256": "314501cf36c690c8a2bdeff1ba7e6028d9212dc71908c9d8f01afa779b0f327a",
+      "requires": [],
+      "incompatibleAnnexes": [],
+      "incompatibleAssumptions": []
+    },
+    {
+      "id": "regulated",
+      "version": "1.0.0",
+      "sha256": "26191b9066b75da4349a90b1a107f0ae7abf88ae3c50ab139fb9418c920a409a",
+      "requires": [
+        "auth",
+        "observability"
+      ],
+      "incompatibleAnnexes": [],
+      "incompatibleAssumptions": []
+    },
+    {
+      "id": "observability",
+      "version": "1.0.0",
+      "sha256": "ec3318065f2adafe83926ebf8a80647670005c6c9e156eff687ca0c21c701a8d",
+      "requires": [],
+      "incompatibleAnnexes": [],
+      "incompatibleAssumptions": []
+    }
+  ],
+  "authority": "Discovery does not grant factory-ready, dispatch, merge, deployment, publication, or courseware-release authority."
+}

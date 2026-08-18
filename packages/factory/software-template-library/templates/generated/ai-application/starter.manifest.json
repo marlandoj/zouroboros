@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "templateId": "ai-application",
+  "version": "1.0.0",
+  "level": "starter",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "AI applications",
+  "definition": "Products whose user-visible behavior materially depends on model inference, retrieval, classification, or generation.",
+  "examples": [
+    "RAG assistant",
+    "document classifier",
+    "coding copilot",
+    "support triage"
+  ],
+  "counterexample": "A deterministic rules engine that does not use model inference.",
+  "executionModes": [
+    "direct"
+  ],
+  "requiredSections": [
+    "mission",
+    "capabilities",
+    "constraints",
+    "acceptance",
+    "exclusions"
+  ],
+  "emphasis": [
+    "model contract",
+    "evaluation dataset",
+    "fallbacks",
+    "uncertainty",
+    "production-evaluation parity"
+  ],
+  "nonGoals": [
+    "Do not use model opinion as deterministic validation.",
+    "Do not publish benchmark results from a path unavailable to production."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "Which model capability, provider, data, and latency contracts apply?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which evaluation set and thresholds govern release?"
+    },
+    {
+      "id": "D-003",
+      "question": "Which failures require fallback, refusal, or human review?"
+    },
+    {
+      "id": "D-004",
+      "question": "What is the smallest usable vertical slice?"
+    },
+    {
+      "id": "D-005",
+      "question": "What must explicitly remain out of scope?"
+    }
+  ],
+  "requirements": [
+    "Version prompts, models, retrieval behavior, and evaluation fixtures.",
+    "Expose uncertainty and defined refusal or escalation behavior.",
+    "Keep evaluation and production execution paths equivalent."
+  ],
+  "verifications": [
+    "Run deterministic output-schema and safety checks.",
+    "Evaluate quality on a versioned representative cohort.",
+    "Exercise provider outage, timeout, refusal, and degraded-output paths."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "7c5234af044beb68f293f3e1f659937cc304bec2aece9d66a316191339565803"
+}

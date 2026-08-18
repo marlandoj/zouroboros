@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "templateId": "web-app",
+  "version": "1.0.0",
+  "level": "factory",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "Web applications",
+  "definition": "Browser-delivered products centered on pages, forms, workflows, and responsive interaction.",
+  "examples": [
+    "habit tracker",
+    "booking system",
+    "CRM",
+    "portfolio builder"
+  ],
+  "counterexample": "A headless payment API whose primary contract is machine-to-machine.",
+  "executionModes": [
+    "swarm",
+    "undecided"
+  ],
+  "requiredSections": [
+    "mission",
+    "provenance",
+    "contracts",
+    "requirements",
+    "dag",
+    "ownership",
+    "verification",
+    "scope-policy",
+    "rollout",
+    "rollback",
+    "authority"
+  ],
+  "emphasis": [
+    "pages and navigation",
+    "user workflows",
+    "responsive states",
+    "accessibility",
+    "browser verification"
+  ],
+  "nonGoals": [
+    "Do not require a backend when local persistence satisfies the product.",
+    "Do not infer authentication or payments from visual similarity alone."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "Which user journey is primary?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which browsers and responsive breakpoints are supported?"
+    },
+    {
+      "id": "D-003",
+      "question": "What persistence and authentication, if any, are required?"
+    },
+    {
+      "id": "D-004",
+      "question": "Which repository and branch policy are authoritative?"
+    },
+    {
+      "id": "D-005",
+      "question": "Who may approve promotion, merge, migration, deployment, and publication?"
+    },
+    {
+      "id": "D-006",
+      "question": "What is the scope-cut order?"
+    },
+    {
+      "id": "D-007",
+      "question": "What rollback restores code, data, and external side effects?"
+    }
+  ],
+  "requirements": [
+    "Render every primary workflow with loading, empty, error, and populated states.",
+    "Support keyboard navigation and declared accessibility targets.",
+    "Preserve user-visible state across the declared persistence boundary."
+  ],
+  "verifications": [
+    "Run browser flows for the primary journey.",
+    "Capture desktop and mobile evidence.",
+    "Run accessibility and static checks."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "3f27a046d93b28bcc9f33b178234ab0e5d32c8c409b0c7551881ddea084bc6d2"
+}

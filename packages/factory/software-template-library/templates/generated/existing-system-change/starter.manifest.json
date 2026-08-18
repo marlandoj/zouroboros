@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "templateId": "existing-system-change",
+  "version": "1.0.0",
+  "level": "starter",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "Existing-system changes",
+  "definition": "Brownfield features, fixes, migrations, refactors, and remediations constrained by existing behavior and repository contracts.",
+  "examples": [
+    "feature addition",
+    "schema migration",
+    "refactor",
+    "reliability remediation"
+  ],
+  "counterexample": "A greenfield product with no existing code, data, users, or compatibility obligations.",
+  "executionModes": [
+    "direct"
+  ],
+  "requiredSections": [
+    "mission",
+    "capabilities",
+    "constraints",
+    "acceptance",
+    "exclusions"
+  ],
+  "emphasis": [
+    "current evidence",
+    "protected behavior",
+    "impact analysis",
+    "regression verification",
+    "rollout and rollback"
+  ],
+  "nonGoals": [
+    "Do not redesign unrelated modules during a bounded change.",
+    "Do not delete or rename without sweeping live references."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "Which current behavior and interfaces are protected?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which files, schemas, callers, and deployments are affected?"
+    },
+    {
+      "id": "D-003",
+      "question": "Which rollout, compatibility, data, and rollback constraints apply?"
+    },
+    {
+      "id": "D-004",
+      "question": "What is the smallest usable vertical slice?"
+    },
+    {
+      "id": "D-005",
+      "question": "What must explicitly remain out of scope?"
+    }
+  ],
+  "requirements": [
+    "Reproduce or document the current behavior before editing.",
+    "Preserve protected capabilities and unrelated user changes.",
+    "Verify callers, migrations, configuration, and runtime paths after the change."
+  ],
+  "verifications": [
+    "Run focused regression and protected-behavior tests.",
+    "Trace affected callers and configuration references.",
+    "Exercise rollout and rollback or forward-repair paths."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "870589af287b2a96aae31a8243eedd38343674bd30f79707b3f2ec66bac2f7f1"
+}

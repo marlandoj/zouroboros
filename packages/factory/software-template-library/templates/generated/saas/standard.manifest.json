@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "templateId": "saas",
+  "version": "1.0.0",
+  "level": "standard",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "SaaS products",
+  "definition": "Hosted multi-user products with accounts, roles, persistent organizational data, and service lifecycle behavior.",
+  "examples": [
+    "subscription analytics",
+    "inventory management",
+    "team workspace",
+    "client portal"
+  ],
+  "counterexample": "A single-user local tool with no accounts, shared data, or hosted service.",
+  "executionModes": [
+    "direct",
+    "swarm"
+  ],
+  "requiredSections": [
+    "mission",
+    "users",
+    "workflows",
+    "data",
+    "security",
+    "lifecycle",
+    "quality",
+    "verification",
+    "exclusions"
+  ],
+  "emphasis": [
+    "tenancy",
+    "roles and permissions",
+    "billing lifecycle",
+    "data isolation",
+    "service operations"
+  ],
+  "nonGoals": [
+    "Do not add multi-tenancy to a single-user prototype.",
+    "Do not treat client-side role checks as authorization."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "What is the tenant boundary?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which roles and ownership rules apply?"
+    },
+    {
+      "id": "D-003",
+      "question": "Which subscription and account lifecycle states exist?"
+    },
+    {
+      "id": "D-004",
+      "question": "Which data and lifecycle contracts are authoritative?"
+    },
+    {
+      "id": "D-005",
+      "question": "Which failure and recovery behavior is required?"
+    },
+    {
+      "id": "D-006",
+      "question": "What deployment environment is authoritative?"
+    }
+  ],
+  "requirements": [
+    "Isolate tenant data on every server-side access path.",
+    "Enforce role and ownership permissions for each protected action.",
+    "Represent trial, active, past-due, canceled, and recovery states when billing is in scope."
+  ],
+  "verifications": [
+    "Run cross-tenant denial tests.",
+    "Exercise role and lifecycle transition matrices.",
+    "Reconcile billing and account state where applicable."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "ab81715dcb7d0b6df193fc12678839f2ae95d80b737c45e1ebb9ef996d4a8220"
+}

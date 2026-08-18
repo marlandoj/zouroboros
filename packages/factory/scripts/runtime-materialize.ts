@@ -116,8 +116,11 @@ export function auditDependencyLinks(candidateRoot: string): { links: number; vi
 }
 
 export function resolveTemplateLibraryAjv(candidateRoot: string): { entrypoint: string; version: string } {
-  const projectManifest = join(candidateRoot, "Projects", "software-template-library", "package.json");
-  if (!existsSync(projectManifest)) {
+  const projectManifest = [
+    join(candidateRoot, "Projects", "software-template-library", "package.json"),
+    join(candidateRoot, "packages", "factory", "software-template-library", "package.json"),
+  ].find((manifest) => existsSync(manifest));
+  if (!projectManifest) {
     throw new RuntimeMaterializationError("template_library_missing", "software-template-library package manifest is missing");
   }
   const requireFromProject = createRequire(projectManifest);

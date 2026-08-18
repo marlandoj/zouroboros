@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "templateId": "api-backend",
+  "version": "1.0.0",
+  "level": "factory",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "APIs and backends",
+  "definition": "Machine-facing services governed by endpoint, schema, authorization, error, reliability, and compatibility contracts.",
+  "examples": [
+    "authentication service",
+    "payment API",
+    "notification service",
+    "content API"
+  ],
+  "counterexample": "A static portfolio whose primary behavior is rendered content.",
+  "executionModes": [
+    "swarm",
+    "undecided"
+  ],
+  "requiredSections": [
+    "mission",
+    "provenance",
+    "contracts",
+    "requirements",
+    "dag",
+    "ownership",
+    "verification",
+    "scope-policy",
+    "rollout",
+    "rollback",
+    "authority"
+  ],
+  "emphasis": [
+    "endpoint and schema contracts",
+    "authorization",
+    "error semantics",
+    "compatibility",
+    "load and recovery"
+  ],
+  "nonGoals": [
+    "Do not expose internal exceptions as public API contracts.",
+    "Do not infer idempotency or compatibility behavior."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "Which protocol, schema, and compatibility policy are authoritative?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which callers and authorization rules apply?"
+    },
+    {
+      "id": "D-003",
+      "question": "Which latency, throughput, and availability budgets apply?"
+    },
+    {
+      "id": "D-004",
+      "question": "Which repository and branch policy are authoritative?"
+    },
+    {
+      "id": "D-005",
+      "question": "Who may approve promotion, merge, migration, deployment, and publication?"
+    },
+    {
+      "id": "D-006",
+      "question": "What is the scope-cut order?"
+    },
+    {
+      "id": "D-007",
+      "question": "What rollback restores code, data, and external side effects?"
+    }
+  ],
+  "requirements": [
+    "Validate inputs and authorization before side effects.",
+    "Return stable machine-readable error contracts.",
+    "Preserve declared backward compatibility or version explicitly."
+  ],
+  "verifications": [
+    "Run schema and consumer contract tests.",
+    "Exercise authentication, authorization, malformed input, and idempotency.",
+    "Measure load and recovery against declared budgets."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "3003add11fa33f752fec63570c17756aa712137a0b2e6ae6cdd1886aba004745"
+}

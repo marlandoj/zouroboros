@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "templateId": "mobile-app",
+  "version": "1.0.0",
+  "level": "factory",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "Mobile applications",
+  "definition": "Phone or tablet products constrained by platform permissions, device lifecycle, connectivity, and distribution.",
+  "examples": [
+    "fitness tracker",
+    "expense scanner",
+    "field-service app",
+    "offline journal"
+  ],
+  "counterexample": "A responsive website with no native device capability or app-store distribution.",
+  "executionModes": [
+    "swarm",
+    "undecided"
+  ],
+  "requiredSections": [
+    "mission",
+    "provenance",
+    "contracts",
+    "requirements",
+    "dag",
+    "ownership",
+    "verification",
+    "scope-policy",
+    "rollout",
+    "rollback",
+    "authority"
+  ],
+  "emphasis": [
+    "platform targets",
+    "permissions",
+    "offline lifecycle",
+    "device testing",
+    "distribution"
+  ],
+  "nonGoals": [
+    "Do not claim cross-platform parity without device evidence.",
+    "Do not request permissions before the user reaches the relevant workflow."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "Which platforms and minimum OS versions are supported?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which device permissions are necessary?"
+    },
+    {
+      "id": "D-003",
+      "question": "What offline and background behavior is required?"
+    },
+    {
+      "id": "D-004",
+      "question": "Which repository and branch policy are authoritative?"
+    },
+    {
+      "id": "D-005",
+      "question": "Who may approve promotion, merge, migration, deployment, and publication?"
+    },
+    {
+      "id": "D-006",
+      "question": "What is the scope-cut order?"
+    },
+    {
+      "id": "D-007",
+      "question": "What rollback restores code, data, and external side effects?"
+    }
+  ],
+  "requirements": [
+    "Handle permission granted, denied, restricted, and revoked states.",
+    "Preserve committed work across backgrounding and process restart.",
+    "Meet declared platform packaging and distribution requirements."
+  ],
+  "verifications": [
+    "Run the supported device and OS matrix.",
+    "Exercise permission and lifecycle transitions.",
+    "Verify offline and reconnect behavior where declared."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "13d21e78b1de74d620793cfb90a79cbb97f2bf627fd4e508bbd167d4961f838a"
+}

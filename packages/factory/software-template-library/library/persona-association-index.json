@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "associationVersion": "1.1.0",
+  "catalogVersion": "1.0.0",
+  "registrySha256": "56022c5298d9dad5cff42b34e050580385687824e3d9b0e0eaec4d9ac619372a",
+  "hashAlgorithm": "sha256-canonical-json",
+  "entries": [
+    {
+      "key": "web-app@1.0.0",
+      "templateId": "web-app",
+      "templateVersion": "1.0.0",
+      "category": "Web applications",
+      "sha256": "0b303af86633fe6e3484822023c91c24568edd9876dec84931aa6e64523228b7",
+      "roleCount": 3,
+      "requiredRoleCount": 1
+    },
+    {
+      "key": "saas@1.0.0",
+      "templateId": "saas",
+      "templateVersion": "1.0.0",
+      "category": "SaaS products",
+      "sha256": "ff36c872dfbf56d6466205038397d83a5806dcf0995cabb4907225553b0ff441",
+      "roleCount": 2,
+      "requiredRoleCount": 1
+    },
+    {
+      "key": "mobile-app@1.0.0",
+      "templateId": "mobile-app",
+      "templateVersion": "1.0.0",
+      "category": "Mobile applications",
+      "sha256": "75e8f8e61d95879ce1e58418b84adef183a5dc0806a41208580fe80a39442087",
+      "roleCount": 1,
+      "requiredRoleCount": 1
+    },
+    {
+      "key": "desktop-app@1.0.0",
+      "templateId": "desktop-app",
+      "templateVersion": "1.0.0",
+      "category": "Desktop applications",
+      "sha256": "df20e5e2aab8284ba0e2c28a1847e411585eefa107b5df14a8e7708df380186e",
+      "roleCount": 1,
+      "requiredRoleCount": 1
+    },
+    {
+      "key": "game@1.0.0",
+      "templateId": "game",
+      "templateVersion": "1.0.0",
+      "category": "Games",
+      "sha256": "80789e4c62d899169536f6abca68dbba6bc4be24df6c8abe967bac9ea69eefcc",
+      "roleCount": 9,
+      "requiredRoleCount": 4
+    },
+    {
+      "key": "simulation-3d@1.0.0",
+      "templateId": "simulation-3d",
+      "templateVersion": "1.0.0",
+      "category": "3D and simulations",
+      "sha256": "3384455a6730305740c777e05e800f35a7e622f8171e7ee5169e6cae468b60f4",
+      "roleCount": 2,
+      "requiredRoleCount": 1
+    },
+    {
+      "key": "api-backend@1.0.0",
+      "templateId": "api-backend",
+      "templateVersion": "1.0.0",
+      "category": "APIs and backends",
+      "sha256": "6a7448b096e4f7b99c13940150d16b4bbf55f85ebe3f10b0dc12b31e1d5187d7",
+      "roleCount": 2,
+      "requiredRoleCount": 1
+    },
+    {
+      "key": "ai-application@1.0.0",
+      "templateId": "ai-application",
+      "templateVersion": "1.0.0",
+      "category": "AI applications",
+      "sha256": "1cd6098da3be28712995a14bc99d3c9dc01be33f7acfc5cd71e7d795f9c4cbd9",
+      "roleCount": 2,
+      "requiredRoleCount": 1
+    },
+    {
+      "key": "data-product@1.0.0",
+      "templateId": "data-product",
+      "templateVersion": "1.0.0",
+      "category": "Data products",
+      "sha256": "8672fed5ed324c790cd5bf2d9ce683e5fdf114d0c2294eb3244272dfee71be11",
+      "roleCount": 2,
+      "requiredRoleCount": 1
+    },
+    {
+      "key": "automation@1.0.0",
+      "templateId": "automation",
+      "templateVersion": "1.0.0",
+      "category": "Automation",
+      "sha256": "87e9221663dd7ced129faad7910e01fca2c1c7fbab88b8f494e95312a6ef872b",
+      "roleCount": 1,
+      "requiredRoleCount": 1
+    },
+    {
+      "key": "integration@1.0.0",
+      "templateId": "integration",
+      "templateVersion": "1.0.0",
+      "category": "Integrations",
+      "sha256": "8b369e55d49ba902dfb096bd5095f08c6ff80e5c5231342e3f41fce13f318f72",
+      "roleCount": 2,
+      "requiredRoleCount": 1
+    },
+    {
+      "key": "developer-tool@1.0.0",
+      "templateId": "developer-tool",
+      "templateVersion": "1.0.0",
+      "category": "Developer tools",
+      "sha256": "ab4230bc37b585afab1c5156339ffafce09a00d8323ecaa2eabf8d931aa4951b",
+      "roleCount": 1,
+      "requiredRoleCount": 1
+    },
+    {
+      "key": "infrastructure@1.0.0",
+      "templateId": "infrastructure",
+      "templateVersion": "1.0.0",
+      "category": "Infrastructure",
+      "sha256": "8808130fdef3f351e940120aeb678d03a353a63063a4bc85843737d6362f8095",
+      "roleCount": 2,
+      "requiredRoleCount": 1
+    },
+    {
+      "key": "existing-system-change@1.0.0",
+      "templateId": "existing-system-change",
+      "templateVersion": "1.0.0",
+      "category": "Existing-system changes",
+      "sha256": "370244a3b39ec9dea0bfdcd1e05ced5efc879b39656450e6aef6c627db3e29ab",
+      "roleCount": 2,
+      "requiredRoleCount": 1
+    }
+  ]
+}

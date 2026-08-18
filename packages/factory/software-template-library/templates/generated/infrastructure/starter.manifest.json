@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "templateId": "infrastructure",
+  "version": "1.0.0",
+  "level": "starter",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "Infrastructure",
+  "definition": "Runtime, deployment, monitoring, backup, and platform capabilities whose failures affect other systems.",
+  "examples": [
+    "deployment pipeline",
+    "monitoring service",
+    "backup system",
+    "internal worker"
+  ],
+  "counterexample": "A static local document with no runtime or operational dependency.",
+  "executionModes": [
+    "direct"
+  ],
+  "requiredSections": [
+    "mission",
+    "capabilities",
+    "constraints",
+    "acceptance",
+    "exclusions"
+  ],
+  "emphasis": [
+    "environments",
+    "least privilege",
+    "health",
+    "rollback",
+    "recovery and reachability"
+  ],
+  "nonGoals": [
+    "Do not equate a passing health check with a live consumer.",
+    "Do not provision persistent cost without an identified caller or trigger."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "Which environments, consumers, identities, and network boundaries apply?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which service objectives, rollback, backup, and recovery targets apply?"
+    },
+    {
+      "id": "D-003",
+      "question": "Who owns incidents and destructive changes?"
+    },
+    {
+      "id": "D-004",
+      "question": "What is the smallest usable vertical slice?"
+    },
+    {
+      "id": "D-005",
+      "question": "What must explicitly remain out of scope?"
+    }
+  ],
+  "requirements": [
+    "Identify the concrete production caller, trigger, or consumer.",
+    "Use least-privilege identities and explicit secret boundaries.",
+    "Provide health, rollback, backup, and recovery evidence."
+  ],
+  "verifications": [
+    "Run transport, health, failure-injection, and recovery tests.",
+    "Prove reachability from the named production consumer.",
+    "Exercise backup restoration and rollback without relying on the failed system."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "4fdb970b409033f94b058cb3c4b10a8d5386a7ee1667a1a6c7c75711caeb6a4d"
+}

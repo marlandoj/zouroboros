@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
   chmodSync,
@@ -20,12 +20,57 @@ import {
 } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { createRequire } from "node:module";
 
 const PACKAGE_ROOT = resolve(import.meta.dir, "..");
 const FACTORY_RELATIVE_DIR = join("Projects", "zouroboros-software-factory");
+const TEMPLATE_LIBRARY_RELATIVE_DIR = join("Projects", "software-template-library");
 const STATE_MARKER = ".factory-state-root.json";
 const COPY_DIRECTORIES = ["scripts", "contracts", "fixtures", "game-gauntlet", "scenarios"] as const;
 const COPY_FILES = ["package.json", "README.md", "MVP_PATH.md", "OPERATORS_MANUAL.md", "tsconfig.json", "LICENSE"] as const;
+const TEMPLATE_LIBRARY_SOURCE_DIR = "software-template-library";
+const TEMPLATE_LIBRARY_RUNTIME_DEPENDENCIES = ["ajv", "fast-deep-equal", "fast-uri", "json-schema-traverse", "require-from-string"] as const;
+const EXPECTED_TEMPLATE_LIBRARY = {
+  schema_version: 1,
+  catalog_version: "1.0.0",
+  tooling_version: "1.0.1",
+  catalog_sha256: "fd5485d1e87a9064170691c19d4c7f30354aaade25a86fea763ac3f26c2059d3",
+  manifest_index_sha256: "6c8dc4d3fc87f30aa08b827698e139c8369a765cd6a41b1d0512cc572f86687d",
+  persona_associations_sha256: "e709af45566c4b0248ca77e8ca9aa692133bd5636a85e95e9c0254e9301173f4",
+  persona_association_index_sha256: "45922df5582e36fc8ecd6c1d7571130b4857aae1ec43057dc3066e762b939bfc",
+  maturity: "published",
+  execution_authority: false,
+} as const;
+const TEMPLATE_LIBRARY_HASHED_FILES = {
+  catalog_sha256: "library/template-library.json",
+  manifest_index_sha256: "library/manifest-index.json",
+  persona_associations_sha256: "library/persona-associations.json",
+  persona_association_index_sha256: "library/persona-association-index.json",
+} as const;
+const REQUIRED_TEMPLATE_LIBRARY_FILES = [
+  "package.json",
+  "README.md",
+  "distribution.json",
+  "library/template-library.json",
+  "library/manifest-index.json",
+  "library/persona-associations.json",
+  "library/persona-association-index.json",
+  "schema/template-library.schema.json",
+  "schema/persona-associations.schema.json",
+  "scripts/template-library.ts",
+  "scripts/persona-associations.ts",
+  "templates/TEMPLATE_CATALOG.md",
+  "templates/generated/web-app/standard.manifest.json",
+] as const;
+const FORBIDDEN_TEMPLATE_LIBRARY_PATHS = [
+  "evaluations",
+  "PROJECT.md",
+  "BACKLOG.md",
+  "PROGRESS.md",
+  "scripts/review-library.ts",
+  "scripts/sync-linear.ts",
+  "scripts/set-linear-state.ts",
+] as const;
 const REQUIRED_FACTORY_FILES = [
   "package.json",
   "scripts/factory-package-cli.ts",
@@ -58,8 +103,11 @@ export interface InstallOptions {
 export interface InstallResult {
   root: string;
   factory_dir: string;
+  template_library_dir: string;
   state_dir: string;
   package_version: string;
+  template_library_catalog_version: string;
+  template_library_tooling_version: string;
   config: "created" | "preserved" | "reset";
   copied_files: number;
   scheduler_configured: false;
@@ -75,7 +123,20 @@ export interface DoctorResult {
   ok: boolean;
   root: string;
   factory_dir: string;
+  template_library_dir: string;
   checks: DoctorCheck[];
+}
+
+interface TemplateLibraryDistribution {
+  schema_version: number;
+  catalog_version: string;
+  tooling_version: string;
+  catalog_sha256: string;
+  manifest_index_sha256: string;
+  persona_associations_sha256: string;
+  persona_association_index_sha256: string;
+  maturity: string;
+  execution_authority: boolean;
 }
 
 function parseArgs(argv: string[]): ParsedArgs {
@@ -128,6 +189,53 @@ function readPackageVersion(sourceRoot = PACKAGE_ROOT): string {
   return manifest.version;
 }
 
+function sha256File(path: string): string {
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+
+function readTemplateLibraryDistribution(libraryDir: string): TemplateLibraryDistribution {
+  return JSON.parse(readFileSync(join(libraryDir, "distribution.json"), "utf8")) as TemplateLibraryDistribution;
+}
+
+function templateLibraryBoundaryChecks(libraryDir: string): DoctorCheck[] {
+  const checks: DoctorCheck[] = [];
+  for (const file of REQUIRED_TEMPLATE_LIBRARY_FILES) {
+    const present = existsSync(join(libraryDir, file));
+    checks.push({ status: present ? "PASS" : "FAIL", label: `template library ${file}`, detail: present ? "present" : "missing" });
+  }
+  for (const path of FORBIDDEN_TEMPLATE_LIBRARY_PATHS) {
+    const excluded = !existsSync(join(libraryDir, path));
+    checks.push({ status: excluded ? "PASS" : "FAIL", label: `template library exclude ${path}`, detail: excluded ? "excluded" : "unsafe distribution content present" });
+  }
+  if (checks.some((check) => check.status === "FAIL")) return checks;
+
+  let distribution: TemplateLibraryDistribution;
+  try {
+    distribution = readTemplateLibraryDistribution(libraryDir);
+  } catch (error) {
+    checks.push({ status: "FAIL", label: "template library distribution", detail: error instanceof Error ? error.message : String(error) });
+    return checks;
+  }
+  for (const [key, expected] of Object.entries(EXPECTED_TEMPLATE_LIBRARY)) {
+    const actual = distribution[key as keyof TemplateLibraryDistribution];
+    checks.push({
+      status: actual === expected ? "PASS" : "FAIL",
+      label: `template library ${key}`,
+      detail: actual === expected ? String(actual) : `expected ${String(expected)}, found ${String(actual)}`,
+    });
+  }
+  for (const [hashKey, relativePath] of Object.entries(TEMPLATE_LIBRARY_HASHED_FILES)) {
+    const expected = EXPECTED_TEMPLATE_LIBRARY[hashKey as keyof typeof EXPECTED_TEMPLATE_LIBRARY];
+    const actual = sha256File(join(libraryDir, relativePath));
+    checks.push({
+      status: actual === expected ? "PASS" : "FAIL",
+      label: `template library hash ${relativePath}`,
+      detail: actual === expected ? actual : `expected ${String(expected)}, found ${actual}`,
+    });
+  }
+  return checks;
+}
+
 function writeAtomic(path: string, content: string | Uint8Array, mode?: number): void {
   mkdirSync(dirname(path), { recursive: true });
   const temporary = join(dirname(path), `.${basename(path)}.${process.pid}.${randomUUID()}.tmp`);
@@ -156,6 +264,26 @@ function copyTree(sourceRoot: string, source: string, destinationRoot: string, d
   chmodSync(temporary, sourceStat.mode & 0o777);
   renameSync(temporary, destination);
   return 1;
+}
+
+function copyTemplateLibraryRuntimeDependencies(sourceRoot: string, destinationRoot: string, templateLibraryDir: string): number {
+  const requireFromFactory = createRequire(join(sourceRoot, "package.json"));
+  const ajvManifest = realpathSync(requireFromFactory.resolve("ajv/package.json"));
+  const requireFromAjv = createRequire(ajvManifest);
+  let copiedFiles = 0;
+  for (const dependency of TEMPLATE_LIBRARY_RUNTIME_DEPENDENCIES) {
+    const manifest = dependency === "ajv"
+      ? ajvManifest
+      : realpathSync(requireFromAjv.resolve(`${dependency}/package.json`));
+    const dependencyRoot = dirname(manifest);
+    copiedFiles += copyTree(
+      dependencyRoot,
+      dependencyRoot,
+      destinationRoot,
+      join(templateLibraryDir, "node_modules", dependency),
+    );
+  }
+  return copiedFiles;
 }
 
 function initializeStateRoot(stateDir: string): void {
@@ -203,12 +331,18 @@ export function installFactory(options: InstallOptions): InstallResult {
   assertZouroborosRoot(root);
   const factoryDir = canonicalPath(options.factoryDir ?? join(root, FACTORY_RELATIVE_DIR), "factory directory");
   assertContained(root, factoryDir);
+  const templateLibraryDir = canonicalPath(join(root, TEMPLATE_LIBRARY_RELATIVE_DIR), "template library directory");
+  assertContained(root, templateLibraryDir);
   const stateDir = canonicalPath(
     options.stateDir ?? join(process.env.XDG_STATE_HOME || join(homedir(), ".local", "state"), "zouroboros", "factory"),
     "factory state directory",
   );
-  const existing = existsSync(factoryDir) && readdirSync(factoryDir).length > 0;
-  if (existing && !options.force) throw new Error(`${factoryDir} already exists; use --force for a code-only update`);
+  const existingFactory = existsSync(factoryDir) && readdirSync(factoryDir).length > 0;
+  const existingTemplateLibrary = existsSync(templateLibraryDir) && readdirSync(templateLibraryDir).length > 0;
+  if ((existingFactory || existingTemplateLibrary) && !options.force) {
+    const existing = [existingFactory ? factoryDir : "", existingTemplateLibrary ? templateLibraryDir : ""].filter(Boolean).join(", ");
+    throw new Error(`${existing} already exists; use --force for a code-only update`);
+  }
 
   mkdirSync(factoryDir, { recursive: true });
   let copiedFiles = 0;
@@ -224,6 +358,20 @@ export function installFactory(options: InstallOptions): InstallResult {
     factoryDir,
     join(factoryDir, "config", "factory-state-owners-v1.json"),
   );
+  copiedFiles += copyTree(
+    sourceRoot,
+    join(sourceRoot, TEMPLATE_LIBRARY_SOURCE_DIR),
+    root,
+    templateLibraryDir,
+  );
+  copiedFiles += copyTemplateLibraryRuntimeDependencies(sourceRoot, root, templateLibraryDir);
+
+  const templateLibraryChecks = templateLibraryBoundaryChecks(templateLibraryDir);
+  const templateLibraryFailures = templateLibraryChecks.filter((check) => check.status === "FAIL");
+  if (templateLibraryFailures.length) {
+    throw new Error(`installed template library failed verification: ${templateLibraryFailures.map((check) => `${check.label}: ${check.detail}`).join("; ")}`);
+  }
+  const templateLibraryDistribution = readTemplateLibraryDistribution(templateLibraryDir);
 
   initializeStateRoot(stateDir);
   const configPath = join(factoryDir, "config", "runtime-flags.json");
@@ -253,7 +401,15 @@ export function installFactory(options: InstallOptions): InstallResult {
     installed_at: new Date().toISOString(),
     root,
     factory_dir: factoryDir,
+    template_library_dir: templateLibraryDir,
     state_dir: stateDir,
+    template_library: {
+      catalog_version: templateLibraryDistribution.catalog_version,
+      tooling_version: templateLibraryDistribution.tooling_version,
+      catalog_sha256: templateLibraryDistribution.catalog_sha256,
+      manifest_index_sha256: templateLibraryDistribution.manifest_index_sha256,
+      execution_authority: false,
+    },
     scheduler_configured: false,
     excluded: ["state", "evaluations", "investigations", "serial promotions", "executor credentials", "experiment artifacts"],
   }, null, 2)}\n`, 0o600);
@@ -261,8 +417,11 @@ export function installFactory(options: InstallOptions): InstallResult {
   return {
     root,
     factory_dir: factoryDir,
+    template_library_dir: templateLibraryDir,
     state_dir: stateDir,
     package_version: packageVersion,
+    template_library_catalog_version: templateLibraryDistribution.catalog_version,
+    template_library_tooling_version: templateLibraryDistribution.tooling_version,
     config,
     copied_files: copiedFiles,
     scheduler_configured: false,
@@ -290,17 +449,24 @@ function validateStateMarker(stateDir: string): string | null {
 export function doctorFactory(rootInput: string, factoryDirInput?: string): DoctorResult {
   const root = canonicalPath(rootInput, "Zouroboros root");
   const factoryDir = canonicalPath(factoryDirInput ?? join(root, FACTORY_RELATIVE_DIR), "factory directory");
+  const templateLibraryDir = canonicalPath(join(root, TEMPLATE_LIBRARY_RELATIVE_DIR), "template library directory");
   const checks: DoctorCheck[] = [];
   checks.push({ status: executableCheck("bun") ? "PASS" : "FAIL", label: "Bun runtime", detail: executableCheck("bun") ? "available" : "bun is not on PATH" });
   checks.push({ status: executableCheck("git") ? "PASS" : "FAIL", label: "Git runtime", detail: executableCheck("git") ? "available" : "git is not on PATH" });
   for (const file of REQUIRED_FACTORY_FILES) {
     checks.push({ status: existsSync(join(factoryDir, file)) ? "PASS" : "FAIL", label: file, detail: existsSync(join(factoryDir, file)) ? "present" : "missing" });
   }
+  checks.push(...templateLibraryBoundaryChecks(templateLibraryDir));
 
   let stateDir = "";
   try {
-    const manifest = JSON.parse(readFileSync(join(factoryDir, ".factory-package.json"), "utf8")) as { state_dir?: unknown };
+    const manifest = JSON.parse(readFileSync(join(factoryDir, ".factory-package.json"), "utf8")) as { state_dir?: unknown; template_library_dir?: unknown };
     stateDir = typeof manifest.state_dir === "string" ? canonicalPath(manifest.state_dir, "manifest state directory") : "";
+    checks.push({
+      status: manifest.template_library_dir === templateLibraryDir ? "PASS" : "FAIL",
+      label: "template library install manifest",
+      detail: manifest.template_library_dir === templateLibraryDir ? templateLibraryDir : "installed component path is missing or mismatched",
+    });
   } catch {
     checks.push({ status: "FAIL", label: "install manifest", detail: ".factory-package.json is missing or invalid" });
   }
@@ -318,6 +484,19 @@ export function doctorFactory(rootInput: string, factoryDirInput?: string): Doct
     status: runtimeValidation.status === 0 ? "PASS" : "FAIL",
     label: "runtime configuration",
     detail: runtimeValidation.status === 0 ? runtimeValidation.stdout.trim() : (runtimeValidation.stderr || runtimeValidation.stdout).trim().slice(0, 500),
+  });
+
+  const templateLibraryValidation = spawnSync("bun", [join(templateLibraryDir, "scripts", "template-library.ts"), "validate"], {
+    cwd: templateLibraryDir,
+    env: { ...process.env, ZOUROBOROS_ROOT: root, ZOUROBOROS_WORKSPACE: root },
+    encoding: "utf8",
+  });
+  checks.push({
+    status: templateLibraryValidation.status === 0 ? "PASS" : "FAIL",
+    label: "template library runtime validation",
+    detail: templateLibraryValidation.status === 0
+      ? templateLibraryValidation.stdout.trim()
+      : (templateLibraryValidation.stderr || templateLibraryValidation.stdout).trim().slice(0, 500),
   });
 
   for (const path of [
@@ -338,16 +517,22 @@ export function doctorFactory(rootInput: string, factoryDirInput?: string): Doct
     label: "conveyor trigger",
     detail: "not configured by this package; wire a scheduler or automation only after smoke verification and operator approval",
   });
-  return { ok: checks.every((check) => check.status !== "FAIL"), root, factory_dir: factoryDir, checks };
+  return { ok: checks.every((check) => check.status !== "FAIL"), root, factory_dir: factoryDir, template_library_dir: templateLibraryDir, checks };
 }
 
 export function packageCheck(sourceRoot = PACKAGE_ROOT): { ok: boolean; checks: DoctorCheck[] } {
   const root = canonicalPath(sourceRoot, "source root");
   const checks: DoctorCheck[] = [];
-  for (const path of [...COPY_DIRECTORIES, ...COPY_FILES, "templates/config/runtime-flags.json", "config/factory-state-owners-v1.json"]) {
+  for (const path of [...COPY_DIRECTORIES, ...COPY_FILES, TEMPLATE_LIBRARY_SOURCE_DIR, "templates/config/runtime-flags.json", "config/factory-state-owners-v1.json"]) {
     checks.push({ status: existsSync(join(root, path)) ? "PASS" : "FAIL", label: path, detail: existsSync(join(root, path)) ? "packaged" : "missing" });
   }
   const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as { files?: string[] };
+  const templateLibraryPublished = (manifest.files ?? []).some((entry) => entry === `${TEMPLATE_LIBRARY_SOURCE_DIR}/` || entry === TEMPLATE_LIBRARY_SOURCE_DIR);
+  checks.push({
+    status: templateLibraryPublished ? "PASS" : "FAIL",
+    label: "publish template library",
+    detail: templateLibraryPublished ? "software-template-library/ is included in package files" : "software-template-library/ is absent from package files",
+  });
   const unsafe = ["state", "evaluations", "config/runtime-flags.json", "config/serial-promotions"];
   for (const path of unsafe) {
     const included = (manifest.files ?? []).some((entry) => entry === path || entry.startsWith(`${path}/`));
@@ -363,6 +548,7 @@ export function packageCheck(sourceRoot = PACKAGE_ROOT): { ok: boolean; checks: 
     label: "safe runtime defaults",
     detail: activated.length === 0 ? "all execution and promotion lanes default off" : activated.map(([key]) => key).join(", "),
   });
+  checks.push(...templateLibraryBoundaryChecks(join(root, TEMPLATE_LIBRARY_SOURCE_DIR)));
   return { ok: checks.every((check) => check.status !== "FAIL"), checks };
 }
 
@@ -380,6 +566,35 @@ function smokeFactory(rootInput: string): number {
       sourceRoot: PACKAGE_ROOT,
       stateDir: join(temporaryRoot, "factory-state"),
     });
+    const templateLibraryScript = join(installed.template_library_dir, "scripts", "template-library.ts");
+    const templateValidation = spawnSync("bun", [templateLibraryScript, "validate"], {
+      cwd: installed.template_library_dir,
+      env: { ...process.env, ZOUROBOROS_ROOT: temporaryRoot, ZOUROBOROS_WORKSPACE: temporaryRoot },
+      encoding: "utf8",
+    });
+    process.stdout.write(templateValidation.stdout || "");
+    process.stderr.write(templateValidation.stderr || "");
+    if (templateValidation.status !== 0) return templateValidation.status ?? 1;
+
+    const resolvedTemplate = join(temporaryRoot, "resolved-web-app-template.json");
+    const templateResolution = spawnSync("bun", [
+      templateLibraryScript,
+      "resolve",
+      "--template",
+      "web-app@1.0.0",
+      "--level",
+      "standard",
+      "--output",
+      resolvedTemplate,
+    ], {
+      cwd: installed.template_library_dir,
+      env: { ...process.env, ZOUROBOROS_ROOT: temporaryRoot, ZOUROBOROS_WORKSPACE: temporaryRoot },
+      encoding: "utf8",
+    });
+    process.stdout.write(templateResolution.stdout || "");
+    process.stderr.write(templateResolution.stderr || "");
+    if (templateResolution.status !== 0 || !existsSync(resolvedTemplate)) return templateResolution.status ?? 1;
+
     const result = spawnSync("bun", [join(installed.factory_dir, "scripts", "factory-mvp.ts"), "smoke"], {
       cwd: installed.factory_dir,
       env: {
@@ -442,6 +657,7 @@ export async function runFactoryPackageCli(argv = process.argv.slice(2)): Promis
     if (parsed.flags.has("json")) console.log(JSON.stringify(result, null, 2));
     else {
       console.log(`Installed zouroboros-factory ${result.package_version} to ${result.factory_dir}`);
+      console.log(`Software Template Library ${result.template_library_catalog_version}/${result.template_library_tooling_version}: ${result.template_library_dir}`);
       console.log(`State root: ${result.state_dir}`);
       console.log(`Runtime config: ${result.config}; conveyor trigger: not configured`);
     }

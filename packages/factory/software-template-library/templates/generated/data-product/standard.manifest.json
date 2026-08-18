@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "templateId": "data-product",
+  "version": "1.0.0",
+  "level": "standard",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "Data products",
+  "definition": "Pipelines, analytical products, and decision surfaces governed by schema, lineage, freshness, quality, and reproducibility.",
+  "examples": [
+    "analytics dashboard",
+    "ETL pipeline",
+    "forecasting system",
+    "data-quality monitor"
+  ],
+  "counterexample": "A content website with no analytical or data-processing contract.",
+  "executionModes": [
+    "direct",
+    "swarm"
+  ],
+  "requiredSections": [
+    "mission",
+    "users",
+    "workflows",
+    "data",
+    "security",
+    "lifecycle",
+    "quality",
+    "verification",
+    "exclusions"
+  ],
+  "emphasis": [
+    "schema",
+    "lineage",
+    "freshness",
+    "quality",
+    "reproducibility and recovery"
+  ],
+  "nonGoals": [
+    "Do not silently coerce malformed records.",
+    "Do not display metrics without source, timestamp, and definition."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "Which source systems and schemas are authoritative?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which freshness, completeness, and quality thresholds apply?"
+    },
+    {
+      "id": "D-003",
+      "question": "How are backfills, late data, retention, and recovery handled?"
+    },
+    {
+      "id": "D-004",
+      "question": "Which data and lifecycle contracts are authoritative?"
+    },
+    {
+      "id": "D-005",
+      "question": "Which failure and recovery behavior is required?"
+    },
+    {
+      "id": "D-006",
+      "question": "What deployment environment is authoritative?"
+    }
+  ],
+  "requirements": [
+    "Validate data at each declared boundary.",
+    "Record lineage, transformation version, and freshness metadata.",
+    "Make backfill and partial-failure behavior idempotent and observable."
+  ],
+  "verifications": [
+    "Run representative, missing, duplicate, late, and malformed data fixtures.",
+    "Reproduce published metrics from versioned inputs.",
+    "Exercise partial failure, retry, and backfill."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "b01d7628de27a33c04c82531decac36e44c4ea285d56ab261ebc6e680ee54be9"
+}

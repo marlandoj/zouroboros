@@ -1,0 +1,2 @@
+packages/factory/software-template-library/scripts/template-library.ts whitespace=-blank-at-eol
+packages/factory/software-template-library/templates/generated/**/*.prompt.md whitespace=-blank-at-eol

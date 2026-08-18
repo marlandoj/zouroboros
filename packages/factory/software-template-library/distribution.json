@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "catalog_version": "1.0.0",
+  "tooling_version": "1.0.1",
+  "catalog_sha256": "fd5485d1e87a9064170691c19d4c7f30354aaade25a86fea763ac3f26c2059d3",
+  "manifest_index_sha256": "6c8dc4d3fc87f30aa08b827698e139c8369a765cd6a41b1d0512cc572f86687d",
+  "persona_associations_sha256": "e709af45566c4b0248ca77e8ca9aa692133bd5636a85e95e9c0254e9301173f4",
+  "persona_association_index_sha256": "45922df5582e36fc8ecd6c1d7571130b4857aae1ec43057dc3066e762b939bfc",
+  "maturity": "published",
+  "execution_authority": false
+}
