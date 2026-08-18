@@ -20,10 +20,17 @@ and writes a fail-closed runtime configuration. Every execution, filing,
 promotion, model-review, and auto-merge lane is off by default.
 
 The package includes runtime scripts, contracts, fixtures, game preflight gates,
-scenarios, a local zero-API swarm decision gate, and the operator documentation.
-It deliberately excludes live state, evaluations,
-incident reports, serial-promotion records, machine-specific executor config,
-and experiment artifacts.
+scenarios, a local zero-API swarm decision gate, the published Software Template
+Library, and the operator documentation. The installer materializes the library
+at `Projects/software-template-library`, pins Ajv 8.17.1, verifies its published
+catalog and index hashes, and records its exact versions in the install manifest.
+
+The Software Template Library distribution contains its catalog, discovery and
+persona-association indexes, JSON schemas, compiler and resolver, and all 42
+generated base variants. It deliberately excludes retained evaluations, project
+planning state, model-review code, Linear mutation code, and live runtime state.
+The factory package also excludes incident reports, serial-promotion records,
+machine-specific executor config, and experiment artifacts.
 
 ## Commands
 
@@ -33,6 +40,14 @@ and experiment artifacts.
 - `zouroboros-factory smoke --root <checkout>` installs into a temporary clean
   checkout and runs the deterministic one-queue, one-worker MVP lifecycle.
 - `zouroboros-factory package-check` validates the publishable package boundary.
+
+`doctor` also executes the installed template catalog validator. `smoke` validates
+the catalog and resolves `web-app@1.0.0` before starting the deterministic factory
+lifecycle.
+
+The target must be a Zouroboros checkout containing
+`Skills/compile-build-spec/scripts/spec-tool.ts`; the library compiler uses that
+canonical downstream validator and `doctor` fails closed when it is unavailable.
 
 `install --force` updates packaged code but preserves an existing
 `config/runtime-flags.json`. Replacing operator configuration requires the

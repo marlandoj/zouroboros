@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "templateId": "saas",
+  "version": "1.0.0",
+  "level": "factory",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "SaaS products",
+  "definition": "Hosted multi-user products with accounts, roles, persistent organizational data, and service lifecycle behavior.",
+  "examples": [
+    "subscription analytics",
+    "inventory management",
+    "team workspace",
+    "client portal"
+  ],
+  "counterexample": "A single-user local tool with no accounts, shared data, or hosted service.",
+  "executionModes": [
+    "swarm",
+    "undecided"
+  ],
+  "requiredSections": [
+    "mission",
+    "provenance",
+    "contracts",
+    "requirements",
+    "dag",
+    "ownership",
+    "verification",
+    "scope-policy",
+    "rollout",
+    "rollback",
+    "authority"
+  ],
+  "emphasis": [
+    "tenancy",
+    "roles and permissions",
+    "billing lifecycle",
+    "data isolation",
+    "service operations"
+  ],
+  "nonGoals": [
+    "Do not add multi-tenancy to a single-user prototype.",
+    "Do not treat client-side role checks as authorization."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "What is the tenant boundary?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which roles and ownership rules apply?"
+    },
+    {
+      "id": "D-003",
+      "question": "Which subscription and account lifecycle states exist?"
+    },
+    {
+      "id": "D-004",
+      "question": "Which repository and branch policy are authoritative?"
+    },
+    {
+      "id": "D-005",
+      "question": "Who may approve promotion, merge, migration, deployment, and publication?"
+    },
+    {
+      "id": "D-006",
+      "question": "What is the scope-cut order?"
+    },
+    {
+      "id": "D-007",
+      "question": "What rollback restores code, data, and external side effects?"
+    }
+  ],
+  "requirements": [
+    "Isolate tenant data on every server-side access path.",
+    "Enforce role and ownership permissions for each protected action.",
+    "Represent trial, active, past-due, canceled, and recovery states when billing is in scope."
+  ],
+  "verifications": [
+    "Run cross-tenant denial tests.",
+    "Exercise role and lifecycle transition matrices.",
+    "Reconcile billing and account state where applicable."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "6cb27bdc581fdc5a386c80941458fea9bc1a3a206565b9caaf01ef13da614e58"
+}

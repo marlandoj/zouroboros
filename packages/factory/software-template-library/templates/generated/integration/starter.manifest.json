@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "templateId": "integration",
+  "version": "1.0.0",
+  "level": "starter",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "Integrations",
+  "definition": "Connections between independently governed systems with authentication, mapping, rate, consistency, and reconciliation boundaries.",
+  "examples": [
+    "Stripe billing",
+    "Linear sync",
+    "CRM connector",
+    "calendar bridge"
+  ],
+  "counterexample": "An internal function call within one codebase and one transaction boundary.",
+  "executionModes": [
+    "direct"
+  ],
+  "requiredSections": [
+    "mission",
+    "capabilities",
+    "constraints",
+    "acceptance",
+    "exclusions"
+  ],
+  "emphasis": [
+    "authentication",
+    "rate limits",
+    "mapping",
+    "idempotency",
+    "reconciliation"
+  ],
+  "nonGoals": [
+    "Do not assume remote identifiers or enum values are stable.",
+    "Do not expose integration credentials to clients or logs."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "Which system is authoritative for each field and lifecycle state?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which authentication and credential-rotation model applies?"
+    },
+    {
+      "id": "D-003",
+      "question": "How are rate limits, duplicates, drift, and reconciliation handled?"
+    },
+    {
+      "id": "D-004",
+      "question": "What is the smallest usable vertical slice?"
+    },
+    {
+      "id": "D-005",
+      "question": "What must explicitly remain out of scope?"
+    }
+  ],
+  "requirements": [
+    "Version field and enum mappings.",
+    "Handle rate limits, pagination, retries, and idempotency explicitly.",
+    "Detect and reconcile divergence without silently overwriting authoritative state."
+  ],
+  "verifications": [
+    "Run mapping and contract fixtures against authoritative schemas.",
+    "Exercise pagination, rate limit, duplicate, deletion, and drift scenarios.",
+    "Verify credential redaction and rotation behavior."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "885cb3e8d98f85e86ead14b69983910dbdbbf088ce8e3cc139f9a811b8dd89b4"
+}

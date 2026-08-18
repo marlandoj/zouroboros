@@ -11,6 +11,9 @@
   },
   "include": [
     "scripts/factory-package-cli.ts",
-    "scripts/factory-package-cli.test.ts"
+    "scripts/factory-package-cli.test.ts",
+    "scripts/factory-package-archive.test.ts",
+    "scripts/runtime-materialize.ts",
+    "scripts/runtime-materialize.test.ts"
   ]
 }

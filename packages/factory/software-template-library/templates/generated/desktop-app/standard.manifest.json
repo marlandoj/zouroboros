@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "templateId": "desktop-app",
+  "version": "1.0.0",
+  "level": "standard",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "Desktop applications",
+  "definition": "Installed workstation products using local files, operating-system integration, packaging, and upgrade behavior.",
+  "examples": [
+    "Markdown editor",
+    "media organizer",
+    "trading workstation",
+    "local research vault"
+  ],
+  "counterexample": "A browser-only dashboard with no local filesystem or desktop distribution needs.",
+  "executionModes": [
+    "direct",
+    "swarm"
+  ],
+  "requiredSections": [
+    "mission",
+    "users",
+    "workflows",
+    "data",
+    "security",
+    "lifecycle",
+    "quality",
+    "verification",
+    "exclusions"
+  ],
+  "emphasis": [
+    "OS support",
+    "filesystem safety",
+    "local persistence",
+    "packaging",
+    "upgrade and recovery"
+  ],
+  "nonGoals": [
+    "Do not overwrite user files without recoverable backups.",
+    "Do not promise OS support that is not exercised."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "Which operating systems and architectures are supported?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which filesystem locations and file formats are authoritative?"
+    },
+    {
+      "id": "D-003",
+      "question": "How are upgrades, rollback, and data recovery handled?"
+    },
+    {
+      "id": "D-004",
+      "question": "Which data and lifecycle contracts are authoritative?"
+    },
+    {
+      "id": "D-005",
+      "question": "Which failure and recovery behavior is required?"
+    },
+    {
+      "id": "D-006",
+      "question": "What deployment environment is authoritative?"
+    }
+  ],
+  "requirements": [
+    "Use atomic or recoverable writes for user-owned files.",
+    "Handle missing, locked, malformed, and externally modified files.",
+    "Package and update the application on declared operating systems."
+  ],
+  "verifications": [
+    "Run filesystem failure and recovery fixtures.",
+    "Test packaging and upgrade on each declared OS.",
+    "Verify data remains readable across supported versions."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "3d7b5bd390aad8168d3ac79acdd75b22c359f5b7977cec2608b767b5bb37e06e"
+}

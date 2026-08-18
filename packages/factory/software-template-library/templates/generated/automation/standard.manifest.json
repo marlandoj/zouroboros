@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "templateId": "automation",
+  "version": "1.0.0",
+  "level": "standard",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "Automation",
+  "definition": "Triggered workflows that perform repeatable actions, often with external side effects and unattended failure modes.",
+  "examples": [
+    "email triage",
+    "report generator",
+    "scheduled sync",
+    "compliance reminder"
+  ],
+  "counterexample": "An interactive dashboard that never performs scheduled or event-driven actions.",
+  "executionModes": [
+    "direct",
+    "swarm"
+  ],
+  "requiredSections": [
+    "mission",
+    "users",
+    "workflows",
+    "data",
+    "security",
+    "lifecycle",
+    "quality",
+    "verification",
+    "exclusions"
+  ],
+  "emphasis": [
+    "triggers",
+    "idempotency",
+    "retries",
+    "side-effect authority",
+    "failure reporting"
+  ],
+  "nonGoals": [
+    "Do not retry irreversible actions without an idempotency contract.",
+    "Do not treat silence as successful completion."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "Which trigger, cadence, time zone, and concurrency rules apply?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which side effects require approval?"
+    },
+    {
+      "id": "D-003",
+      "question": "Which failures retry, alert, pause, or require reconciliation?"
+    },
+    {
+      "id": "D-004",
+      "question": "Which data and lifecycle contracts are authoritative?"
+    },
+    {
+      "id": "D-005",
+      "question": "Which failure and recovery behavior is required?"
+    },
+    {
+      "id": "D-006",
+      "question": "What deployment environment is authoritative?"
+    }
+  ],
+  "requirements": [
+    "Make each repeatable side effect idempotent or explicitly non-retriable.",
+    "Record trigger, attempt, outcome, and reconciliation identity.",
+    "Report material failure through an owned channel."
+  ],
+  "verifications": [
+    "Replay duplicate and overlapping triggers.",
+    "Inject transient and permanent failures.",
+    "Verify success, partial success, retry, and escalation records."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "a5942b219d4b0701ecd5e89b1475e282ad27b7e42927ed8b4037b4ff16052a1a"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "software-template-library",
+  "version": "1.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate": "bun scripts/template-library.ts validate"
+  },
+  "dependencies": {
+    "ajv": "8.17.1"
+  }
+}

@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zouroboros.ai/schemas/software-template-library-v1.json",
+  "title": "Software Template Library",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "catalogVersion", "status", "owner", "resolutionContract", "exportContract", "assumptionVocabulary", "executionModeDefinitions", "detailLevels", "annexes", "categories"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "catalogVersion": { "$ref": "#/$defs/semver" },
+    "status": { "enum": ["draft", "validated", "reviewed", "published", "deprecated"] },
+    "owner": { "$ref": "#/$defs/nonEmpty" },
+    "resolutionContract": { "$ref": "#/$defs/resolutionContract" },
+    "exportContract": { "$ref": "#/$defs/exportContract" },
+    "assumptionVocabulary": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/assumption" }
+    },
+    "executionModeDefinitions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["direct", "swarm", "undecided"],
+      "properties": {
+        "direct": { "$ref": "#/$defs/nonEmpty" },
+        "swarm": { "$ref": "#/$defs/nonEmpty" },
+        "undecided": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "detailLevels": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/detailLevel" }
+    },
+    "annexes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/annex" }
+    },
+    "categories": {
+      "type": "array",
+      "minItems": 14,
+      "items": { "$ref": "#/$defs/category" }
+    }
+  },
+  "$defs": {
+    "nonEmpty": { "type": "string", "minLength": 1 },
+    "semver": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "stringList": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/nonEmpty" },
+      "uniqueItems": true
+    },
+    "executionMode": { "enum": ["direct", "swarm", "undecided"] },
+    "assumption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "description": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "resolutionContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "hashAlgorithm", "hashInput", "hashOutput", "baseTemplateCount", "mergeOrder", "arrayPolicy", "conflictPolicy", "rules"],
+      "properties": {
+        "version": { "$ref": "#/$defs/semver" },
+        "hashAlgorithm": { "const": "sha256-canonical-json" },
+        "hashInput": { "$ref": "#/$defs/nonEmpty" },
+        "hashOutput": { "$ref": "#/$defs/nonEmpty" },
+        "baseTemplateCount": { "const": 1 },
+        "mergeOrder": {
+          "type": "array",
+          "prefixItems": [
+            { "const": "category" },
+            { "const": "detail-level" },
+            { "const": "annexes-in-declared-order" },
+            { "const": "user-answers" }
+          ],
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "arrayPolicy": { "const": "append-unique" },
+        "conflictPolicy": { "const": "fail-closed" },
+        "rules": { "$ref": "#/$defs/stringList" }
+      }
+    },
+    "exportContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "artifactKinds", "candidateOnly", "requiredValidationDecision", "requiredLineage", "ticketHeaders", "prohibitedAuthorities", "failurePolicy"],
+      "properties": {
+        "version": { "$ref": "#/$defs/semver" },
+        "artifactKinds": { "$ref": "#/$defs/stringList" },
+        "candidateOnly": { "const": true },
+        "requiredValidationDecision": { "const": "PASS" },
+        "requiredLineage": { "$ref": "#/$defs/stringList" },
+        "ticketHeaders": { "$ref": "#/$defs/stringList" },
+        "prohibitedAuthorities": { "$ref": "#/$defs/stringList" },
+        "failurePolicy": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "detailLevel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "supportedExecutionModes", "requiredSections", "additionalDecisions", "verificationTypes"],
+      "properties": {
+        "id": { "enum": ["starter", "standard", "factory"] },
+        "description": { "$ref": "#/$defs/nonEmpty" },
+        "supportedExecutionModes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/executionMode" }, "uniqueItems": true },
+        "requiredSections": { "$ref": "#/$defs/stringList" },
+        "additionalDecisions": { "$ref": "#/$defs/stringList" },
+        "verificationTypes": { "$ref": "#/$defs/stringList" }
+      }
+    },
+    "annex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "description", "requires", "incompatibleAnnexes", "incompatibleAssumptions", "decisions", "requirements", "verifications"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "version": { "$ref": "#/$defs/semver" },
+        "description": { "$ref": "#/$defs/nonEmpty" },
+        "requires": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true },
+        "incompatibleAnnexes": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true },
+        "incompatibleAssumptions": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true },
+        "decisions": { "$ref": "#/$defs/stringList" },
+        "requirements": { "$ref": "#/$defs/stringList" },
+        "verifications": { "$ref": "#/$defs/stringList" }
+      }
+    },
+    "category": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "category", "definition", "examples", "counterexample", "tags", "emphasis", "nonGoals", "requiredDecisions", "requirements", "verifications", "recommendedAnnexes", "supportedExecutionModes"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "version": { "$ref": "#/$defs/semver" },
+        "category": { "$ref": "#/$defs/nonEmpty" },
+        "definition": { "$ref": "#/$defs/nonEmpty" },
+        "examples": { "$ref": "#/$defs/stringList" },
+        "counterexample": { "$ref": "#/$defs/nonEmpty" },
+        "tags": { "$ref": "#/$defs/stringList" },
+        "emphasis": { "$ref": "#/$defs/stringList" },
+        "nonGoals": { "$ref": "#/$defs/stringList" },
+        "requiredDecisions": { "$ref": "#/$defs/stringList" },
+        "requirements": { "$ref": "#/$defs/stringList" },
+        "verifications": { "$ref": "#/$defs/stringList" },
+        "recommendedAnnexes": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true },
+        "supportedExecutionModes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/executionMode" }, "uniqueItems": true }
+      }
+    }
+  }
+}

@@ -68,6 +68,24 @@ describe("runtime materialization", () => {
     });
   });
 
+  test("resolves Ajv from the packaged template-library source layout", () => {
+    const root = mkdtempSync(join(tmpdir(), "runtime-materialize-packaged-ajv-"));
+    roots.push(root);
+    const project = join(root, "packages", "factory", "software-template-library");
+    const ajv = join(root, ".pnpm", "ajv@8.17.1", "node_modules", "ajv");
+    mkdirSync(project, { recursive: true });
+    mkdirSync(join(root, "packages", "factory", "node_modules"), { recursive: true });
+    mkdirSync(join(ajv, "dist"), { recursive: true });
+    writeFileSync(join(project, "package.json"), "{}");
+    writeFileSync(join(ajv, "package.json"), JSON.stringify({ name: "ajv", version: "8.17.1" }));
+    writeFileSync(join(ajv, "dist", "2020.js"), "module.exports = {};");
+    symlinkSync(ajv, join(root, "packages", "factory", "node_modules", "ajv"));
+    expect(resolveTemplateLibraryAjv(root)).toEqual({
+      entrypoint: ".pnpm/ajv@8.17.1/node_modules/ajv/dist/2020.js",
+      version: "8.17.1",
+    });
+  });
+
   test("runtime key changes with dependency graph or platform input", () => {
     const base = {
       merge_commit: "a".repeat(40),

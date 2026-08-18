@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "templateId": "saas",
+  "version": "1.0.0",
+  "level": "starter",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "SaaS products",
+  "definition": "Hosted multi-user products with accounts, roles, persistent organizational data, and service lifecycle behavior.",
+  "examples": [
+    "subscription analytics",
+    "inventory management",
+    "team workspace",
+    "client portal"
+  ],
+  "counterexample": "A single-user local tool with no accounts, shared data, or hosted service.",
+  "executionModes": [
+    "direct"
+  ],
+  "requiredSections": [
+    "mission",
+    "capabilities",
+    "constraints",
+    "acceptance",
+    "exclusions"
+  ],
+  "emphasis": [
+    "tenancy",
+    "roles and permissions",
+    "billing lifecycle",
+    "data isolation",
+    "service operations"
+  ],
+  "nonGoals": [
+    "Do not add multi-tenancy to a single-user prototype.",
+    "Do not treat client-side role checks as authorization."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "What is the tenant boundary?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which roles and ownership rules apply?"
+    },
+    {
+      "id": "D-003",
+      "question": "Which subscription and account lifecycle states exist?"
+    },
+    {
+      "id": "D-004",
+      "question": "What is the smallest usable vertical slice?"
+    },
+    {
+      "id": "D-005",
+      "question": "What must explicitly remain out of scope?"
+    }
+  ],
+  "requirements": [
+    "Isolate tenant data on every server-side access path.",
+    "Enforce role and ownership permissions for each protected action.",
+    "Represent trial, active, past-due, canceled, and recovery states when billing is in scope."
+  ],
+  "verifications": [
+    "Run cross-tenant denial tests.",
+    "Exercise role and lifecycle transition matrices.",
+    "Reconcile billing and account state where applicable."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "5f3e1d672edf5bd45fbdbc4bf5fa1975de020f6e9a794adaccba9f1a6d2feae9"
+}

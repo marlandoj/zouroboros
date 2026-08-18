@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "templateId": "api-backend",
+  "version": "1.0.0",
+  "level": "starter",
+  "catalogVersion": "1.0.0",
+  "resolutionContractVersion": "1.0.0",
+  "maturity": "published",
+  "owner": "Marlandoj",
+  "category": "APIs and backends",
+  "definition": "Machine-facing services governed by endpoint, schema, authorization, error, reliability, and compatibility contracts.",
+  "examples": [
+    "authentication service",
+    "payment API",
+    "notification service",
+    "content API"
+  ],
+  "counterexample": "A static portfolio whose primary behavior is rendered content.",
+  "executionModes": [
+    "direct"
+  ],
+  "requiredSections": [
+    "mission",
+    "capabilities",
+    "constraints",
+    "acceptance",
+    "exclusions"
+  ],
+  "emphasis": [
+    "endpoint and schema contracts",
+    "authorization",
+    "error semantics",
+    "compatibility",
+    "load and recovery"
+  ],
+  "nonGoals": [
+    "Do not expose internal exceptions as public API contracts.",
+    "Do not infer idempotency or compatibility behavior."
+  ],
+  "requiredDecisions": [
+    {
+      "id": "D-001",
+      "question": "Which protocol, schema, and compatibility policy are authoritative?"
+    },
+    {
+      "id": "D-002",
+      "question": "Which callers and authorization rules apply?"
+    },
+    {
+      "id": "D-003",
+      "question": "Which latency, throughput, and availability budgets apply?"
+    },
+    {
+      "id": "D-004",
+      "question": "What is the smallest usable vertical slice?"
+    },
+    {
+      "id": "D-005",
+      "question": "What must explicitly remain out of scope?"
+    }
+  ],
+  "requirements": [
+    "Validate inputs and authorization before side effects.",
+    "Return stable machine-readable error contracts.",
+    "Preserve declared backward compatibility or version explicitly."
+  ],
+  "verifications": [
+    "Run schema and consumer contract tests.",
+    "Exercise authentication, authorization, malformed input, and idempotency.",
+    "Measure load and recovery against declared budgets."
+  ],
+  "annexes": [],
+  "assumptions": [],
+  "authority": "Resolution creates a candidate specification only; factory-ready, dispatch, merge, migration, deployment, publication, and courseware release require explicit human authority.",
+  "sha256": "311f846772884e69bb0465c341a6a1e19bcc5d9be2702f392fcd45d6b7059677"
+}
